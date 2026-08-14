@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: translator_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Ánh xạ thư mục data để lưu vĩnh viễn Translation Memory và Context
+      - ./data:/app/data
+      # Ánh xạ huggingface cache để không phải tải lại model AI mỗi lần xóa container
+      - hf_cache:/root/.cache/huggingface
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  hf_cache:

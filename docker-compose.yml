@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # 1. Backend (FastAPI + GPU + SQLite DB)
+  ai_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: translator_ai_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data # Gắn volume chung để lưu DB và Translation Memory
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # 2. Admin Web (React)
+  admin_dashboard:
+    build:
+      context: ./admin_web
+      dockerfile: Dockerfile
+    container_name: translator_admin_web
+    ports:
+      - "8080:80"
+    depends_on:
+      - ai_backend
+    restart: unless-stopped
+
+volumes:
+  data:
+    driver: local
