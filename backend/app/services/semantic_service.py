@@ -26,6 +26,12 @@ def correct_text_semantics(text: str, context: str) -> str:
 
     text = refine_text_rule_based(text)
 
+    # Whisper small can end an advisory sentence with "?" because the embedded
+    # "... xem ... hay không" is interrogative. That punctuation reverses the
+    # meaning when NLLB translates the whole sentence as a direct question.
+    if re.search(r"^(?:bạn|anh|chị|quý khách) nên\b.*\bđể\b.*\bxem\b.*\bhay không\?$", text, re.IGNORECASE):
+        text = text[:-1] + "."
+
     mode = os.getenv("SEMANTIC_CORRECTION_MODE", "none").lower()
     if mode == "none":
         return text

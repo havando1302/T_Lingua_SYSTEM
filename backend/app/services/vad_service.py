@@ -21,7 +21,8 @@ class WebRtcVadStream:
         frame_ms: int = VAD_FRAME_MS,
         aggressiveness: int = VAD_AGGRESSIVENESS,
         speech_pad_ms: int = VAD_SPEECH_PAD_MS,
-        silence_ms: int = VAD_SILENCE_MS
+        silence_ms: int = VAD_SILENCE_MS,
+        max_speech_ms: int = 15000,
     ):
         self.sample_rate = sample_rate
         self.channels = channels
@@ -35,12 +36,14 @@ class WebRtcVadStream:
 
         self._prepad_frames = max(1, speech_pad_ms // self.frame_ms)
         self._max_silence_frames = max(1, silence_ms // self.frame_ms)
+        self._max_speech_frames = max(1, max_speech_ms // self.frame_ms)
 
         self._residual = b""
         self._ring = deque(maxlen=self._prepad_frames)
         self._current = bytearray()
         self._in_speech = False
         self._silence_frames = 0
+        self._speech_frames = 0
 
     def process(self, audio_bytes: bytes) -> tuple[list[bytes], bytes, bool]:
         """
@@ -68,18 +71,48 @@ class WebRtcVadStream:
                     self._current.extend(b"".join(self._ring))
                     self._ring.clear()
                     self._silence_frames = 0
+                    self._speech_frames = 1
             else:
                 self._current.extend(frame)
                 if is_speech:
                     self._silence_frames = 0
+                    self._speech_frames += 1
                 else:
                     self._silence_frames += 1
-                    if self._silence_frames >= self._max_silence_frames:
-                        finals.append(bytes(self._current))
-                        self._current.clear()
-                        self._in_speech = False
-                        self._silence_frames = 0
+
+                if self._silence_frames >= self._max_silence_frames:
+                    finals.append(bytes(self._current))
+                    self._current.clear()
+                    self._in_speech = False
+                    self._silence_frames = 0
+                    self._speech_frames = 0
+                elif self._speech_frames >= self._max_speech_frames:
+                    # Finite window split: complete current segment to protect memory and downstream latency.
+                    finals.append(bytes(self._current))
+                    self._current.clear()
+                    self._silence_frames = 0
+                    self._speech_frames = 0
 
         self._residual = data[offset:]
 
         return finals, bytes(self._current), self._in_speech
+
+    def flush(self) -> bytes | None:
+        """Emits any pending audio in the speech buffer on turn end."""
+        if self._current:
+            chunk = bytes(self._current)
+            self._current.clear()
+            self._in_speech = False
+            self._silence_frames = 0
+            self._speech_frames = 0
+            return chunk
+        return None
+
+    def reset(self) -> None:
+        """Resets the stream state between turns or on cancellation."""
+        self._residual = b""
+        self._ring.clear()
+        self._current.clear()
+        self._in_speech = False
+        self._silence_frames = 0
+        self._speech_frames = 0

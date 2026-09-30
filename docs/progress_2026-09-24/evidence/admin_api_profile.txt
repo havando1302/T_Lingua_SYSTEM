@@ -1,0 +1,43 @@
+         63541 function calls (63141 primitive calls) in 0.650 seconds
+
+   Ordered by: cumulative time
+   List reduced from 265 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       50    0.000    0.000    0.650    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\starlette\testclient.py:471(get)
+       50    0.000    0.000    0.650    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:1036(get)
+       50    0.000    0.000    0.650    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\starlette\testclient.py:430(request)
+       50    0.000    0.000    0.638    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:771(request)
+       50    0.000    0.000    0.630    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:879(send)
+       50    0.000    0.000    0.624    0.012 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:930(_send_handling_auth)
+       50    0.000    0.000    0.624    0.012 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:964(_send_handling_redirects)
+       50    0.001    0.000    0.623    0.012 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:1001(_send_single_request)
+       50    0.002    0.000    0.609    0.012 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\starlette\testclient.py:225(handle_request)
+      660    0.533    0.001    0.533    0.001 {method 'acquire' of '_thread.lock' objects}
+      255    0.002    0.000    0.510    0.002 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\threading.py:288(wait)
+      150    0.001    0.000    0.502    0.003 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\from_thread.py:323(call)
+      350    0.002    0.000    0.485    0.001 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\_base.py:430(result)
+  700/550    0.001    0.000    0.130    0.000 {built-in method builtins.next}
+      100    0.000    0.000    0.129    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\starlette\testclient.py:422(_portal_factory)
+      100    0.001    0.000    0.128    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\from_thread.py:503(start_blocking_portal)
+  300/250    0.000    0.000    0.073    0.000 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\contextlib.py:130(__enter__)
+      150    0.000    0.000    0.072    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\from_thread.py:356(start_task_soon)
+      150    0.001    0.000    0.070    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\from_thread.py:282(_spawn_task_from_thread)
+      150    0.001    0.000    0.069    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\from_thread.py:95(run_sync)
+      150    0.001    0.000    0.068    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\anyio\_backends\_asyncio.py:2690(run_sync_from_thread)
+  300/250    0.000    0.000    0.058    0.000 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\contextlib.py:139(__exit__)
+      150    0.000    0.000    0.043    0.000 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\asyncio\base_events.py:796(call_soon_threadsafe)
+      150    0.000    0.000    0.042    0.000 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\asyncio\proactor_events.py:800(_write_to_self)
+      150    0.042    0.000    0.042    0.000 {method 'send' of '_socket.socket' objects}
+       50    0.000    0.000    0.034    0.001 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\threading.py:916(start)
+       50    0.000    0.000    0.029    0.001 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\threading.py:589(wait)
+       50    0.000    0.000    0.027    0.001 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\threading.py:1064(join)
+       50    0.000    0.000    0.026    0.001 C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\threading.py:1102(_wait_for_tstate_lock)
+       50    0.000    0.000    0.012    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_models.py:1101(extract_cookies)
+      100    0.001    0.000    0.011    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:391(_merge_url)
+      200    0.001    0.000    0.010    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_urls.py:77(__init__)
+      100    0.002    0.000    0.009    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_urlparse.py:213(urlparse)
+       50    0.001    0.000    0.008    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_client.py:340(build_request)
+       50    0.001    0.000    0.008    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\httpx\_models.py:1249(__init__)
+
+

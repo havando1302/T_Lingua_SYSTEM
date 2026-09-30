@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../controllers/translate_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../widgets/chat/chat_bubble.dart';
@@ -50,45 +51,50 @@ class _ChatScreenState extends State<ChatScreen> {
         });
 
         return Column(
-      children: [
-        // 1. Header của trang Chat (Tùy chỉnh lại cho hợp nền tối)
-        _buildHeader(),
+          children: [
+            // 1. Header của trang Chat (Tùy chỉnh lại cho hợp nền tối)
+            _buildHeader(),
+            if (widget.logic.errorMessage != null)
+              Text(
+                widget.logic.errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
 
-        // 2. Danh sách tin nhắn (Cuộn vô tận)
-        Expanded(
-          child: Container(
-            decoration: const BoxDecoration(
-              color:
-                  Colors.white, // Giữ nền trắng cho khu vực chat giống ảnh mẫu
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 20,
+            // 2. Danh sách tin nhắn (Cuộn vô tận)
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors
+                      .white, // Giữ nền trắng cho khu vực chat giống ảnh mẫu
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
                 ),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  return ChatBubble(message: messages[index]);
-                },
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 20,
+                    ),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      return ChatBubble(message: messages[index]);
+                    },
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
 
-        // 3. Thanh điều khiển Mic (Nằm dưới cùng)
-        DualMicBar(logic: widget.logic),
-      ],
-    );
+            // 3. Thanh điều khiển Mic (Nằm dưới cùng)
+            DualMicBar(logic: widget.logic),
+          ],
+        );
       },
     );
   }
@@ -99,6 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         children: [
           IconButton(
+            tooltip: tr('back'),
             icon: const Icon(
               Icons.arrow_back_ios_new,
               color: Color.fromARGB(255, 0, 0, 0),
@@ -111,25 +118,32 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           ),
           const SizedBox(width: 5),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tr('conversation'),
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('conversation'),
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
-              ),
-              Text(
-                tr('vi_en'),
-                style: TextStyle(
-                  color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.6),
-                  fontSize: 13,
+                Text(
+                  tr('vi_en'),
+                  style: TextStyle(
+                    color: const Color.fromARGB(
+                      255,
+                      0,
+                      0,
+                      0,
+                    ).withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

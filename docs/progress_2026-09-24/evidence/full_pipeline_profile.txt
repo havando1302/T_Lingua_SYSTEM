@@ -1,0 +1,48 @@
+         2236162 function calls (1946213 primitive calls) in 9.664 seconds
+
+   Ordered by: cumulative time
+   List reduced from 820 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    9.669    9.669 C:\Du_an\T_Langua_Test\scripts\run_full_pipeline_benchmark.py:78(<listcomp>)
+       10    0.002    0.000    9.669    0.967 C:\Du_an\T_Langua_Test\scripts\run_full_pipeline_benchmark.py:55(run)
+95904/352    0.124    0.000    8.068    0.023 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\module.py:1747(_wrapped_call_impl)
+95904/352    0.224    0.000    8.066    0.023 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\module.py:1755(_call_impl)
+   180/20    0.004    0.000    7.759    0.388 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\utils\_contextlib.py:113(decorate_context)
+       20    0.002    0.000    7.756    0.388 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\generation\utils.py:2260(generate)
+       20    0.063    0.003    7.125    0.356 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\generation\utils.py:2783(_sample)
+  642/342    0.007    0.000    6.319    0.018 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\utils\generic.py:1006(wrapper)
+  642/342    0.010    0.000    6.308    0.018 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\utils\output_capturing.py:231(wrapper)
+     6084    0.018    0.000    6.054    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\modeling_layers.py:79(__call__)
+      150    0.002    0.000    3.788    0.025 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\m2m_100\modeling_m2m_100.py:830(forward)
+      150    0.002    0.000    3.757    0.025 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\m2m_100\modeling_m2m_100.py:743(forward)
+      150    0.026    0.000    3.732    0.025 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\m2m_100\modeling_m2m_100.py:632(forward)
+     3600    0.337    0.000    3.499    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\m2m_100\modeling_m2m_100.py:419(forward)
+       10    0.001    0.000    3.257    0.326 C:\Du_an\T_Langua_Test\backend\app\ai\torch_whisper_adapter.py:26(transcribe)
+       10    0.002    0.000    3.159    0.316 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\generation_whisper.py:383(generate)
+       10    0.003    0.000    3.107    0.311 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\generation_whisper.py:970(generate_with_fallback)
+    48754    0.087    0.000    2.321    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\linear.py:124(forward)
+  344/172    0.002    0.000    2.293    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\utils\generic.py:933(wrapper)
+      172    0.002    0.000    2.291    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\modeling_whisper.py:992(forward)
+      172    0.002    0.000    2.265    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\modeling_whisper.py:864(forward)
+      172    0.026    0.000    2.235    0.013 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\modeling_whisper.py:688(forward)
+    48754    2.193    0.000    2.193    0.000 {built-in method torch._C._nn.linear}
+     2064    0.188    0.000    2.115    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\modeling_whisper.py:448(forward)
+     7440    0.190    0.000    2.066    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\m2m_100\modeling_m2m_100.py:254(forward)
+       10    0.005    0.000    1.700    0.170 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\vits\modeling_vits.py:1258(forward)
+     4248    0.221    0.000    1.334    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\whisper\modeling_whisper.py:284(forward)
+     1610    0.007    0.000    0.873    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\conv.py:374(forward)
+     1610    0.004    0.000    0.826    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\conv.py:357(_conv_forward)
+     1610    0.822    0.001    0.822    0.001 {built-in method torch.conv1d}
+       10    0.004    0.000    0.693    0.069 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\vits\modeling_vits.py:519(forward)
+    18414    0.044    0.000    0.627    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\modules\normalization.py:216(forward)
+      120    0.013    0.000    0.611    0.005 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\vits\modeling_vits.py:455(forward)
+    11688    0.078    0.000    0.600    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\integrations\sdpa_attention.py:79(sdpa_attention_forward)
+    18414    0.044    0.000    0.566    0.000 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\torch\nn\functional.py:2889(layer_norm)
+       20    0.000    0.000    0.521    0.026 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\generation\utils.py:3904(_prefill)
+    18414    0.504    0.000    0.504    0.000 {built-in method torch.layer_norm}
+       10    0.000    0.000    0.501    0.050 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\vits\modeling_vits.py:588(forward)
+       40    0.006    0.000    0.498    0.012 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\models\vits\modeling_vits.py:563(forward)
+      342    0.458    0.001    0.458    0.001 C:\Du_an\T_Langua_Test\backend\venv\lib\site-packages\transformers\generation\utils.py:2680(_has_unfinished_sequences)
+
+

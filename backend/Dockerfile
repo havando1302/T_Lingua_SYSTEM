@@ -20,7 +20,8 @@ RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy toàn bộ mã nguồn
-COPY . .
+COPY app/ ./app/
+COPY run.py ./run.py
 
 # Expose port FastAPI
 EXPOSE 8000

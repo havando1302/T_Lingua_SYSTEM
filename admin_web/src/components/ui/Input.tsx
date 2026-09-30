@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes } from 'react';
+import React, { type InputHTMLAttributes } from 'react';
 import { cn } from './Button';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -8,10 +8,13 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, icon, ...props }, ref) => {
+  ({ className, label, error, icon, id, 'aria-describedby': describedBy, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id ?? generatedId;
+    const errorId = `${inputId}-error`;
     return (
       <div className="w-full">
-        {label && <label className="block text-sm font-medium text-text-muted mb-1">{label}</label>}
+        {label && <label htmlFor={inputId} className="block text-sm font-medium text-text-muted mb-1">{label}</label>}
         <div className="relative">
           {icon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted">
@@ -27,9 +30,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               className
             )}
             {...props}
+            id={inputId}
+            aria-invalid={error ? true : props['aria-invalid']}
+            aria-describedby={[describedBy, error ? errorId : null].filter(Boolean).join(' ') || undefined}
           />
         </div>
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+        {error && <p id={errorId} role="alert" className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
     );
   }

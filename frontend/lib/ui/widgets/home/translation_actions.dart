@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Để dùng tính năng rung nhẹ hoặc Copy
 import '../../../core/app_localizations.dart';
 
 class TranslationActions extends StatelessWidget {
@@ -8,7 +7,13 @@ class TranslationActions extends StatelessWidget {
   final VoidCallback? onSave;
   final VoidCallback? onFlag;
 
-  const TranslationActions({super.key, this.onPlay, this.onCopy, this.onSave, this.onFlag});
+  const TranslationActions({
+    super.key,
+    this.onPlay,
+    this.onCopy,
+    this.onSave,
+    this.onFlag,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +24,7 @@ class TranslationActions extends StatelessWidget {
             icon: Icons.volume_up_rounded,
             label: tr('play'),
             iconColor: Colors.blue,
-            onTap: () {
-              // Logic phát âm thanh ở đây
-              if (onPlay != null) {
-                onPlay!();
-                return;
-              }
-              print("Đang phát...");
-            },
+            onTap: onPlay,
           ),
         ),
         const SizedBox(width: 12),
@@ -35,15 +33,7 @@ class TranslationActions extends StatelessWidget {
             icon: Icons.copy_rounded,
             label: tr('copy'),
             iconColor: Colors.indigo,
-            onTap: () {
-              // Thêm hiệu ứng rung nhẹ khi copy
-              HapticFeedback.lightImpact();
-              if (onCopy != null) {
-                onCopy!();
-                return;
-              }
-              print("Đã copy!");
-            },
+            onTap: onCopy,
           ),
         ),
         const SizedBox(width: 12),
@@ -52,27 +42,16 @@ class TranslationActions extends StatelessWidget {
             icon: Icons.star_rounded,
             label: tr('save'),
             iconColor: Colors.amber,
-            onTap: () {
-              if (onSave != null) {
-                onSave!();
-                return;
-              }
-              print("Đã lưu!");
-            },
+            onTap: onSave,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildActionButton(
             icon: Icons.flag_rounded,
-            label: "Báo lỗi",
+            label: tr('flag'),
             iconColor: Colors.redAccent,
-            onTap: () {
-              if (onFlag != null) {
-                onFlag!();
-                return;
-              }
-            },
+            onTap: onFlag,
           ),
         ),
       ],
@@ -83,37 +62,49 @@ class TranslationActions extends StatelessWidget {
     required IconData icon,
     required String label,
     required Color iconColor,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
-    return Material(
-      color: Colors.white, // Nền trắng
-      borderRadius: BorderRadius.circular(16),
-      elevation: 2, // Tạo độ nổi nhẹ
-      shadowColor: Colors.black26,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        splashColor: iconColor.withOpacity(0.1), // Màu gợn sóng khi nhấn
-        highlightColor: iconColor.withOpacity(0.05), // Màu khi giữ tay vào
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: iconColor, size: 20),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF334155),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        enabled: onTap != null,
+        label: label,
+        child: Material(
+          color: Colors.white, // Nền trắng
+          borderRadius: BorderRadius.circular(16),
+          elevation: 2, // Tạo độ nổi nhẹ
+          shadowColor: Colors.black26,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            splashColor: iconColor.withValues(
+              alpha: 0.1,
+            ), // Màu gợn sóng khi nhấn
+            highlightColor: iconColor.withValues(
+              alpha: 0.05,
+            ), // Màu khi giữ tay vào
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: 20),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF334155),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

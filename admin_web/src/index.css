@@ -32,6 +32,16 @@
   }
 }
 
+@layer components {
+  .field {
+    @apply block h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  textarea.field {
+    @apply h-auto;
+  }
+}
+
 body {
   background-color: var(--background);
   color: var(--text);

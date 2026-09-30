@@ -1,9 +1,12 @@
 class ChatMessage {
-  final String id; // [NEW] ID to link STT with Translation
-  final String text; // Nội dung câu gốc (ví dụ: "Xin chào")
-  final String translation; // Nội dung đã dịch (ví dụ: "Hello")
-  final bool isMe; // Để phân biệt bên trái hay bên phải
-  final bool isDraft; // Đánh dấu tin nhắn đang là dự thảo (partial STT)
+  final String id;
+  final String text;
+  final String translation;
+  final bool isMe;
+  final bool isDraft;
+  final String? turnId;
+  final String? sourceLang;
+  final String? targetLang;
 
   ChatMessage({
     required this.id,
@@ -11,6 +14,9 @@ class ChatMessage {
     required this.translation,
     required this.isMe,
     this.isDraft = false,
+    this.turnId,
+    this.sourceLang,
+    this.targetLang,
   });
 
   ChatMessage copyWith({
@@ -19,6 +25,9 @@ class ChatMessage {
     String? translation,
     bool? isMe,
     bool? isDraft,
+    String? turnId,
+    String? sourceLang,
+    String? targetLang,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -26,6 +35,9 @@ class ChatMessage {
       translation: translation ?? this.translation,
       isMe: isMe ?? this.isMe,
       isDraft: isDraft ?? this.isDraft,
+      turnId: turnId ?? this.turnId,
+      sourceLang: sourceLang ?? this.sourceLang,
+      targetLang: targetLang ?? this.targetLang,
     );
   }
 }

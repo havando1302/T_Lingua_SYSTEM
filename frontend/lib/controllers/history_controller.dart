@@ -1,96 +1,84 @@
-// [NEW] Controller quản lý logic cho trang History — sử dụng Hive làm storage
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+
 import '../models/history.dart';
+import '../services/history_storage_service.dart';
 
 class HistoryController extends ChangeNotifier {
-  // [NEW] Hive Box chứa dữ liệu lịch sử
-  late final Box<HistoryModel> _box;
-
-  // [NEW] Lắng nghe thay đổi từ Hive Box (khi TranslationLogic ghi data mới)
-  StreamSubscription? _boxSub;
-
-  // [NEW] Danh sách đã sort sẵn — UI chỉ cần đọc getter này
+  static const int pageSize = 50;
+  final Box<HistoryModel> _box = Hive.box<HistoryModel>('history');
+  StreamSubscription<BoxEvent>? _boxSub;
   List<HistoryModel> _historyList = [];
-  List<HistoryModel> get historyList => _historyList;
+  int _visibleLimit = pageSize;
+  int _total = 0;
+  bool _reloadScheduled = false;
+  bool _disposed = false;
+
+  List<HistoryModel> get historyList => List.unmodifiable(_historyList);
+  bool get hasMore => _historyList.length < _total;
+  int get total => _total;
 
   HistoryController() {
-    _box = Hive.box<HistoryModel>('history');
     loadHistory();
-
-    // [NEW] Tự động reload khi Hive Box thay đổi (ví dụ: TranslationLogic thêm item mới)
+    // Legacy Hive integer keys do not equal model IDs. Reload the authoritative
+    // box and coalesce delete batches so clear/retention cannot leave stale UI.
     _boxSub = _box.watch().listen((_) {
-      loadHistory();
+      if (_reloadScheduled) return;
+      _reloadScheduled = true;
+      scheduleMicrotask(() {
+        _reloadScheduled = false;
+        if (!_disposed) loadHistory();
+      });
     });
   }
 
-  // ============================================================
-  // [NEW] Load toàn bộ dữ liệu từ Hive Box và sort
-  // ============================================================
+  bool contains(String id) => _box.values.any((item) => item.id == id);
+
   void loadHistory() {
-    _historyList = _box.values.toList();
-    _sortList();
+    final values = _box.values.toList()..sort(_compareHistory);
+    _total = values.length;
+    _historyList = values.take(_visibleLimit).toList();
     notifyListeners();
   }
 
-  // ============================================================
-  // [NEW] Toggle Favorite — cập nhật Hive và sort lại
-  // ============================================================
-  void toggleFavorite(String id) {
+  void loadMore() {
+    _visibleLimit += pageSize;
+    loadHistory();
+  }
+
+  Future<void> toggleFavorite(String id) async {
+    final item = _historyList.where((item) => item.id == id).firstOrNull;
+    if (item == null || !item.isInBox) return;
+    item.isFavorite = !item.isFavorite;
     try {
-      final item = _historyList.firstWhere((e) => e.id == id);
+      await item.save();
+    } catch (_) {
       item.isFavorite = !item.isFavorite;
-      item.save(); // Ghi trực tiếp vào Hive nhờ extend HiveObject
-      _sortList();
-      notifyListeners();
-    } catch (e) {
-      debugPrint('HistoryController.toggleFavorite error: $e');
+      rethrow;
     }
   }
 
-  // ============================================================
-  // [NEW] Xóa item khỏi Hive và cập nhật UI ngay lập tức
-  // ============================================================
-  void deleteItem(String id) {
-    try {
-      final item = _historyList.firstWhere((e) => e.id == id);
-      item.delete(); // Xóa khỏi Hive nhờ extend HiveObject
-      _historyList.removeWhere((e) => e.id == id);
-      notifyListeners();
-    } catch (e) {
-      debugPrint('HistoryController.deleteItem error: $e');
-    }
+  Future<void> deleteItem(String id) async {
+    final item = _historyList.where((item) => item.id == id).firstOrNull;
+    if (item != null && item.isInBox) await item.delete();
   }
 
-  // ============================================================
-  // [NEW] Thêm item mới vào Hive (gọi từ TranslationLogic khi dịch xong)
-  // ============================================================
-  void addHistory(HistoryModel item) {
-    _box.add(item); // Lưu vào Hive
-    _historyList.add(item);
-    _sortList();
-    notifyListeners();
+  Future<HistorySaveResult> addHistory(HistoryModel item) =>
+      HistoryStorageService.instance.save(item);
+
+  static int _compareHistory(HistoryModel a, HistoryModel b) {
+    if (a.isFavorite != b.isFavorite) return a.isFavorite ? -1 : 1;
+    final aTime = a.savedAtEpochMs ?? int.tryParse(a.id) ?? 0;
+    final bTime = b.savedAtEpochMs ?? int.tryParse(b.id) ?? 0;
+    final byTime = bTime.compareTo(aTime);
+    return byTime == 0 ? b.id.compareTo(a.id) : byTime;
   }
 
-  // ============================================================
-  // [NEW] Sort logic:
-  //   1. Starred items luôn ở trên cùng
-  //   2. Trong cùng nhóm → mới nhất (time lớn hơn) lên trước
-  // ============================================================
-  void _sortList() {
-    _historyList.sort((a, b) {
-      // Ưu tiên starred lên đầu
-      if (a.isFavorite && !b.isFavorite) return -1;
-      if (!a.isFavorite && b.isFavorite) return 1;
-      // Trong cùng nhóm → so sánh id giảm dần (mới nhất trước)
-      return b.id.compareTo(a.id);
-    });
-  }
-
-  // [NEW] Giải phóng stream subscription khi controller bị huỷ
   @override
   void dispose() {
+    _disposed = true;
     _boxSub?.cancel();
     super.dispose();
   }

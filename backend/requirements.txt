@@ -1,42 +1,38 @@
+# ── Core Framework ──────────────────────
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
+pydantic-settings
+
+# ── AI / ML ─────────────────────────────
 faster-whisper
 transformers
 sentencepiece
 accelerate
-TTS
-torch
-torchvision
-torchaudio
+
+# ── Audio Processing ────────────────────
 librosa
 soundfile
-numpy
-fastapi
-uvicorn
-python-multipart
-faster-whisper
-transformers
-sentencepiece
-accelerate
-TTS
-torch
-torchvision
-torchaudio
-librosa
-soundfile
-numpy
 scipy
-webrtcvad
-websockets
+webrtcvad-wheels
 deepfilternet
+
+# ── Database ────────────────────────────
 SQLAlchemy
+# Thêm khi chuyển sang PostgreSQL (Phase 2):
+asyncpg
+psycopg2-binary
+
+# ── Authentication ──────────────────────
 passlib[bcrypt]
 python-jose[cryptography]
-pydantic-settings
+pyotp==2.9.0
+
+# ── WebSocket ───────────────────────────
+websockets
+
+# ── Utilities ───────────────────────────
 psutil
-numpy==1.26.4
-pandas==2.2.1
-requests==2.31.0
-psutil==5.9.8
-openpyxl==3.1.2
+pandas
+requests
+openpyxl

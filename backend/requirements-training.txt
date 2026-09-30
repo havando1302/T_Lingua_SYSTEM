@@ -1,0 +1,7 @@
+-r requirements.txt
+datasets>=3.0
+evaluate>=0.4
+jiwer>=3.0
+sacrebleu>=2.4
+peft>=0.13
+tensorboard>=2.17

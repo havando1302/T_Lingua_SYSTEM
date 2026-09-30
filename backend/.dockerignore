@@ -1,0 +1,13 @@
+# Allow only application sources and dependency declarations into the build context.
+**
+!app/
+!app/**
+!run.py
+!requirements.txt
+!Dockerfile
+app/**/__pycache__/
+app/**/*.pyc
+app/**/.env*
+app/**/*.pem
+app/**/*.key
+app/**/credentials*

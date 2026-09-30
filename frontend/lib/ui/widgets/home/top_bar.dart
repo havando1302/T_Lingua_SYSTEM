@@ -21,11 +21,11 @@ class TopBar extends StatelessWidget {
 
         borderRadius: BorderRadius.circular(18),
 
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -45,20 +45,24 @@ class TopBar extends StatelessWidget {
 
             child: IconButton(
               onPressed: onHistoryPressed,
+              tooltip: tr('history'),
 
               icon: const Icon(Icons.history_rounded, color: Color(0xFF222222)),
             ),
           ),
 
           // TITLE
-          Text(
-            tr('voice_translator'),
+          Expanded(
+            child: Text(
+              tr('voice_translator'),
+              textAlign: TextAlign.center,
 
-            style: const TextStyle(
-              color: Color(0xFF222222),
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+              style: const TextStyle(
+                color: Color(0xFF222222),
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
 
@@ -71,6 +75,7 @@ class TopBar extends StatelessWidget {
 
             child: IconButton(
               onPressed: onSettingsPressed,
+              tooltip: tr('settings'),
 
               icon: const Icon(
                 Icons.settings_outlined,

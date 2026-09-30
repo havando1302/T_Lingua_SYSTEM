@@ -39,11 +39,11 @@ class TranslateCard extends StatelessWidget {
 
             borderRadius: BorderRadius.circular(28),
 
-            border: Border.all(color: Colors.black.withOpacity(0.03)),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
 
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -114,7 +114,12 @@ class TranslateCard extends StatelessWidget {
         if (translatedText.isNotEmpty) const SizedBox(height: 18),
 
         if (translatedText.isNotEmpty)
-          TranslationActions(onPlay: onPlay, onCopy: onCopy, onSave: onSave, onFlag: onFlag),
+          TranslationActions(
+            onPlay: onPlay,
+            onCopy: onCopy,
+            onSave: onSave,
+            onFlag: onFlag,
+          ),
       ],
     );
   }

@@ -1,0 +1,31 @@
+
+> admin_web@0.0.0 build
+> tsc -b && vite build
+
+vite v8.1.0 building client environment for production...
+[2K
+transforming...✓ 578 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                         0.47 kB │ gzip:   0.30 kB
+dist/assets/index-ymIJd66y.css         29.34 kB │ gzip:   6.11 kB
+dist/assets/plus-Ce2ZZdvD.js            0.14 kB │ gzip:   0.14 kB
+dist/assets/download-CG29r4mx.js        0.22 kB │ gzip:   0.18 kB
+dist/assets/date-DnSAAwTc.js            0.26 kB │ gzip:   0.24 kB
+dist/assets/refresh-cw-C0BlHlma.js      0.31 kB │ gzip:   0.22 kB
+dist/assets/save-B-k-0sFY.js            0.31 kB │ gzip:   0.22 kB
+dist/assets/trash-2-cJf6NeOD.js         0.31 kB │ gzip:   0.20 kB
+dist/assets/Table-C63K3CRD.js           1.03 kB │ gzip:   0.41 kB
+dist/assets/History-BjNdTT35.js         2.49 kB │ gzip:   1.09 kB
+dist/assets/ListControls-7qdptJpi.js    3.16 kB │ gzip:   1.53 kB
+dist/assets/ApiKeys-ChAv-pBs.js         6.80 kB │ gzip:   2.96 kB
+dist/assets/Dashboard-3WYjXFsn.js       7.40 kB │ gzip:   2.91 kB
+dist/assets/Dictionary-CBYkamXl.js      7.43 kB │ gzip:   2.90 kB
+dist/assets/Users-CigymZbx.js           7.98 kB │ gzip:   2.93 kB
+dist/assets/Settings-BlkhCn_s.js        8.52 kB │ gzip:   3.21 kB
+dist/assets/QA-CiiywsVb.js             12.59 kB │ gzip:   4.23 kB
+dist/assets/Analytics-Bbz1Au6G.js      46.14 kB │ gzip:  13.39 kB
+dist/assets/index-BgVWWQZZ.js         329.50 kB │ gzip: 108.70 kB
+dist/assets/AreaChart-ByLte18Y.js     359.00 kB │ gzip: 104.90 kB
+
+✓ built in 552ms

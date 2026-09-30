@@ -1,0 +1,36 @@
+{
+  "summary": {
+    "created_at": "2026-09-24T17:50:45.873711+00:00",
+    "scope": "local_translation_benchmark_v2",
+    "model_id": "facebook/nllb-200-distilled-1.3B",
+    "dataset": "benchmark_v2_500.csv",
+    "cases": 500,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "python": "3.10.11",
+    "torch": "2.7.1+cu118",
+    "load_seconds": 14.996,
+    "latency_ms": {
+      "mean": 483.109,
+      "p50": 450.364,
+      "p95": 743.579,
+      "p99": 853.838,
+      "min": 257.882,
+      "max": 1346.09
+    },
+    "quality": {
+      "corpus_bleu_smoothed": 56.925,
+      "mean_chrf": 74.867,
+      "mean_token_f1": 0.7871,
+      "required_term_accuracy": 0.7429,
+      "term_hits": 650,
+      "term_total": 875
+    },
+    "gpu_peak_memory_mb": 2633.98,
+    "limitations": [
+      "Controlled synthetic template corpus; not a substitute for licensed natural-domain data.",
+      "BLEU implementation uses add-one smoothing; compare only with runs from this script.",
+      "COMET and independent human review are not included in this automated run."
+    ]
+  }
+}

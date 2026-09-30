@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/app_localizations.dart';
 
 class HistoryCard extends StatelessWidget {
   final String originalText;
@@ -46,7 +47,7 @@ class HistoryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -77,6 +78,9 @@ class HistoryCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
+                            tooltip: tr(
+                              isFavorite ? 'remove_favorite' : 'add_favorite',
+                            ),
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
                             icon: Icon(
@@ -91,6 +95,7 @@ class HistoryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           IconButton(
+                            tooltip: tr('delete'),
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
                             icon: const Icon(

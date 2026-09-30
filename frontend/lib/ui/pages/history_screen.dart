@@ -34,141 +34,179 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   // [NEW] Gọi controller thay vì setState trực tiếp
-  void _toggleFavorite(String id) {
-    _controller.toggleFavorite(id);
+  Future<void> _toggleFavorite(String id) async {
+    try {
+      await _controller.toggleFavorite(id);
+    } catch (_) {
+      _showError();
+    }
   }
 
   // [NEW] Gọi controller thay vì setState trực tiếp
-  void _deleteItem(String id) {
-    _controller.deleteItem(id);
+  Future<void> _deleteItem(String id) async {
+    try {
+      await _controller.deleteItem(id);
+    } catch (_) {
+      _showError();
+    }
+  }
+
+  void _showError() {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('update_failed'))));
+    }
   }
 
   void _showDetailDialog(BuildContext context, HistoryModel item) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF1F5F9),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-        actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-        title: Row(
-          children: [
-            Text(item.fromFlag, style: const TextStyle(fontSize: 22)),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Icon(Icons.arrow_forward, size: 18, color: Color(0xFF64748B)),
-            ),
-            Text(item.toFlag, style: const TextStyle(fontSize: 22)),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                item.time,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF475569),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              // Label "Bản gốc"
-              Text(
-                tr('original'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF475569),
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Nội dung bản gốc
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  item.originalText,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
-                    height: 1.5,
+      builder: (context) => AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) => !_controller.contains(item.id)
+            ? AlertDialog(
+                content: Text(tr('history_removed')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(tr('close')),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Label "Bản dịch"
-              Text(
-                tr('translated'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF475569),
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Nội dung bản dịch
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  item.translatedText,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                ],
+              )
+            : AlertDialog(
+                backgroundColor: const Color(0xFFF1F5F9),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                tr('close'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
+                titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                title: Row(
+                  children: [
+                    Text(item.fromFlag, style: const TextStyle(fontSize: 22)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                    Text(item.toFlag, style: const TextStyle(fontSize: 22)),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        item.time,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF475569),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+                      // Label "Bản gốc"
+                      Text(
+                        tr('original'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF475569),
+                          fontSize: 14,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Nội dung bản gốc
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          item.originalText,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0F172A),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Label "Bản dịch"
+                      Text(
+                        tr('translated'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF475569),
+                          fontSize: 14,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Nội dung bản dịch
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          item.translatedText,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0F172A),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        tr('close'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -208,8 +246,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.only(top: 25, bottom: 100),
-                        itemCount: sortedList.length,
+                        itemCount:
+                            sortedList.length + (_controller.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == sortedList.length) {
+                            return TextButton(
+                              onPressed: _controller.loadMore,
+                              child: Text(
+                                '${tr('load_more')} (${sortedList.length}/${_controller.total})',
+                              ),
+                            );
+                          }
                           final item = sortedList[index];
                           return HistoryCard(
                             originalText: item.originalText,
@@ -238,6 +285,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Row(
         children: [
           IconButton(
+            tooltip: tr('back'),
             icon: const Icon(
               Icons.arrow_back_ios_new,
               color: Color.fromARGB(255, 0, 0, 0),

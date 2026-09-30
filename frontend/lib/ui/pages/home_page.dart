@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../controllers/translate_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../core/app_localizations.dart';
+import '../../services/history_storage_service.dart';
 
 // Widgets
 import '../widgets/home/top_bar.dart';
@@ -15,7 +17,9 @@ import 'history_screen.dart';
 import 'setting_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final TranslationLogic? homeLogic;
+  final TranslationLogic? chatLogic;
+  const HomePage({super.key, this.homeLogic, this.chatLogic});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -27,12 +31,93 @@ class _HomePageState extends State<HomePage> {
   late final TranslationLogic _chatLogic;
 
   int _selectedIndex = 0;
+  bool _navigating = false;
+  bool _saving = false;
+
+  Future<void> _stopMicrophones() async {
+    await _homeLogic.cancelRecording();
+    await _chatLogic.cancelRecording();
+  }
+
+  Future<void> _selectPage(int index) async {
+    if (_navigating || index == _selectedIndex) return;
+    _navigating = true;
+    try {
+      await _stopMicrophones();
+      if (mounted) setState(() => _selectedIndex = index);
+    } finally {
+      _navigating = false;
+    }
+  }
+
+  Future<void> _openSettings() async {
+    if (_navigating) return;
+    _navigating = true;
+    try {
+      await _stopMicrophones();
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+      );
+    } finally {
+      _navigating = false;
+    }
+  }
+
+  void _feedback(String key) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr(key))));
+  }
+
+  Future<void> _saveTranslation() async {
+    if (_saving) return;
+    final message = _homeLogic.messages.lastOrNull;
+    setState(() => _saving = true);
+    try {
+      var result = await _homeLogic.saveTranslation(message: message);
+      if (result == HistorySaveResult.disabled && mounted) {
+        final agreed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(tr('enable_history')),
+            content: Text(tr('history_consent')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(tr('cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(tr('agree')),
+              ),
+            ],
+          ),
+        );
+        if (agreed != true || !mounted) return;
+        await SettingsController.instance.setHistoryEnabled(true);
+        result = await _homeLogic.saveTranslation(message: message);
+      }
+      _feedback(switch (result) {
+        HistorySaveResult.saved => 'saved_success',
+        HistorySaveResult.alreadySaved => 'already_saved',
+        HistorySaveResult.empty => 'nothing_to_save',
+        HistorySaveResult.disabled => 'history_disabled',
+      });
+    } catch (_) {
+      _feedback('history_save_failed');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _homeLogic = TranslationLogic(); // [NEW] Logic riêng cho trang Home
-    _chatLogic = TranslationLogic(); // [NEW] Logic riêng cho trang Chat
+    _homeLogic = widget.homeLogic ?? TranslationLogic();
+    _chatLogic = widget.chatLogic ?? TranslationLogic();
   }
 
   @override
@@ -56,32 +141,29 @@ class _HomePageState extends State<HomePage> {
         // SỬA TẠI ĐÂY: Truyền callback đổi index về 0 (Home) khi bấm nút back ở màn History
         final List<Widget> pages = [
           _buildHomeContent(),
-          ChatScreen(
-            logic: _chatLogic,
-            onBackToHome: () {
-              setState(() {
-                _selectedIndex = 0; // Quay về tab đầu tiên (Home)
-              });
-            },
-          ),
-          HistoryScreen(
-            onBackToHome: () {
-              setState(() {
-                _selectedIndex = 0; // Quay về tab đầu tiên (Home)
-              });
-            },
-          ),
+          ChatScreen(logic: _chatLogic, onBackToHome: () => _selectPage(0)),
+          HistoryScreen(onBackToHome: () => _selectPage(0)),
         ];
 
-        return Scaffold(
-          // Background xám trắng nhẹ
-          backgroundColor: const Color(0xFFF5F5F7),
+        return PopScope(
+          canPop: _selectedIndex == 0,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) {
+              await _stopMicrophones();
+            } else {
+              await _selectPage(0);
+            }
+          },
+          child: Scaffold(
+            // Background xám trắng nhẹ
+            backgroundColor: const Color(0xFFF5F5F7),
 
-          body: SafeArea(
-            child: IndexedStack(index: _selectedIndex, children: pages),
+            body: SafeArea(
+              child: IndexedStack(index: _selectedIndex, children: pages),
+            ),
+
+            bottomNavigationBar: _buildBottomBar(),
           ),
-
-          bottomNavigationBar: _buildBottomBar(),
         );
       },
     );
@@ -90,69 +172,108 @@ class _HomePageState extends State<HomePage> {
   // ================= HOME CONTENT =================
 
   Widget _buildHomeContent() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          TopBar(
-            onHistoryPressed: () {
-              setState(() {
-                _selectedIndex = 2;
-              });
-            },
-            onSettingsPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: Column(
+                  children: [
+                    TopBar(
+                      onHistoryPressed: () => _selectPage(2),
+                      onSettingsPressed: _openSettings,
+                    ),
+
+                    const SizedBox(height: 12),
+                    if (_homeLogic.errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          _homeLogic.errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+
+                    LanguageSelector(logic: _homeLogic),
+
+                    const SizedBox(height: 20),
+
+                    MicButton(
+                      isListening: _homeLogic.isRecording,
+                      isBusy: _homeLogic.isMicBusy,
+                      onTap: _homeLogic.toggleRecording,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    TranslateCard(
+                      speechText: _homeLogic.messages.isNotEmpty
+                          ? _homeLogic.messages.last.text
+                          : '',
+                      translatedText: _homeLogic.messages.isNotEmpty
+                          ? _homeLogic.messages.last.translation
+                          : '',
+                      isListening: _homeLogic.isRecording,
+                      onPlay: () async {
+                        if (!await _homeLogic.playLastAudio()) {
+                          _feedback('audio_not_ready');
+                        }
+                      },
+                      onCopy: () async {
+                        try {
+                          await _homeLogic.copyTranslation();
+                          _feedback('copied_success');
+                        } catch (_) {
+                          _feedback('copy_failed');
+                        }
+                      },
+                      onSave: _saving ? null : _saveTranslation,
+                      onFlag: _homeLogic.isFlagging
+                          ? null
+                          : () async {
+                              if (_homeLogic.messages.isNotEmpty) {
+                                try {
+                                  await _homeLogic.flagMessage(
+                                    _homeLogic.messages.last.id,
+                                  );
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(tr('flag_success')),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(tr('flag_failed')),
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                    ),
+
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            ),
           ),
-
-          const SizedBox(height: 20),
-
-          LanguageSelector(logic: _homeLogic), // [NEW] Home dùng _homeLogic riêng
-
-          const Spacer(),
-
-          const SizedBox(height: 30),
-
-          MicButton(
-            isListening: _homeLogic.isRecording, // [NEW]
-            onTap: _homeLogic.toggleRecording, // [NEW]
-          ),
-
-          const SizedBox(height: 40),
-
-          TranslateCard(
-            speechText: _homeLogic.messages.isNotEmpty ? _homeLogic.messages.last.text : '', // [NEW]
-            translatedText: _homeLogic.messages.isNotEmpty ? _homeLogic.messages.last.translation : '', // [NEW]
-            isListening: _homeLogic.isRecording, // [NEW]
-            onPlay: _homeLogic.playLastAudio, // [NEW]
-            onCopy: _homeLogic.copyTranslation, // [NEW]
-            onSave: _homeLogic.saveTranslation, // [NEW]
-            onFlag: () async {
-              if (_homeLogic.messages.isNotEmpty) {
-                try {
-                  await _homeLogic.flagMessage(_homeLogic.messages.last.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã báo lỗi bản dịch này! Hệ thống sẽ kiểm tra và khắc phục.'))
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Không thể báo lỗi, vui lòng thử lại.'))
-                    );
-                  }
-                }
-              }
-            },
-          ),
-
-          const Spacer(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -171,7 +292,7 @@ class _HomePageState extends State<HomePage> {
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -184,11 +305,7 @@ class _HomePageState extends State<HomePage> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
 
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
+          onTap: _selectPage,
 
           backgroundColor: Colors.white,
 
@@ -203,20 +320,20 @@ class _HomePageState extends State<HomePage> {
 
           elevation: 0,
 
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded, size: 26),
-              label: 'Home',
+              icon: const Icon(Icons.home_rounded, size: 26),
+              label: tr('home'),
             ),
 
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded, size: 24),
-              label: 'Chat',
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 24),
+              label: tr('conversation'),
             ),
 
             BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded, size: 26),
-              label: 'History',
+              icon: const Icon(Icons.history_rounded, size: 26),
+              label: tr('history'),
             ),
           ],
         ),

@@ -3,44 +3,63 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:hive/hive.dart'; // [NEW] Hive
-import '../models/history.dart'; // [NEW] HistoryModel
+
+import '../services/auth_session_service.dart';
+import '../services/history_storage_service.dart';
+import '../models/history.dart';
 
 import '../core/constants.dart';
+import '../core/app_localizations.dart';
 import '../services/audio_player_service.dart';
 import '../services/audio_stream_service.dart';
+import '../services/mic_state_machine.dart';
 import '../services/websocket_service.dart';
 import '../repositories/translate_repository.dart';
 import '../models/chat_message.dart';
 import 'settings_controller.dart';
 
 class TranslationLogic extends ChangeNotifier {
-  final RealtimeWebSocketService _ws = RealtimeWebSocketService();
-  final AudioStreamService _audio = AudioStreamService();
-  final AudioPlayerService _player = AudioPlayerService();
+  final RealtimeWebSocketService _ws;
+  final AudioStreamService _audio;
+  final AudioPlayerService _player;
+  static TranslationLogic? _microphoneOwner;
+  static Future<void> _microphoneQueue = Future.value();
+  final Set<String> _cancelledTurns = {};
+  final Set<String> _flaggingMessages = {};
+  final String _historyNamespace = DateTime.now().microsecondsSinceEpoch
+      .toString();
+  final MicStateMachine mic = MicStateMachine();
 
   bool isRecording = false;
-  
+
   // State for Chat Messages
   List<ChatMessage> messages = [];
-  
-  // Unique Client ID for backend session memory
-  final String clientId = 'client_${DateTime.now().millisecondsSinceEpoch}';
+
+  bool _starting = false;
+  bool _disposed = false;
+  int _recordingGeneration = 0;
+  String? errorMessage;
+  String? activeTurnId;
 
   // Language Config
   String currentSourceLang = 'vi';
   String currentTargetLang = 'eng_Latn';
   bool isMeSpeaking = true;
 
-  String? _lastAudioUrl;
-
   StreamSubscription<dynamic>? _wsSub;
   StreamSubscription<Uint8List>? _audioSub;
-  bool _connecting = false;
 
-  TranslationLogic() {
+  TranslationLogic({
+    RealtimeWebSocketService? websocket,
+    AudioStreamService? audio,
+    AudioPlayerService? player,
+  }) : _ws = websocket ?? RealtimeWebSocketService(),
+       _audio = audio ?? AudioStreamService(),
+       _player = player ?? AudioPlayerService() {
+    mic.addListener(_onMicChanged);
     _initLanguagesFromSettings();
     SettingsController.instance.addListener(_onSettingsChanged);
+    AuthSessionService.instance.addListener(_onAuthChanged);
   }
 
   void _initLanguagesFromSettings() {
@@ -57,11 +76,36 @@ class TranslationLogic extends ChangeNotifier {
   }
 
   void _onSettingsChanged() {
-    _initLanguagesFromSettings();
-    notifyListeners();
+    // UI preferences and playback speed never overwrite the selected direction.
+    if (!_disposed) notifyListeners();
+  }
+
+  void _onMicChanged() {
+    if (!_disposed) notifyListeners();
+  }
+
+  bool get isMicBusy => mic.isStarting || mic.isStopping;
+  bool get isFlagging => _flaggingMessages.isNotEmpty;
+
+  Future<void> _claimMicrophone(int generation) {
+    final claim = _microphoneQueue.then((_) async {
+      if (_disposed || generation != _recordingGeneration) return;
+      final previous = _microphoneOwner;
+      if (previous != null && previous != this) {
+        await previous.cancelRecording();
+      }
+      if (!_disposed && generation == _recordingGeneration) {
+        _microphoneOwner = this;
+      }
+    });
+    _microphoneQueue = claim.catchError((Object _) {});
+    return claim;
   }
 
   void swapLanguages() {
+    if (mic.isActive || activeTurnId != null) {
+      unawaited(cancelRecording());
+    }
     if (currentSourceLang == 'vi') {
       currentSourceLang = 'en';
       currentTargetLang = 'vie_Latn';
@@ -75,7 +119,9 @@ class TranslationLogic extends ChangeNotifier {
   }
 
   Future<void> toggleRecording() async {
-    if (isRecording) {
+    if (mic.isStarting) {
+      await cancelRecording();
+    } else if (isRecording || mic.isRecording) {
       await stopRecording();
     } else {
       await startRecording(
@@ -91,7 +137,10 @@ class TranslationLogic extends ChangeNotifier {
     String? targetLang,
     bool? isMe,
   }) async {
-    if (isRecording) {
+    if (_disposed ||
+        mic.isActive ||
+        mic.isStopping ||
+        AuthSessionService.instance.isSuspended) {
       return;
     }
 
@@ -99,80 +148,171 @@ class TranslationLogic extends ChangeNotifier {
     if (targetLang != null) currentTargetLang = targetLang;
     if (isMe != null) isMeSpeaking = isMe;
 
-    await _connectIfNeeded();
-
-    final stream = await _audio.startStream(
-      sampleRate: audioSampleRate,
-      channels: audioChannels,
-    );
-
-    isRecording = true;
+    errorMessage = null;
     notifyListeners();
 
-    _audioSub = stream.listen(
-      (chunk) {
-        if (!isRecording) {
+    await mic.start(() async {
+      _starting = true;
+      final generation = ++_recordingGeneration;
+
+      try {
+        await _claimMicrophone(generation);
+        if (_disposed ||
+            generation != _recordingGeneration ||
+            _microphoneOwner != this) {
           return;
         }
-        _ws.sendBytes(chunk);
-      },
-      onError: (error) {
-        stopRecording();
-      },
-    );
+        await _connectIfNeeded();
+        if (_disposed ||
+            generation != _recordingGeneration ||
+            !_ws.isConnected) {
+          throw Exception('Connection not established');
+        }
+
+        final turnId =
+            '${DateTime.now().millisecondsSinceEpoch}-$_recordingGeneration';
+        activeTurnId = turnId;
+        _player.setActiveTurn(turnId);
+
+        final stream = await _audio.startStream(
+          sampleRate: audioSampleRate,
+          channels: audioChannels,
+        );
+
+        if (_disposed ||
+            generation != _recordingGeneration ||
+            !_ws.isConnected) {
+          await _audio.stop();
+          throw Exception('Connection aborted after stream start');
+        }
+
+        isRecording = true;
+        notifyListeners();
+
+        // Protocol v2: signal start of turn with immutable turn metadata
+        _ws.startTurn(
+          turnId: turnId,
+          speaker: isMeSpeaking ? 'me' : 'partner',
+          sourceLang: currentSourceLang,
+          targetLang: currentTargetLang,
+        );
+
+        _audioSub = stream.listen(
+          (chunk) {
+            if (!isRecording) {
+              return;
+            }
+            _ws.sendBytes(chunk);
+          },
+          onError: (error) {
+            unawaited(stopRecording());
+          },
+        );
+      } catch (error) {
+        if (_disposed || generation != _recordingGeneration) return;
+        await _audio.stop();
+        if (_microphoneOwner == this) _microphoneOwner = null;
+        errorMessage = error is SessionException
+            ? error.message
+            : error is MicrophonePermissionException
+            ? tr('microphone_denied')
+            : tr('microphone_connection_error');
+        rethrow;
+      } finally {
+        _starting = false;
+        if (!_disposed) notifyListeners();
+      }
+    });
   }
 
-  Future<void> stopRecording() async {
-    if (!isRecording) {
-      return;
+  Future<void> stopRecording({bool sendSilence = false}) async {
+    final endingTurnId = activeTurnId;
+    _recordingGeneration++;
+
+    await mic.stop(() async {
+      // Keep the subscription alive until the recorder has flushed its final
+      // PCM chunk. Short commands often carry their last consonant there.
+      await _audio.stop();
+      await _audioSub?.cancel();
+      _audioSub = null;
+
+      isRecording = false;
+      if (!_disposed) notifyListeners();
+
+      if (_ws.isConnected && endingTurnId != null) {
+        // Protocol v2: explicitly end turn without artificial silence
+        _ws.endTurn(turnId: endingTurnId);
+      }
+    });
+  }
+
+  Future<void> cancelRecording() async {
+    final cancellingTurnId = activeTurnId;
+    if (cancellingTurnId != null) _cancelledTurns.add(cancellingTurnId);
+    activeTurnId = null;
+    _recordingGeneration++;
+
+    await mic.stop(() async {
+      isRecording = false;
+      if (!_disposed) notifyListeners();
+
+      await _audioSub?.cancel();
+      _audioSub = null;
+      await _audio.stop();
+    });
+    // Cancellation also applies after mic stop while STT/TTS is still running.
+    if (_ws.isConnected && cancellingTurnId != null) {
+      _ws.cancelTurn(turnId: cancellingTurnId);
     }
+    if (cancellingTurnId != null) {
+      await _player.clearQueueForTurn(cancellingTurnId);
+    } else {
+      await _player.stop();
+    }
+    if (_microphoneOwner == this) _microphoneOwner = null;
+  }
 
-    isRecording = false;
-    notifyListeners();
-
-    await _audioSub?.cancel();
-    _audioSub = null;
-    await _audio.stop();
-
-    await _sendSilence(durationMs: 1500);
+  void _onAuthChanged() {
+    if (AuthSessionService.instance.isSuspended ||
+        AuthSessionService.instance.currentToken == null) {
+      unawaited(cancelRecording());
+    }
   }
 
   Future<void> _connectIfNeeded() async {
     final payload = {
       'type': 'config',
-      'client_id': clientId,
       'sample_rate': audioSampleRate,
       'channels': audioChannels,
       'sample_width': audioSampleWidth,
       'source_lang': currentSourceLang,
       'target_lang': currentTargetLang,
+      'protocol_version': 2,
     };
 
-    if (_ws.isConnected || _connecting) {
-      _ws.setConfigPayload(payload);
-      return;
-    }
-    _connecting = true;
-
     _ws.setConfigPayload(payload);
-    _ws.connect(wsBaseUrl);
-
-    _wsSub?.cancel();
-    _wsSub = _ws.stream.listen(
+    _wsSub ??= _ws.stream.listen(
       _handleMessage,
-      onError: (_) {
-        _connecting = false;
+      onError: (Object error) {
+        if (isRecording || _starting) {
+          errorMessage = error is SessionException
+              ? error.message
+              : tr('connection_interrupted');
+          unawaited(cancelRecording());
+          if (!_disposed) notifyListeners();
+        }
       },
       onDone: () {
-        _connecting = false;
+        if (isRecording || _starting) {
+          unawaited(cancelRecording());
+        }
       },
     );
-
-    _connecting = false;
+    await _ws.connect(wsBaseUrl);
   }
 
   void _handleMessage(dynamic message) {
-    if (message is! String) {
+    if (_disposed || message is! String) {
       return;
     }
 
@@ -180,33 +320,82 @@ class TranslationLogic extends ChangeNotifier {
     try {
       data = jsonDecode(message) as Map<String, dynamic>;
     } catch (e) {
-      // FIX BUG: Crash JSON
-      debugPrint('WS JSON parse error: $e');
+      debugPrint('Invalid realtime message.');
       return;
     }
     final type = data['type'];
+    if (_cancelledTurns.contains(data['turn_id'])) return;
 
     if (type == 'status') {
+      if (data['status'] == 'busy') {
+        errorMessage = tr('server_busy');
+        // Finish accepted sentences; the last rejected sentence can be retried.
+        if (mic.isActive) unawaited(stopRecording());
+        notifyListeners();
+      }
+      return;
+    }
+
+    if (type == 'error') {
+      final turnId = data['turn_id'] as String?;
+      final code = data['code'];
+      // A turn may contain several utterances. Silence in a later one must
+      // not discard an earlier successful translation or its audio.
+      if (code == 'no_speech_detected' &&
+          turnId != null &&
+          messages.any((message) => message.turnId == turnId)) {
+        return;
+      }
+      errorMessage = switch (data['code']) {
+        'no_speech_detected' => tr('no_speech_detected'),
+        'stt_unavailable' => tr('stt_unavailable'),
+        'translation_unavailable' => tr('translation_unavailable'),
+        'tts_unavailable' => tr('tts_unavailable'),
+        _ => tr('session_request_failed'),
+      };
+      for (var i = 0; i < messages.length; i++) {
+        if (turnId == null || messages[i].turnId == turnId) {
+          messages[i] = messages[i].copyWith(isDraft: false);
+        }
+      }
+      if (code != 'no_speech_detected' &&
+          mic.isActive &&
+          (turnId == null || turnId == activeTurnId)) {
+        unawaited(cancelRecording());
+      }
+      notifyListeners();
       return;
     }
 
     if (type == 'stt') {
       final text = (data['data']?['text'] ?? '') as String;
       final msgId = (data['message_id'] ?? '') as String;
-      
+      final turnId = (data['turn_id'] ?? '') as String;
+      final speaker = (data['speaker'] ?? '') as String;
+      final srcLang = (data['source_lang'] ?? currentSourceLang) as String;
+      final tgtLang = (data['target_lang'] ?? currentTargetLang) as String;
+
       if (text.trim().isEmpty) return;
+
+      // Speaker and language bound to immutable turn metadata
+      final msgIsMe = speaker.isNotEmpty ? (speaker == 'me') : isMeSpeaking;
 
       final existingIdx = messages.indexWhere((m) => m.id == msgId);
       if (existingIdx >= 0) {
         messages[existingIdx] = messages[existingIdx].copyWith(text: text);
       } else {
-        messages.add(ChatMessage(
-          id: msgId,
-          text: text,
-          translation: '',
-          isMe: isMeSpeaking,
-          isDraft: true,
-        ));
+        messages.add(
+          ChatMessage(
+            id: msgId,
+            text: text,
+            translation: '',
+            isMe: msgIsMe,
+            isDraft: true,
+            turnId: turnId.isNotEmpty ? turnId : null,
+            sourceLang: srcLang,
+            targetLang: tgtLang,
+          ),
+        );
       }
       notifyListeners();
       return;
@@ -215,28 +404,33 @@ class TranslationLogic extends ChangeNotifier {
     if (type == 'translation') {
       final translated = (data['data']?['translated_text'] ?? '') as String;
       final msgId = (data['message_id'] ?? '') as String;
-      
+
       final existingIdx = messages.indexWhere((m) => m.id == msgId);
       if (existingIdx >= 0) {
-        messages[existingIdx] = messages[existingIdx].copyWith(
+        final originalMsg = messages[existingIdx];
+        messages[existingIdx] = originalMsg.copyWith(
           translation: translated,
           isDraft: false,
         );
 
-        // [NEW] Tự động lưu vào Hive ngay khi dịch xong — không cần bấm Save
-        _autoSaveToHistory(
-          originalText: messages[existingIdx].text,
-          translatedText: translated,
-        );
+        unawaited(_autoSaveToHistory(messages[existingIdx]));
       }
       notifyListeners();
       return;
     }
 
-    if (type == 'audio') {
-      final audioPath = data['audio_url'] as String?;
-      if (audioPath != null) {
-        _lastAudioUrl = '$httpBaseUrl$audioPath';
+    if (type == 'audio_chunk') {
+      final b64 = data['audio_data'] as String?;
+      final turnId = data['turn_id'] as String?;
+      if (b64 != null && b64.isNotEmpty) {
+        final Uint8List wavBytes;
+        try {
+          wavBytes = base64Decode(b64);
+        } on FormatException {
+          debugPrint('Invalid audio response.');
+          return;
+        }
+
         final speedStr = SettingsController.instance.voiceSpeed;
         double rate = 1.0;
         if (speedStr == 'Slow') {
@@ -244,41 +438,28 @@ class TranslationLogic extends ChangeNotifier {
         } else if (speedStr == 'Fast') {
           rate = 1.25;
         }
-        _player.playUrl(_lastAudioUrl!, rate: rate);
+
+        // Isolated playback queue: chunks from cancelled turns are rejected
+        _player.enqueueChunk(wavBytes, turnId: turnId, rate: rate);
       }
-    }
-  }
-
-  Future<void> _sendSilence({required int durationMs}) async {
-    final bytesPerSecond = audioSampleRate * audioChannels * audioSampleWidth;
-    final totalBytes = (bytesPerSecond * durationMs / 1000).round();
-    final chunkSize = (bytesPerSecond * 0.2).round();
-
-    int sent = 0;
-    while (sent < totalBytes) {
-      final size = (totalBytes - sent) < chunkSize
-          ? (totalBytes - sent)
-          : chunkSize;
-      _ws.sendBytes(Uint8List(size));
-      sent += size;
-      await Future.delayed(const Duration(milliseconds: 20));
-    }
-  }
-
-  Future<void> playLastAudio() async {
-    final url = _lastAudioUrl;
-    if (url == null) {
       return;
     }
-    final speedStr = SettingsController.instance.voiceSpeed;
-    double rate = 1.0;
-    if (speedStr == 'Slow') {
-      rate = 0.8;
-    } else if (speedStr == 'Fast') {
-      rate = 1.25;
+
+    if (type == 'turn_complete') {
+      final turnId = data['turn_id'] as String?;
+      _player.completeTurn(turnId);
+      if (turnId == activeTurnId) activeTurnId = null;
+      notifyListeners();
     }
-    await _player.playUrl(url, rate: rate);
   }
+
+  Future<bool> playLastAudio() => _player.replayLastTurn(
+    rate: switch (SettingsController.instance.voiceSpeed) {
+      'Slow' => 0.8,
+      'Fast' => 1.25,
+      _ => 1.0,
+    },
+  );
 
   Future<void> copyTranslation() async {
     if (messages.isEmpty || messages.last.translation.isEmpty) {
@@ -287,55 +468,74 @@ class TranslationLogic extends ChangeNotifier {
     await Clipboard.setData(ClipboardData(text: messages.last.translation));
   }
 
-  void saveTranslation() {
-    // Placeholder: hook into history storage when available.
+  Future<HistorySaveResult> saveTranslation({ChatMessage? message}) async {
+    final candidate = message ?? messages.lastOrNull;
+    if (candidate == null || candidate.isDraft) {
+      return HistorySaveResult.empty;
+    }
+    return _saveMessage(candidate);
   }
 
   Future<void> flagMessage(String messageId) async {
+    if (!_flaggingMessages.add(messageId)) return;
+    notifyListeners();
     try {
       final msg = messages.firstWhere((m) => m.id == messageId);
       if (msg.translation.isEmpty) return;
-      
+
       final repo = TranslateRepository();
       await repo.flagTranslation(
         sourceText: msg.text,
         translatedText: msg.translation,
-        clientId: clientId,
+        sourceLang: msg.sourceLang ?? currentSourceLang,
+        targetLang: msg.targetLang ?? currentTargetLang,
+        inputMode: 'voice',
       );
     } catch (e) {
-      debugPrint('Error flagging message: $e');
+      debugPrint('Flag request failed.');
       rethrow;
+    } finally {
+      _flaggingMessages.remove(messageId);
+      if (!_disposed) notifyListeners();
     }
   }
 
-  // [NEW] Tự động lưu bản dịch vào Hive khi nhận kết quả từ WebSocket
-  void _autoSaveToHistory({
-    required String originalText,
-    required String translatedText,
-  }) {
+  Future<void> _autoSaveToHistory(ChatMessage message) async {
     try {
-      final box = Hive.box<HistoryModel>('history');
-      final now = DateTime.now();
-      final timeStr =
-          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-
-      final item = HistoryModel(
-        id: now.millisecondsSinceEpoch.toString(),
-        originalText: originalText,
-        translatedText: translatedText,
-        time: timeStr,
-        fromFlag: currentSourceLang == 'vi' ? '🇻🇳' : '🇺🇸',
-        toFlag: currentTargetLang == 'eng_Latn' ? '🇺🇸' : '🇻🇳',
-      );
-      box.add(item);
-      debugPrint('[NEW] Auto-saved to history: $originalText → $translatedText');
-    } catch (e) {
-      debugPrint('[NEW] Auto-save history error: $e');
+      await _saveMessage(message);
+    } catch (_) {
+      errorMessage = tr('history_save_failed');
+      if (!_disposed) notifyListeners();
     }
+  }
+
+  Future<HistorySaveResult> _saveMessage(ChatMessage message) {
+    final now = DateTime.now();
+    final src = message.sourceLang ?? currentSourceLang;
+    final tgt = message.targetLang ?? currentTargetLang;
+    return HistoryStorageService.instance.save(
+      HistoryModel(
+        id: '$_historyNamespace:${message.turnId ?? ""}:${message.id}',
+        savedAtEpochMs: now.millisecondsSinceEpoch,
+        originalText: message.text,
+        translatedText: message.translation,
+        time:
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
+        fromFlag: src == 'vi' || src == 'vie_Latn' ? '🇻🇳' : '🇺🇸',
+        toFlag: tgt == 'en' || tgt == 'eng_Latn' ? '🇺🇸' : '🇻🇳',
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _recordingGeneration++;
+    if (_microphoneOwner == this) _microphoneOwner = null;
+    mic.removeListener(_onMicChanged);
+    mic.reset();
+    mic.dispose();
+    AuthSessionService.instance.removeListener(_onAuthChanged);
     SettingsController.instance.removeListener(_onSettingsChanged);
     _audioSub?.cancel();
     _wsSub?.cancel();
@@ -391,10 +591,10 @@ class TextTranslateController extends ChangeNotifier {
       await _repository.flagTranslation(
         sourceText: sourceText,
         translatedText: translatedText,
-        clientId: 'text_client',
+        inputMode: 'text',
       );
     } catch (e) {
-      debugPrint('Error flagging translation: $e');
+      debugPrint('Flag request failed.');
       rethrow;
     }
   }

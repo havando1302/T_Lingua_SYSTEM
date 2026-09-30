@@ -16,12 +16,16 @@ class TranslateRepository {
   Future<void> flagTranslation({
     required String sourceText,
     required String translatedText,
-    required String clientId,
+    String sourceLang = 'vi',
+    String targetLang = 'en',
+    String inputMode = 'unknown',
   }) {
     return ApiService.flagTranslation(
       sourceText: sourceText,
       translatedText: translatedText,
-      clientId: clientId,
+      sourceLang: sourceLang,
+      targetLang: targetLang,
+      inputMode: inputMode,
     );
   }
 }

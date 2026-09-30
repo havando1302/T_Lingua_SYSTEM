@@ -1,77 +1,89 @@
-import { useEffect, useState, useRef } from 'react';
-import api from '../lib/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
+import { useState, useRef } from 'react';
+import api, { apiErrorMessage } from '../lib/api';
+import { Card, CardContent, CardHeader, CardTitle, } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Plus, Trash2, Book, Upload } from 'lucide-react';
+import { Plus, Trash2, Book, Download, Upload } from 'lucide-react';
+import { useAuthUser } from '../lib/auth';
+import { usePaginatedList } from '../lib/usePaginatedList';
+import { ListSearch, ListStatus, ListPagination } from '../components/ListControls';
+
+interface DictionaryEntry { source_text: string; translated_text: string; source_lang?: string; target_lang?: string; }
+const entryKey = (item: DictionaryEntry) => JSON.stringify([item.source_text, item.source_lang, item.target_lang]);
 
 const Dictionary = () => {
-  const [items, setItems] = useState<any[]>([]);
+  const canWrite = useAuthUser()?.role === 'superadmin';
+  const list = usePaginatedList<DictionaryEntry>('/dictionary');
+  const items = list.items;
+  const [sourceLang, setSourceLang] = useState('vi');
+  const [targetLang, setTargetLang] = useState('en');
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [source, setSource] = useState('');
   const [target, setTarget] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchDictionary = async () => {
-    try {
-      const res = await api.get('/dictionary');
-      setItems(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchDictionary();
-  }, []);
-
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!source.trim() || !target.trim()) return;
+    if (!canWrite || loading || uploading) return;
+    setError(''); setNotice('');
+    if (!source.trim() || !target.trim()) { setError('Vui lòng nhập văn bản gốc và bản dịch; không chỉ nhập khoảng trắng.'); return; }
+    if (sourceLang === targetLang) { setError('Chọn hai ngôn ngữ khác nhau.'); return; }
     setLoading(true);
     try {
-      await api.post('/dictionary', { source_text: source, translated_text: target });
+      await api.post('/dictionary', { source_text: source.trim(), translated_text: target.trim(), source_lang: sourceLang, target_lang: targetLang });
       setSource('');
       setTarget('');
-      fetchDictionary();
+      setNotice('Đã lưu cặp dịch vào từ điển.');
+      await list.firstPage();
     } catch (err) {
-      console.error(err);
-      alert('Lỗi khi thêm từ');
+      setError(apiErrorMessage(err, 'Lỗi khi thêm từ'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (sourceText: string) => {
+  const handleDelete = async (item: DictionaryEntry) => {
+    if (!canWrite || deleting !== null) return;
     if (!confirm('Bạn có chắc muốn xóa cặp dịch này khỏi Từ điển?')) return;
+    setDeleting(entryKey(item));
+    setError(''); setNotice('');
     try {
-      await api.delete(`/dictionary/${encodeURIComponent(sourceText)}`);
-      fetchDictionary();
+      await api.post('/dictionary/delete', { source_text: item.source_text, source_lang: item.source_lang, target_lang: item.target_lang });
+      setNotice('Đã xóa cặp dịch.');
+      await list.refresh();
     } catch (err) {
-      console.error(err);
-      alert('Lỗi khi xóa từ');
-    }
+      setError(apiErrorMessage(err, 'Lỗi khi xóa từ'));
+    } finally { setDeleting(null); }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canWrite) return;
     const file = e.target.files?.[0];
     if (!file) return;
+    setError(''); setNotice('');
+    if (!/\.(csv|xlsx)$/i.test(file.name) || file.size > 1_000_000 || file.size === 0 || sourceLang === targetLang) {
+      setError('Chọn file CSV UTF-8 hoặc XLSX có dữ liệu, tối đa 1 MB và hai ngôn ngữ khác nhau.');
+      e.target.value = '';
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('source_lang', sourceLang);
+    formData.append('target_lang', targetLang);
 
     try {
-      const res = await api.post('/dictionary/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      alert(`Đã thêm thành công ${res.data.added} mục từ vựng mới!`);
-      fetchDictionary();
-    } catch (err: any) {
-      console.error(err);
-      alert(err.response?.data?.detail || 'Lỗi khi tải file lên');
+      const res = await api.post('/dictionary/upload', formData);
+      setNotice(`Đã nhập ${res.data.added} cặp dịch vào từ điển.`);
+      await list.firstPage();
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'Lỗi khi tải file lên'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -80,14 +92,29 @@ const Dictionary = () => {
     }
   };
 
+  const handleExport = async () => {
+    setError(''); setNotice('');
+    try {
+      const response = await api.get('/dictionary/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'translation-dictionary.csv'; link.click();
+      URL.revokeObjectURL(url);
+      setNotice('Đã xuất từ điển CSV.');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Không thể xuất từ điển.'));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Từ điển (Glossary)</h1>
-        <p className="text-text-muted mt-2">Quản lý thư viện từ vựng chuẩn do nhân viên cung cấp. AI sẽ ưu tiên dịch đúng theo các cặp từ này.</p>
       </div>
 
-      <Card>
+      {error && <p role="alert" className="text-red-600">{error}</p>}
+      {notice && <p role="status" className="text-emerald-600">{notice}</p>}
+      {canWrite && <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -95,15 +122,13 @@ const Dictionary = () => {
                 <Book size={24} />
                 <CardTitle>Thêm từ vựng mới</CardTitle>
               </div>
-              <CardDescription className="mt-1">
-                Nhập chính xác câu/từ nguồn và bản dịch đích để AI học theo. Hoặc tải lên file CSV.
-              </CardDescription>
             </div>
             
             <div>
               <input 
                 type="file" 
-                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+                accept=".csv,.xlsx"
+                aria-label="Chọn file từ điển CSV hoặc XLSX"
                 className="hidden" 
                 ref={fileInputRef} 
                 onChange={handleFileUpload} 
@@ -112,14 +137,27 @@ const Dictionary = () => {
                 variant="secondary" 
                 onClick={() => fileInputRef.current?.click()}
                 isLoading={uploading}
+                disabled={loading}
               >
                 <Upload size={18} className="mr-2" />
-                Tải lên CSV / Excel
+                Tải lên CSV / XLSX
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap gap-4">
+            <label className="text-sm">Ngôn ngữ nguồn
+              <select className="ml-2 rounded border border-border bg-surface p-2" value={sourceLang} disabled={loading || uploading} onChange={(event) => setSourceLang(event.target.value)}>
+                <option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option>
+              </select>
+            </label>
+            <label className="text-sm">Ngôn ngữ đích
+              <select className="ml-2 rounded border border-border bg-surface p-2" value={targetLang} disabled={loading || uploading} onChange={(event) => setTargetLang(event.target.value)}>
+                <option value="en">Tiếng Anh</option><option value="vi">Tiếng Việt</option>
+              </select>
+            </label>
+          </div>
           <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
               <Input
@@ -127,6 +165,7 @@ const Dictionary = () => {
                 placeholder="VD: Cảm ơn bạn rất nhiều"
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
+                maxLength={5000}
                 required
               />
             </div>
@@ -136,22 +175,28 @@ const Dictionary = () => {
                 placeholder="VD: Thank you very much"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
+                maxLength={5000}
                 required
               />
             </div>
-            <Button type="submit" isLoading={loading} className="w-full sm:w-auto">
+            <Button type="submit" isLoading={loading} disabled={uploading} className="w-full sm:w-auto">
               <Plus size={18} className="mr-2" />
               Thêm vào bộ nhớ
             </Button>
           </form>
         </CardContent>
-      </Card>
+      </Card>}
 
       <Card>
         <CardHeader>
-          <CardTitle>Thư viện Từ vựng & Câu mẫu</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>Thư viện Từ vựng & Câu mẫu</CardTitle>
+            <Button variant="secondary" onClick={handleExport}><Download size={16} className="mr-2" />Xuất CSV</Button>
+          </div>
+          <ListSearch list={list} />
         </CardHeader>
         <CardContent>
+          <ListStatus list={list} />
           <Table>
             <TableHeader>
               <TableRow>
@@ -164,24 +209,25 @@ const Dictionary = () => {
               {items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center text-text-muted">
-                    Chưa có dữ liệu từ điển nào.
+                    {list.fetching ? 'Đang tải…' : list.error ? 'Chưa tải được từ điển.' : 'Không tìm thấy cặp dịch.'}
                   </TableCell>
                 </TableRow>
               ) : (
-                items.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{item.source_text}</TableCell>
-                    <TableCell>{item.translated_text}</TableCell>
+                items.map((item) => (
+                  <TableRow key={entryKey(item)}>
+                    <TableCell className="font-medium whitespace-pre-wrap break-words">{item.source_text}<p className="text-xs text-text-muted">{item.source_lang || "Chưa xác định"} → {item.target_lang || "Chưa xác định"}</p></TableCell>
+                    <TableCell className="whitespace-pre-wrap break-words">{item.translated_text}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="danger" size="sm" onClick={() => handleDelete(item.source_text)}>
+                      {canWrite && <Button variant="danger" size="sm" onClick={() => handleDelete(item)} disabled={deleting !== null} isLoading={deleting === entryKey(item)} aria-label={`Xóa cặp dịch ${item.source_text}`}>
                         <Trash2 size={16} />
-                      </Button>
+                      </Button>}
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
+          <ListPagination list={list} />
         </CardContent>
       </Card>
     </div>

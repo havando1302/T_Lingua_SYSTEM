@@ -40,7 +40,6 @@ _REPLACEMENTS = (
     ("một ngìn", "một nghìn"),
 
     # === Từ vựng phổ biến ===
-    ("công nghiệp", "công nghệ"),
     ("điện thoạch", "điện thoại"),
     ("máy tín", "máy tính"),
     ("intenet", "internet"),
@@ -49,6 +48,11 @@ _REPLACEMENTS = (
     ("thời tiếc", "thời tiết"),
     ("nhiệc độ", "nhiệt độ"),
     ("sở thụ", "sở thú"),
+    # Short Vietnamese clips are sometimes decoded phonetically.  These
+    # variants were reproduced with large-v3-turbo and the real app output.
+    ("Sjá þú", "Sở thú"),
+    ("thở thú", "sở thú"),
+    ("tờ thu", "sở thú"),
 )
 
 

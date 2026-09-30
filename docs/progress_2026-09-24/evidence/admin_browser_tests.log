@@ -1,0 +1,60 @@
+
+> admin_web@0.0.0 test:browser
+> node scripts/test-admin-browser.mjs
+
+Chrome connected {
+  protocolVersion: '1.3',
+  product: 'Chrome/153.0.8010.53',
+  revision: '@792bf6722e73a45aa9e47c163b9901bdc17f3230',
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36',
+  jsVersion: '15.3.76.13'
+}
+PASS Login labels link to all three controls
+PASS Admin cannot publish dictionary from QA
+PASS Partial QA save and independent dictionary retry preserve language
+PASS QA filters apply server-side across pages
+PASS UTC timestamp and zero latency display correctly
+PASS Draft search does not affect pagination; submit starts page one
+PASS List refresh failure is marked stale, then retry recovers
+PASS Mobile heading and menu do not overlap; Escape closes menu
+PASS /users: page two and search beyond old limit
+PASS /apikeys: page two and search beyond old limit
+PASS /dictionary: page two and search beyond old limit
+PASS Delete source containing slash, question mark, hash and percent uses JSON
+PASS Manual dictionary addition includes the selected language direction
+PASS Dictionary upload rejects XLS and carries language fields for CSV
+PASS Unicode password byte limit is explained without submitting
+PASS 422 field errors identify the field and constraint
+PASS User role and password editor calls the protected update API
+PASS Settings use canonical saved value and success feedback
+PASS Model canary configuration is sent with an explicit traffic percentage
+PASS First dashboard failure does not display fabricated zero metrics
+PASS Analytics percentile labels and process-reset scope are clear
+{
+  "passed": 21,
+  "failed": 0,
+  "browserErrors": [],
+  "results": [
+    "Login labels link to all three controls",
+    "Admin cannot publish dictionary from QA",
+    "Partial QA save and independent dictionary retry preserve language",
+    "QA filters apply server-side across pages",
+    "UTC timestamp and zero latency display correctly",
+    "Draft search does not affect pagination; submit starts page one",
+    "List refresh failure is marked stale, then retry recovers",
+    "Mobile heading and menu do not overlap; Escape closes menu",
+    "/users: page two and search beyond old limit",
+    "/apikeys: page two and search beyond old limit",
+    "/dictionary: page two and search beyond old limit",
+    "Delete source containing slash, question mark, hash and percent uses JSON",
+    "Manual dictionary addition includes the selected language direction",
+    "Dictionary upload rejects XLS and carries language fields for CSV",
+    "Unicode password byte limit is explained without submitting",
+    "422 field errors identify the field and constraint",
+    "User role and password editor calls the protected update API",
+    "Settings use canonical saved value and success feedback",
+    "Model canary configuration is sent with an explicit traffic percentage",
+    "First dashboard failure does not display fabricated zero metrics",
+    "Analytics percentile labels and process-reset scope are clear"
+  ]
+}

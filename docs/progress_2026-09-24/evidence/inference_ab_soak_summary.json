@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-09-24T17:55:37.426167+00:00",
+  "device": "cuda",
+  "ab_test": {
+    "beam_1": {
+      "cases": 50,
+      "latency_mean_ms": 513.248,
+      "latency_p95_ms": 767.597,
+      "mean_token_f1": 0.7972,
+      "mean_chrf": 76.282,
+      "term_accuracy": 0.7191
+    },
+    "beam_3": {
+      "cases": 50,
+      "latency_mean_ms": 707.654,
+      "latency_p95_ms": 983.532,
+      "mean_token_f1": 0.796,
+      "mean_chrf": 76.159,
+      "term_accuracy": 0.7416
+    }
+  },
+  "selected_configuration": "beam_1",
+  "soak": {
+    "iterations_requested": 200,
+    "iterations_completed": 200,
+    "duration_seconds": 116.429,
+    "oom": false,
+    "latency_p95_ms": 825.861,
+    "memory_samples_mb": [
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42,
+      2626.42
+    ],
+    "memory_growth_mb": 0.0
+  },
+  "limitations": [
+    "Bounded 200-iteration local soak, not a multi-hour concurrent production load test."
+  ]
+}

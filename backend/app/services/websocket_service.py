@@ -88,7 +88,7 @@ async def websocket_receiver(websocket: WebSocket):
 
     except Exception as e:
 
-        logger.error(f"Lỗi luồng nhận WebSocket: {e}")
+        logger.error("WebSocket receive failed: %s", type(e).__name__)
 
         try:
 

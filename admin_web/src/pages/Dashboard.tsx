@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import api from '../lib/api';
+import api, { apiErrorMessage } from '../lib/api';
+import { Button } from '../components/ui/Button';
 import { Activity, Users, Zap, AlertCircle, HardDrive, Cpu, MemoryStick } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
@@ -9,7 +10,9 @@ const Dashboard = () => {
     total_translations: 0,
     flagged_translations: 0,
     avg_latency: 0.0,
-    unique_clients: 0
+    unique_clients: 0,
+    started_at: '',
+    sample_limit: 1000
   });
 
   const [sysStatus, setSysStatus] = useState({
@@ -17,36 +20,58 @@ const Dashboard = () => {
     ram_usage: 0,
     ram_total: 0,
     disk_usage: 0,
-    disk_total: 0
+    disk_total: 0,
+    inference_runtime: null as { device?: string; whisper_device?: string; whisper_model_id?: string; whisper_compute_type?: string; whisper_cpu_fallback?: boolean; model_load_seconds?: number } | null
   });
 
   const [timeSeries, setTimeSeries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState('');
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let pending = false;
     const fetchData = async () => {
+      if (pending) return;
+      pending = true;
       try {
         const [metricsRes, sysRes, tsRes] = await Promise.all([
-          api.get('/metrics/dashboard'),
-          api.get('/system/status'),
-          api.get('/metrics/timeseries')
+          api.get('/metrics/dashboard', { signal: controller.signal }),
+          api.get('/system/status', { signal: controller.signal }),
+          api.get('/metrics/timeseries', { signal: controller.signal })
         ]);
+        if (controller.signal.aborted) return;
+        setError('');
+        setUpdatedAt(new Date());
         setMetrics(metricsRes.data);
         setSysStatus(sysRes.data);
         setTimeSeries(tsRes.data);
       } catch (err) {
-        console.error('Lỗi khi lấy dữ liệu dashboard:', err);
+        if (!controller.signal.aborted) setError(apiErrorMessage(err));
+      } finally {
+        pending = false;
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchData();
     const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    return () => { controller.abort(); clearInterval(interval); };
+  }, [reload]);
+
+  if (!updatedAt) return <div className="space-y-4">
+    <h1 className="text-3xl font-bold">Bảng điều khiển</h1>
+    <p role={error ? 'alert' : 'status'}>{error || (loading ? 'Đang tải số liệu…' : 'Chưa tải được số liệu.')}</p>
+    {error && <Button onClick={() => setReload(value => value + 1)}>Thử lại</Button>}
+  </div>;
 
   const statCards = [
     { title: 'Tổng lượt dịch', value: metrics.total_translations, icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { title: 'Thiết bị truy cập', value: metrics.unique_clients, icon: Users, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { title: 'Độ trễ trung bình (s)', value: metrics.avg_latency.toFixed(3), icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-    { title: 'Lỗi / Cảnh báo', value: metrics.flagged_translations, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+    { title: 'Khách trong mẫu gần đây', value: metrics.unique_clients, icon: Users, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { title: 'Độ trễ TB mẫu gần đây (s)', value: metrics.avg_latency.toFixed(3), icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { title: 'Bản dịch đang bị báo lỗi', value: metrics.flagged_translations, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
   ];
 
   const sysCards = [
@@ -59,8 +84,12 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
-        <p className="text-text-muted mt-2">Tổng quan về hệ thống dịch thuật AI của bạn.</p>
       </div>
+      <p className="text-xs text-text-muted">Cập nhật: {updatedAt.toLocaleTimeString('vi-VN')}</p>
+      {error && <div role="alert" className="rounded-lg bg-amber-500/10 p-3 text-amber-700">{error} Đang hiển thị số liệu lần trước.
+        <Button variant="ghost" onClick={() => setReload(value => value + 1)}>Thử lại</Button>
+      </div>}
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
@@ -114,6 +143,10 @@ const Dashboard = () => {
             <CardDescription>Tình trạng phần cứng máy chủ realtime</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 mt-4">
+            {sysStatus.inference_runtime && <p className="text-sm text-text-muted">
+              Nhận dạng giọng nói: {sysStatus.inference_runtime.whisper_model_id || 'Chưa xác định'} · {sysStatus.inference_runtime.whisper_device || sysStatus.inference_runtime.device || 'Chưa xác định'} · {sysStatus.inference_runtime.whisper_compute_type || ''}
+              {sysStatus.inference_runtime.whisper_cpu_fallback && ' · Đang dùng CPU dự phòng'}
+            </p>}
             {sysCards.map((sys, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

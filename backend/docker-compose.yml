@@ -5,13 +5,16 @@ services:
     build: .
     container_name: translator_backend
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
     volumes:
       # Ánh xạ thư mục data để lưu vĩnh viễn Translation Memory và Context
       - ./data:/app/data
       # Ánh xạ huggingface cache để không phải tải lại model AI mỗi lần xóa container
       - hf_cache:/root/.cache/huggingface
     environment:
+      - API_HOST=0.0.0.0
       - NVIDIA_VISIBLE_DEVICES=all
     deploy:
       resources:

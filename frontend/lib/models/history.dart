@@ -22,12 +22,13 @@ class HistoryModelAdapter extends TypeAdapter<HistoryModel> {
       fromFlag: fields[4] as String,
       toFlag: fields[5] as String,
       isFavorite: fields[6] as bool,
+      savedAtEpochMs: fields[7] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, HistoryModel obj) {
-    writer.writeByte(7); // số lượng fields
+    writer.writeByte(8);
     writer.writeByte(0);
     writer.write(obj.id);
     writer.writeByte(1);
@@ -42,6 +43,8 @@ class HistoryModelAdapter extends TypeAdapter<HistoryModel> {
     writer.write(obj.toFlag);
     writer.writeByte(6);
     writer.write(obj.isFavorite);
+    writer.writeByte(7);
+    writer.write(obj.savedAtEpochMs);
   }
 }
 
@@ -54,8 +57,9 @@ class HistoryModel extends HiveObject {
   final String time;
   final String fromFlag;
   final String toFlag;
-  bool
-  isFavorite; // Không để final vì thuộc tính này có thể thay đổi trạng thái thay vì tạo mới object
+  // Null marks legacy records, which are never silently removed by retention.
+  final int? savedAtEpochMs;
+  bool isFavorite; // Không để final vì thuộc tính này có thể thay đổi trạng thái thay vì tạo mới object
 
   HistoryModel({
     required this.id,
@@ -65,6 +69,7 @@ class HistoryModel extends HiveObject {
     required this.fromFlag,
     required this.toFlag,
     this.isFavorite = false,
+    this.savedAtEpochMs,
   });
 
   // Bản lề kết nối Backend: Chuyển dữ liệu từ JSON (Backend Python) thành Object Dart

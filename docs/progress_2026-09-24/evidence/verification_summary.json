@@ -1,0 +1,140 @@
+{
+  "created_at": "2026-09-24T18:05:48.841487+00:00",
+  "cutoff_date": "2026-09-24",
+  "scope": "backend automated tests, admin production build/lint/browser tests, Flutter static analysis",
+  "results": [
+    {
+      "name": "backend_full_tests",
+      "status": "passed",
+      "exit_code": 0,
+      "duration_seconds": 40.543,
+      "command": [
+        "C:\\Du_an\\T_Langua_Test\\backend\\venv\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "backend.tests.e2e.test_comprehensive_audit",
+        "backend.tests.e2e.test_user_persona_simulation",
+        "backend.tests.optimization.test_api_optimization",
+        "backend.tests.optimization.test_memory_cache",
+        "backend.tests.optimization.test_pipeline_runtime",
+        "backend.tests.optimization.test_semantic_punctuation",
+        "backend.tests.phase2.test_admin_extensions",
+        "backend.tests.phase2.test_auth",
+        "backend.tests.phase2.test_boundary",
+        "backend.tests.phase3.test_realtime_turn",
+        "backend.tests.phase4.test_translation_quality",
+        "backend.tests.phase5.test_performance_metrics",
+        "backend.tests.phase6.test_operations_lifecycle",
+        "backend.tests.phase7.test_clean_architecture",
+        "backend.tests.phase8.test_scale_resilience",
+        "-v"
+      ],
+      "working_directory": ".",
+      "log": "docs/progress_2026-09-24/evidence/backend_full_tests.log",
+      "log_sha256": "5267009886382f4fa6f73c352881f6b189d63822a4459444e0a26cff2f3b4cbd",
+      "tests_run": 121,
+      "test_runner_seconds": 35.495,
+      "test_result": "OK",
+      "warning_count": 15,
+      "warnings": [
+        "\u001b[90m[01:05:10]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=spammer_client queue_len=5",
+        "\u001b[90m[01:05:10]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=spammer_client queue_len=5",
+        "\u001b[90m[01:05:10]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=spammer_client queue_len=5",
+        "\u001b[90m[01:05:10]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=spammer_client queue_len=5",
+        "\u001b[90m[01:05:10]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=spammer_client queue_len=5",
+        "\u001b[90m[01:05:17]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=malicious_bot queue_len=4",
+        "\u001b[90m[01:05:30]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Closing due to HTTP exception: Realtime requires translate and audio scopes (code=4403)",
+        "\u001b[90m[01:05:31]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Closing due to HTTP exception: Invalid or expired credentials (code=4401)",
+        "\u001b[90m[01:05:31]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Closing due to HTTP exception: Invalid or expired credentials (code=4401)",
+        "\u001b[90m[01:05:31]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Closing due to HTTP exception: Owner does not match the authenticated session (code=4403)",
+        "\u001b[90m[01:05:32]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Invalid configuration or audio: Identity cannot be changed mid-session",
+        "\u001b[90m[01:05:38]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[websocket]\u001b[0m [WS] Invalid configuration or audio: Invalid audio frame",
+        "\u001b[90m[01:05:38]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[scheduler]\u001b[0m fair_queue_session_full session_id=sessionA queue_len=2",
+        "\u001b[90m[01:05:38]\u001b[0m \u001b[93mWARNING\u001b[0m \u001b[96m[health]\u001b[0m readiness_workers_unavailable",
+        "C:\\Du_an\\T_Langua_Test\\backend\\tests\\e2e\\test_comprehensive_audit.py:32: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead."
+      ]
+    },
+    {
+      "name": "admin_build",
+      "status": "passed",
+      "exit_code": 0,
+      "duration_seconds": 3.626,
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "working_directory": "admin_web",
+      "log": "docs/progress_2026-09-24/evidence/admin_build.log",
+      "log_sha256": "536d60c63a717df45a6f961ccd31b0aa39a6687d10bc489f389000d11ef22e96",
+      "warning_count": 0,
+      "warnings": []
+    },
+    {
+      "name": "admin_lint",
+      "status": "passed",
+      "exit_code": 0,
+      "duration_seconds": 0.563,
+      "command": [
+        "npm.cmd",
+        "run",
+        "lint"
+      ],
+      "working_directory": "admin_web",
+      "log": "docs/progress_2026-09-24/evidence/admin_lint.log",
+      "log_sha256": "14a05efe4707ad1980b440268d5e59c9c8789b3f5d497d3b387ae1f7b5060e13",
+      "warning_count": 2,
+      "warnings": [
+        "src/components/ThemeProvider.tsx:63:14: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "src/components/ui/Button.tsx:5:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components."
+      ]
+    },
+    {
+      "name": "admin_browser_tests",
+      "status": "passed",
+      "exit_code": 0,
+      "duration_seconds": 5.194,
+      "command": [
+        "npm.cmd",
+        "run",
+        "test:browser"
+      ],
+      "working_directory": "admin_web",
+      "log": "docs/progress_2026-09-24/evidence/admin_browser_tests.log",
+      "log_sha256": "cda93d0942b17b1aac30cc68c3614d4c9a04e126990229dee2fc97e267cf65da",
+      "browser_passed": 21,
+      "browser_failed": 0,
+      "warning_count": 0,
+      "warnings": []
+    },
+    {
+      "name": "flutter_analyze",
+      "status": "passed",
+      "exit_code": 0,
+      "duration_seconds": 23.828,
+      "command": [
+        "flutter.bat",
+        "analyze",
+        "--no-pub"
+      ],
+      "working_directory": "frontend",
+      "log": "docs/progress_2026-09-24/evidence/flutter_analyze.log",
+      "log_sha256": "f70e7a51e2a3075f333c3f68bccddf28736dd2ce494f576e6aeff4c4e82ac6fe",
+      "warning_count": 0,
+      "warnings": [],
+      "reused": true,
+      "note": "Captured outside the workspace sandbox because Dart Analysis Server writes plugin state to AppData."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "timeout": 0,
+    "unavailable": 0
+  },
+  "git": {
+    "head": "569a803b63d115bea1cca76e3eb63889cb88539d",
+    "worktree_entry_count": 158,
+    "note": "A dirty worktree means Git history cannot prove the completion date or author of each change."
+  }
+}

@@ -48,7 +48,7 @@ class ChatBubble extends StatelessWidget {
             ),
           ),
           // Phần văn bản dịch — bọc trong bubble nhạt hơn
-          if (message.translation.isNotEmpty || !message.isDraft)
+          if (message.translation.isNotEmpty || message.isDraft)
             Container(
               margin: const EdgeInsets.only(top: 6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -69,7 +69,9 @@ class ChatBubble extends StatelessWidget {
                 ),
               ),
               child: Text(
-                message.translation.isEmpty ? tr('translating') : message.translation,
+                message.translation.isEmpty
+                    ? tr('translating')
+                    : message.translation,
                 style: const TextStyle(
                   color: Color(0xFF0F172A),
                   fontSize: 15,

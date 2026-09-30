@@ -24,33 +24,40 @@ class LanguageSelector extends StatelessWidget {
         const SizedBox(width: 12),
 
         // BUTTON SWAP
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: logic.swapLanguages,
-            borderRadius: BorderRadius.circular(14),
-
-            child: Container(
-              padding: const EdgeInsets.all(14),
-
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-
+        Tooltip(
+          message: tr('swap_languages'),
+          child: Semantics(
+            button: true,
+            label: tr('swap_languages'),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: logic.swapLanguages,
                 borderRadius: BorderRadius.circular(14),
 
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blueAccent.withOpacity(0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
 
-              child: const Icon(
-                Icons.swap_horiz,
-                color: Colors.white,
-                size: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent,
+
+                    borderRadius: BorderRadius.circular(14),
+
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blueAccent.withValues(alpha: 0.25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+
+                  child: const Icon(
+                    Icons.swap_horiz,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
           ),
@@ -74,11 +81,11 @@ class LanguageSelector extends StatelessWidget {
 
         borderRadius: BorderRadius.circular(20),
 
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -93,13 +100,16 @@ class LanguageSelector extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          Text(
-            label,
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
 
-            style: const TextStyle(
-              color: Color(0xFF222222),
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              style: const TextStyle(
+                color: Color(0xFF222222),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

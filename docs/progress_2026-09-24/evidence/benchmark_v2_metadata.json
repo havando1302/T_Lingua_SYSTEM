@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "created_at": "2026-09-24T17:59:44.614552+00:00",
+  "case_count": 500,
+  "language_pairs": {
+    "vi->en": 250,
+    "en->vi": 250
+  },
+  "domains": {
+    "operations": 50,
+    "business": 50,
+    "technology": 50,
+    "security": 50,
+    "travel": 50,
+    "healthcare": 50,
+    "education": 50,
+    "finance": 50,
+    "support": 50,
+    "translation": 50
+  },
+  "source": "deterministic bilingual templates",
+  "sha256": "835f051c6813acd7fa16287edc15c62f289bbb59b944e776b05815afc5341341",
+  "limitations": [
+    "Synthetic template corpus; use a separately licensed natural corpus before production acceptance.",
+    "References were authored as controlled template pairs and still require independent human review."
+  ]
+}

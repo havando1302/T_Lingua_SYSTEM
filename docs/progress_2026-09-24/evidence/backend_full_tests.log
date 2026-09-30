@@ -1,0 +1,320 @@
+[90m[01:05:04][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/users -> 401 (41.6ms)
+[90m[01:05:04][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/users "HTTP/1.1 401 Unauthorized"
+[90m[01:05:04][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/users -> 401 (3.9ms)
+[90m[01:05:04][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/users "HTTP/1.1 401 Unauthorized"
+[90m[01:05:05][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/apikeys -> 403 (8.6ms)
+[90m[01:05:05][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/apikeys "HTTP/1.1 403 Forbidden"
+[90m[01:05:05][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/users -> 403 (5.3ms)
+[90m[01:05:05][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/users "HTTP/1.1 403 Forbidden"
+[90m[01:05:05][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] DELETE /admin/dictionary/{source_text:path} -> 403 (5.9ms)
+[90m[01:05:05][0m [92mINFO [0m [96m[httpx][0m HTTP Request: DELETE http://testserver/admin/dictionary/test_word "HTTP/1.1 403 Forbidden"
+[90m[01:05:07][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] POST <unmatched> -> 401 (0.3ms)
+[90m[01:05:07][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translate-text "HTTP/1.1 401 Unauthorized"
+[90m[01:05:10][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=spammer_client queue_len=5
+[90m[01:05:10][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=spammer_client queue_len=5
+[90m[01:05:10][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=spammer_client queue_len=5
+[90m[01:05:10][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=spammer_client queue_len=5
+[90m[01:05:10][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=spammer_client queue_len=5
+[90m[01:05:13][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/quality/logs -> 200 (20.5ms)
+[90m[01:05:13][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/logs?skip=0&limit=10 "HTTP/1.1 200 OK"
+[90m[01:05:13][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/quality/logs -> 200 (9.4ms)
+[90m[01:05:13][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/logs?skip=10&limit=10 "HTTP/1.1 200 OK"
+[90m[01:05:13][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/quality/logs -> 200 (10.6ms)
+[90m[01:05:13][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/logs?search=s%E1%BB%91%205 "HTTP/1.1 200 OK"
+[90m[01:05:14][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=cd6c2eeb-4f99-4c1c-9e76-d73474adc4df (hạn 900s)
+[90m[01:05:14][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /api/session/guest -> 200 (13.1ms)
+[90m[01:05:14][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:16][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/login -> 200 (238.3ms)
+[90m[01:05:16][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/login "HTTP/1.1 200 OK"
+[90m[01:05:16][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/metrics/dashboard -> 200 (10.5ms)
+[90m[01:05:16][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/metrics/dashboard "HTTP/1.1 200 OK"
+[90m[01:05:17][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/system/status -> 200 (126.0ms)
+[90m[01:05:17][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/system/status "HTTP/1.1 200 OK"
+[90m[01:05:17][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/metrics/timeseries -> 200 (10.3ms)
+[90m[01:05:17][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/metrics/timeseries "HTTP/1.1 200 OK"
+[90m[01:05:17][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/quality/logs -> 401 (2.9ms)
+[90m[01:05:17][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/logs "HTTP/1.1 401 Unauthorized"
+[90m[01:05:17][0m [92mINFO [0m [96m[main][0m CLIENT [HTTP] GET /admin/quality/logs -> 401 (2.6ms)
+[90m[01:05:17][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/logs "HTTP/1.1 401 Unauthorized"
+[90m[01:05:17][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=malicious_bot queue_len=4
+[OK] Backup created successfully: C:\Users\ADMIN\AppData\Local\Temp\tm-regression-vqso9f8u\backup\backup_tlangua_20260924_180521.tar.gz
+     Manifest: {
+  "translation_memory.json": {
+    "size_bytes": 194,
+    "sha256": "676e4d82da5a282704575e0f405eef069ae8670df3685eab4c4263f01df17bed"
+  }
+}
+[RESTORED] translation_memory.json verified and written to C:\Users\ADMIN\AppData\Local\Temp\tm-regression-vqso9f8u\restored\translation_memory.json
+[OK] Restore completed successfully from C:\Users\ADMIN\AppData\Local\Temp\tm-regression-vqso9f8u\backup\backup_tlangua_20260924_180521.tar.gz
+[90m[01:05:25][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/apikeys/{key_id}/rotate -> 200 (22.9ms)
+[90m[01:05:25][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/apikeys/1/rotate "HTTP/1.1 200 OK"
+[90m[01:05:25][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/dictionary/export -> 200 (14.5ms)
+[90m[01:05:25][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/dictionary/export "HTTP/1.1 200 OK"
+[90m[01:05:26][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/models/deployments -> 200 (14.9ms)
+[90m[01:05:26][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/models/deployments "HTTP/1.1 200 OK"
+[90m[01:05:26][0m [92mINFO [0m [96m[main][0m OK [HTTP] PUT /admin/models/{component}/canary -> 200 (18.1ms)
+[90m[01:05:26][0m [92mINFO [0m [96m[httpx][0m HTTP Request: PUT http://testserver/admin/models/nllb/canary "HTTP/1.1 200 OK"
+[90m[01:05:26][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/models/{component}/promote -> 200 (13.9ms)
+[90m[01:05:26][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/models/nllb/promote "HTTP/1.1 200 OK"
+[90m[01:05:26][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/models/{component}/rollback -> 200 (15.5ms)
+[90m[01:05:26][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/models/nllb/rollback "HTTP/1.1 200 OK"
+[90m[01:05:26][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/audit -> 200 (14.1ms)
+[90m[01:05:26][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/audit?actor=extension-root&resource_type=model "HTTP/1.1 200 OK"
+[90m[01:05:27][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/quality/logs/{log_id}/resolve -> 200 (18.2ms)
+[90m[01:05:27][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/quality/logs/1/resolve "HTTP/1.1 200 OK"
+[90m[01:05:27][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/quality/reviews/export -> 200 (10.5ms)
+[90m[01:05:27][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/quality/reviews/export "HTTP/1.1 200 OK"
+[90m[01:05:27][0m [92mINFO [0m [96m[main][0m OK [HTTP] PATCH /admin/users/{user_id} -> 200 (19.3ms)
+[90m[01:05:27][0m [92mINFO [0m [96m[httpx][0m HTTP Request: PATCH http://testserver/admin/users/2 "HTTP/1.1 200 OK"
+[90m[01:05:27][0m [92mINFO [0m [96m[main][0m OK [HTTP] POST /admin/users/{user_id}/reset-sessions -> 200 (13.7ms)
+[90m[01:05:27][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/admin/users/2/reset-sessions "HTTP/1.1 200 OK"
+[90m[01:05:27][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /admin/audit -> 200 (7.6ms)
+[90m[01:05:27][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/admin/audit "HTTP/1.1 200 OK"
+[90m[01:05:28][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=7255d64e-6456-4dd2-9936-d26c709455e7 (hạn 900s)
+[90m[01:05:28][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:28][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=1f7791f6-eb69-43ee-8e42-1e97949abcd5 (hạn 900s)
+[90m[01:05:28][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:28][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/audio/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.wav "HTTP/1.1 200 OK"
+[90m[01:05:28][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/audio/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.wav "HTTP/1.1 404 Not Found"
+[90m[01:05:28][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/audio/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.wav "HTTP/1.1 404 Not Found"
+[90m[01:05:29][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=8b3e9fc0-373f-4cd8-b5cd-0d06f3767c4a (hạn 900s)
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:29][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=d0ea7292-0ed0-4b95-b4f7-908c59dcc8e2 (hạn 900s)
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translation-memory "HTTP/1.1 200 OK"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/translation-memory "HTTP/1.1 200 OK"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/translation-memory?client_id=8b3e9fc0-373f-4cd8-b5cd-0d06f3767c4a "HTTP/1.1 403 Forbidden"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translation-memory "HTTP/1.1 403 Forbidden"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translation-memory/delete "HTTP/1.1 403 Forbidden"
+[90m[01:05:29][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Đã đăng xuất phiên: owner_id=8b3e9fc0-373f-4cd8-b5cd-0d06f3767c4a
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/logout "HTTP/1.1 204 No Content"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/translation-memory "HTTP/1.1 401 Unauthorized"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/translation-memory "HTTP/1.1 401 Unauthorized"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translation-memory "HTTP/1.1 401 Unauthorized"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/audio/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.wav "HTTP/1.1 401 Unauthorized"
+[90m[01:05:29][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 403 Forbidden"
+[90m[01:05:30][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=3e4d00b2-050b-4902-b099-91cb56ba52f4 (hạn 900s)
+[90m[01:05:30][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:30][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/translate "HTTP/1.1 422 Unprocessable Entity"
+[90m[01:05:30][0m [91mERROR[0m [96m[routes][0m audio_translation_failed error_type=TypeError
+[90m[01:05:30][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/translate "HTTP/1.1 503 Service Unavailable"
+[90m[01:05:30][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/translation-memory "HTTP/1.1 403 Forbidden"
+[90m[01:05:30][0m [93mWARNING[0m [96m[websocket][0m [WS] Closing due to HTTP exception: Realtime requires translate and audio scopes (code=4403)
+[90m[01:05:31][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=9a214fac-b270-416b-b817-bd4c432ce024 (hạn 900s)
+[90m[01:05:31][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:31][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translate-text "HTTP/1.1 200 OK"
+[90m[01:05:31][0m [91mERROR[0m [96m[routes][0m text_translation_failed error_type=RuntimeError
+[90m[01:05:31][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/translate-text "HTTP/1.1 503 Service Unavailable"
+[90m[01:05:31][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=8442c80b-9fa2-4612-ab64-b0eef7f58cb3 (hạn 900s)
+[90m[01:05:31][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:31][0m [93mWARNING[0m [96m[websocket][0m [WS] Closing due to HTTP exception: Invalid or expired credentials (code=4401)
+[90m[01:05:31][0m [93mWARNING[0m [96m[websocket][0m [WS] Closing due to HTTP exception: Invalid or expired credentials (code=4401)
+[90m[01:05:31][0m [93mWARNING[0m [96m[websocket][0m [WS] Closing due to HTTP exception: Owner does not match the authenticated session (code=4403)
+[90m[01:05:32][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=08cbb14f-a959-47e9-976a-ee2527d4e926 (hạn 900s)
+[90m[01:05:32][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:32][0m [92mINFO [0m [96m[websocket][0m [WS] Client connected: owner_id=08cbb14f-a959-47e9-976a-ee2527d4e926 (protocol v2, vi -> eng_Latn)
+[90m[01:05:32][0m [93mWARNING[0m [96m[websocket][0m [WS] Invalid configuration or audio: Identity cannot be changed mid-session
+[90m[01:05:32][0m [92mINFO [0m [96m[websocket][0m [WS] Client disconnected: owner_id=08cbb14f-a959-47e9-976a-ee2527d4e926
+[90m[01:05:32][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=79a14e38-cc0d-469f-948b-692db4ac8f85 (hạn 900s)
+[90m[01:05:32][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:32][0m [92mINFO [0m [96m[websocket][0m [WS] Client connected: owner_id=79a14e38-cc0d-469f-948b-692db4ac8f85 (protocol v2, vi -> eng_Latn)
+[90m[01:05:32][0m [92mINFO [0m [96m[websocket][0m [WS] Client disconnected: owner_id=79a14e38-cc0d-469f-948b-692db4ac8f85
+[90m[01:05:32][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=656d0941-3321-4b1f-8013-0e5de4d1c063 (hạn 900s)
+[90m[01:05:32][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:32][0m [92mINFO [0m [96m[websocket][0m [WS] Client connected: owner_id=656d0941-3321-4b1f-8013-0e5de4d1c063 (protocol v2, vi -> eng_Latn)
+[90m[01:05:32][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Đã đăng xuất phiên: owner_id=656d0941-3321-4b1f-8013-0e5de4d1c063
+[90m[01:05:32][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/logout "HTTP/1.1 204 No Content"
+[90m[01:05:37][0m [92mINFO [0m [96m[websocket][0m [WS] Client disconnected: owner_id=656d0941-3321-4b1f-8013-0e5de4d1c063
+[90m[01:05:38][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=dcb13f8c-98e1-44d9-a34a-7013c4d9e9b3 (hạn 900s)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [WS] Client connected: owner_id=dcb13f8c-98e1-44d9-a34a-7013c4d9e9b3 (protocol v2, vi -> eng_Latn)
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [TURN START] turn_id=turn-1, speaker=me, translation: vi -> eng_Latn
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [TURN END] turn_id=turn-1 (0 audio chunks received)
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [TURN CANCEL] turn_id=turn-1
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [WS] Client disconnected: owner_id=dcb13f8c-98e1-44d9-a34a-7013c4d9e9b3
+[90m[01:05:38][0m [92mINFO [0m [96m[auth_routes][0m [AUTH] Cấp phiên khách mới: owner_id=0e8e0eb0-e19f-4a47-9816-29988ddf3d3f (hạn 900s)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: POST http://testserver/api/session/guest "HTTP/1.1 200 OK"
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [WS] Client connected: owner_id=0e8e0eb0-e19f-4a47-9816-29988ddf3d3f (protocol v2, vi -> eng_Latn)
+[90m[01:05:38][0m [93mWARNING[0m [96m[websocket][0m [WS] Invalid configuration or audio: Invalid audio frame
+[90m[01:05:38][0m [92mINFO [0m [96m[websocket][0m [WS] Client disconnected: owner_id=0e8e0eb0-e19f-4a47-9816-29988ddf3d3f
+[90m[01:05:38][0m [93mWARNING[0m [96m[scheduler][0m fair_queue_session_full session_id=sessionA queue_len=2
+[OK] Backup created successfully: C:\Users\ADMIN\AppData\Local\Temp\tmpcbv5pwt3\backups\backup_tlangua_20260924_180538.tar.gz
+     Manifest: {
+  "admin.db": {
+    "size_bytes": 43,
+    "sha256": "b4072fdef370573698ae55de88982147fa4eadb5988cea3685969b54fb2190f4"
+  },
+  "translation_memory.json": {
+    "size_bytes": 33,
+    "sha256": "294ca28bbd046a94430781b5e3b5dbdc24e8ccd3ec9e021f11b923b6abec3322"
+  }
+}
+[RESTORED] admin.db verified and written to C:\Users\ADMIN\AppData\Local\Temp\tmpcbv5pwt3\restored\admin.db
+[RESTORED] translation_memory.json verified and written to C:\Users\ADMIN\AppData\Local\Temp\tmpcbv5pwt3\restored\translation_memory.json
+[OK] Restore completed successfully from C:\Users\ADMIN\AppData\Local\Temp\tmpcbv5pwt3\backups\backup_tlangua_20260924_180538.tar.gz
+[90m[01:05:38][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /health/live -> 200 (1.1ms)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/health/live "HTTP/1.1 200 OK"
+[90m[01:05:38][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /health/live -> 200 (0.5ms)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/api/v1/health/live "HTTP/1.1 200 OK"
+[90m[01:05:38][0m [91mERROR[0m [96m[health][0m readiness_db_check_failed: Exception
+[90m[01:05:38][0m [93mWARNING[0m [96m[health][0m readiness_workers_unavailable
+[90m[01:05:38][0m [92mINFO [0m [96m[main][0m SERVER [HTTP] GET /health/ready -> 503 (2.5ms)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/health/ready "HTTP/1.1 503 Service Unavailable"
+[90m[01:05:38][0m [92mINFO [0m [96m[main][0m SERVER [HTTP] GET /health/ready -> 503 (0.8ms)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/health/ready "HTTP/1.1 503 Service Unavailable"
+[90m[01:05:38][0m [92mINFO [0m [96m[main][0m OK [HTTP] GET /health/ready -> 200 (1.4ms)
+[90m[01:05:38][0m [92mINFO [0m [96m[httpx][0m HTTP Request: GET http://testserver/health/ready "HTTP/1.1 200 OK"
+C:\Du_an\T_Langua_Test\backend\tests\e2e\test_comprehensive_audit.py:32: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient
+test_p0_01_reject_invalid_and_expired_token (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Từ chối token sai format, sai chữ ký và token đã hết hạn. ... ok
+test_p0_02_privilege_escalation_blocked (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Chống leo thang đặc quyền: employee không thể gọi endpoint admin/superadmin. ... ok
+test_p0_03_cross_tenant_data_isolation (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Đảm bảo cách ly dữ liệu: User A không thể đọc dữ liệu của User B. ... ok
+test_p0_04_anonymous_requests_blocked_by_http_boundary (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Chặn toàn bộ các request không có danh tính hợp lệ tại HTTP Boundary Middleware. ... ok
+test_p0_05_realtime_turn_sequence_and_session_actor (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Kiểm tra tính tuần tự của lượt nói và tính bất biến của Turn Metadata qua SessionActor. ... ok
+test_p0_06_realtime_mic_switch_and_turn_cancellation (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Kiểm tra hủy lượt khi đổi mic/đổi tab: Hủy lượt ngăn phát sinh output rò rỉ. ... ok
+test_p0_07_queue_backpressure_and_overflow_protection (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Kiểm tra cơ chế FairSessionQueue chống tràn RAM khi một client spam dữ liệu. ... ok
+test_p0_08_translation_memory_direction_sensitivity (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Khóa tra cứu TM bắt buộc đúng chiều ngôn ngữ, không dùng nhầm bản dịch ngược. ... ok
+test_p0_09_atomic_save_and_rollback_on_io_failure (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Ghi nguyên tử và rollback: lỗi I/O không được báo thành công giả và bảo toàn dữ liệu cũ. ... ok
+test_p1_10_server_side_pagination_and_filtering (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Phân trang phía server trên /admin/quality/logs: skip/limit và search chính xác. ... ok
+test_p1_11_fair_share_multi_session_concurrency (backend.tests.e2e.test_comprehensive_audit.ComprehensiveE2ESystemAuditTests)
+Kiểm tra tải đồng thời nhiều phiên (Fair-Share): Không phiên nào bị đói (starvation). ... ok
+test_p1_01_cold_boot_guest_session (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 1.1: Người dùng mở ứng dụng lần đầu -> Nhận phiên khách (Guest) hợp lệ. ... ok
+test_p1_02_realtime_audio_turn_workflow (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 1.2: Người dùng bấm mic, gửi audio -> Kiểm tra trình tự Turn & State Actor. ... ok
+test_p1_03_chaos_mic_switch_and_disruption (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 1.3: Chaos test: Đang nói thì đổi micro/đổi cặp ngôn ngữ -> Hủy lượt ngay lập tức. ... ok
+test_p1_04_abrupt_disconnect_and_reconnect (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 1.4: Rớt mạng đột ngột và kết nối lại: Phiên mới độc lập không bị nghẽn buffer. ... ok
+test_p1_05_long_utterance_and_vad_chunking (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 1.5: Câu nói rất dài không dấu câu -> Chia đoạn thông minh cho TTS (< 150 ký tự). ... ok
+test_p2_06_admin_login_and_token_verification (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 2.1: Quản trị viên đăng nhập với tài khoản an toàn -> Nhận JWT Token. ... ok
+test_p2_07_translation_memory_crud_and_isolation (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 2.2: Quản lý Translation Memory: Tra cứu, thêm cụm từ mới và cô lập từ điển cá nhân. ... ok
+test_p2_08_atomic_transaction_and_rollback (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 2.3: Unit of Work: Giao dịch lưu dữ liệu nguyên tử, rollback hoàn toàn khi lỗi. ... ok
+test_p2_09_monitoring_metrics_and_vitals (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 2.4: Giám sát vận hành: Kiểm tra các endpoint Dashboard, System Vitals & Timeseries. ... ok
+test_p3_10_cross_tenant_access_blocked (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 3.1: Kẻ tấn công cố gắng truy cập dữ liệu dịch thuật của người khác -> Bị chặn 403/401. ... ok
+test_p3_11_audio_flood_and_backpressure (backend.tests.e2e.test_user_persona_simulation.FullStackUserPersonaSimulationTests)
+Hành trình 3.2: Kẻ tấn công spam hàng loạt audio chunks -> Kích hoạt FairSessionQueue Rate-limit. ... ok
+test_api_optimization_contracts_in_isolated_process (backend.tests.optimization.test_api_optimization.ApiOptimizationProcessTests) ... ok
+test_ambiguous_untagged_edit_is_rejected_without_partial_write (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_atomic_import_saves_once_and_invalidates_injected_cache (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_backup_validator_and_archive_preserve_metadata_and_all_pairs (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_cache_owner_language_isolation_and_global_invalidation (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_cache_rejects_inflight_writes_after_owner_global_or_clear_change (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_cache_ttl_zero_expiry_lru_and_disabled_capacity (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_concurrent_private_imports_do_not_lose_entries (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_corrupt_reload_preserves_existing_memory (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_empty_text_never_enters_model_and_decimal_comma_is_preserved (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_failed_replace_rolls_back_add_delete_and_import (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_flat_legacy_migration_keeps_known_and_unknown_entries (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_guest_capacity_is_atomic_and_expiry_invalidates_cache (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_guest_data_and_cache_are_forgotten_without_persistence (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_import_validation_failure_never_persists_first_row (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_language_metadata_survives_reload_and_aliases (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_legacy_nested_reserved_source_is_literal_and_roundtrips (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_legacy_term_given_direction_loses_ambiguous_fallback (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_listing_and_glossary_hide_storage_keys_and_other_owners (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_owner_and_language_boundaries_are_validated (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_parallel_model_calls_cannot_switch_shared_tokenizer_direction (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_same_source_distinct_pairs_and_exact_deletion (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_service_inference_finishing_after_dictionary_change_cannot_poison_cache (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_service_respects_disabled_cache_and_does_not_use_other_owner_or_direction (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_service_uses_only_owner_and_approved_global_then_cache (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_untagged_edit_preserves_unique_direction (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_use_case_disabled_cache_and_nllb_adapter_do_not_double_cache (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_use_case_injected_cache_tracks_global_dictionary_mutation (backend.tests.optimization.test_memory_cache.MemoryCacheTests) ... ok
+test_pipeline_runtime_in_isolated_process (backend.tests.optimization.test_pipeline_runtime.RuntimeProcessTests) ... ok
+test_advice_with_embedded_question_is_not_direct_question (backend.tests.optimization.test_semantic_punctuation.SemanticPunctuationTests) ... ok
+test_direct_question_keeps_question_mark (backend.tests.optimization.test_semantic_punctuation.SemanticPunctuationTests) ... ok
+test_api_key_rotation_returns_secret_once_and_revokes_old (backend.tests.phase2.test_admin_extensions.AdminExtensionTests) ... ok
+test_dictionary_export_is_csv_and_does_not_expose_secrets (backend.tests.phase2.test_admin_extensions.AdminExtensionTests) ... ok
+test_model_canary_promote_rollback_and_filtered_audit (backend.tests.phase2.test_admin_extensions.AdminExtensionTests) ... ok
+test_structured_quality_review_and_exports (backend.tests.phase2.test_admin_extensions.AdminExtensionTests) ... ok
+test_user_update_session_reset_and_audit (backend.tests.phase2.test_admin_extensions.AdminExtensionTests) ... ok
+test_api_key_creator_disable_and_user_recovery_revoke_keys (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_api_key_stores_only_digest_and_is_scoped_revocable (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_bad_scope_sets_and_overlong_credentials_are_rejected (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_disabled_and_recreated_username_do_not_reactivate_token (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_guest_capacity_and_expired_session_cleanup (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_guest_identity_scopes_and_logout (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_malformed_signed_claims_are_unauthorized (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_old_username_tokens_and_unregistered_signed_tokens_fail (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_privileged_mfa_enrollment_replay_and_escalation (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_token_version_and_server_expiry_are_enforced (backend.tests.phase2.test_auth.AuthenticationTests) ... ok
+test_production_security_gates_and_error_redaction (backend.tests.phase2.test_auth.ConfigurationTests) ... ok
+test_custom_admin_password_is_preserved_and_kept_active (backend.tests.phase2.test_auth.MigrationTests) ... ok
+test_legacy_data_preserved_keys_retired_default_account_disabled_and_rerun_safe (backend.tests.phase2.test_auth.MigrationTests) ... ok
+test_audio_owner_and_expiry_enforced (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_chunked_body_limit_enforced_before_downstream_parser (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_guest_dictionary_isolated_volatile_and_logout_erases (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_guest_expiry_during_write_never_falls_back_to_disk (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_http_anonymous_and_untrusted_origin_rejected (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_invalid_audio_and_inference_failure_cleanup_temp_outputs (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_scoped_api_key_cannot_read_dictionary (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_slow_body_deadline_rejects_without_downstream (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_text_passes_authenticated_owner_to_inference_and_redacts_failure (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_unauthorized_body_is_not_read (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_missing_forged_and_cross_owner_credentials (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_origin_and_mutable_identity_rejected (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_pending_handshake_capacity_and_release (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_revoked_session_closes_on_authentication_heartbeat (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_turn_controls_remain_available_after_refactor (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_ws_valid_audio_enters_queue_and_oversize_rejected (backend.tests.phase2.test_boundary.BoundaryTests) ... ok
+test_late_result_filtering_on_cancelled_turn (backend.tests.phase3.test_realtime_turn.SessionTurnLifecycleTests) ... ok
+test_session_turn_isolation_and_language_config (backend.tests.phase3.test_realtime_turn.SessionTurnLifecycleTests) ... ok
+test_turn_metadata_immutability (backend.tests.phase3.test_realtime_turn.TurnModelTests) ... ok
+test_vad_finite_window_segmentation (backend.tests.phase3.test_realtime_turn.VadWindowingTests) ... ok
+test_deepfilter_resampling_safe_fallback (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_dictionary_preserves_industry_term (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_fuzzy_tm_is_conservative_direction_aware_and_unambiguous (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_hallucination_preserves_legitimate_farewell (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_repository_pattern_interface (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_short_commands_bypass_deepfilter (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_short_zoo_phrase_variants_are_corrected (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_stt_preserves_decimal_comma (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_tm_direction_awareness_and_isolation (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_translation_memory_entry_db_schema (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_tts_chunk_bounding_on_long_unpunctuated_text (backend.tests.phase4.test_translation_quality.TranslationQualityTests) ... ok
+test_adaptive_gpu_cleanup_policy (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_fair_session_queue_per_session_limit (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_fair_session_queue_round_robin (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_process_metrics_aggregation_does_not_count_retained_qa_content (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_telemetry_turn_recording_and_percentiles (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_translation_cache_lru_and_invalidation (backend.tests.phase5.test_performance_metrics.Phase5PerformanceMetricsTests) ... ok
+test_backup_and_restore_cycle (backend.tests.phase6.test_operations_lifecycle.Phase6OperationsLifecycleTests) ... ok
+test_liveness_probe_returns_200 (backend.tests.phase6.test_operations_lifecycle.Phase6OperationsLifecycleTests) ... ok
+test_readiness_probe_db_failure (backend.tests.phase6.test_operations_lifecycle.Phase6OperationsLifecycleTests) ... ok
+test_readiness_probe_draining (backend.tests.phase6.test_operations_lifecycle.Phase6OperationsLifecycleTests) ... ok
+test_readiness_probe_healthy (backend.tests.phase6.test_operations_lifecycle.Phase6OperationsLifecycleTests) ... ok
+test_dependency_injection_container (backend.tests.phase7.test_clean_architecture.CleanArchitectureTests) ... ok
+test_domain_language_pair_normalization (backend.tests.phase7.test_clean_architecture.CleanArchitectureTests) ... ok
+test_domain_turn_lifecycle (backend.tests.phase7.test_clean_architecture.CleanArchitectureTests) ... ok
+test_translate_turn_use_case_with_mock_adapters (backend.tests.phase7.test_clean_architecture.CleanArchitectureTests) ... ok
+test_client_disconnect_inflight_handling (backend.tests.phase8.test_scale_resilience.Phase8ScaleAndResilienceTests)
+Diễn tập sự cố client mất mạng giữa chừng: Hàng đợi dọn sạch pending frame. ... ok
+test_gpu_oom_fault_recovery (backend.tests.phase8.test_scale_resilience.Phase8ScaleAndResilienceTests)
+Diễn tập sự cố GPU OOM: Bắt lỗi, dọn cache cưỡng bức và duy trì tiến trình sống. ... ok
+test_job_deduplication_and_ownership (backend.tests.phase8.test_scale_resilience.Phase8ScaleAndResilienceTests)
+Kiểm chứng chống xử lý trùng lặp tác vụ (Deduplication). ... ok
+test_session_affinity_routing_contract (backend.tests.phase8.test_scale_resilience.Phase8ScaleAndResilienceTests)
+Kiểm chứng hợp đồng định tuyến phiên: Một session luôn gắn với node/actor sở hữu. ... ok
+
+----------------------------------------------------------------------
+Ran 121 tests in 35.495s
+
+OK

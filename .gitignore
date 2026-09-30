@@ -1,20 +1,55 @@
-
+# ── Python ──────────────────────────────
 venv/
-.env
+.venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
+# ── Environment ─────────────────────────
+.env
+.env.*
+!.env.example
 
+# ── Flutter ─────────────────────────────
+build/
+frontend/build/
 .build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
 
+# ── Node ────────────────────────────────
+node_modules/
+dist/
+
+# ── IDE ─────────────────────────────────
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-.env.*
+
+# ── Data / Temp ─────────────────────────
+backend/data/
+backend/temp/
+backend/outputs/
+*.wav
+*.mp3
+
+# ── AI Models (cached) ─────────────────
+*.bin
+*.safetensors
+*.onnx
+
+# Phase 1 local snapshots and restore drills contain private runtime data.
+.phase1-artifacts/
+# Isolated QA/optimization copies, synthetic databases, browser profiles and builds.
+.qa-work/
+
+# Root Compose/runtime and private security provisioning files.
+/data/
+/outputs/
+/temp/
+*.provisioning
+.env-phase2-*

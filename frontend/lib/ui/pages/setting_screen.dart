@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../controllers/settings_controller.dart';
 import '../../core/app_localizations.dart';
+import '../../services/history_storage_service.dart';
+import '../../services/auth_session_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -24,15 +27,6 @@ class SettingsScreen extends StatelessWidget {
           }
         }
 
-        String getGenderLabel(String gender) {
-          switch (gender) {
-            case 'Male':
-              return tr('male');
-            default:
-              return tr('female');
-          }
-        }
-
         String getLanguageLabel(String lang) {
           switch (lang) {
             case 'en':
@@ -48,6 +42,7 @@ class SettingsScreen extends StatelessWidget {
             backgroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
+              tooltip: tr('back'),
               icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
               onPressed: () => Navigator.pop(context),
             ),
@@ -60,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          body: Column(
+          body: ListView(
             children: [
               const SizedBox(height: 20),
               // Danh sách các tùy chọn
@@ -73,21 +68,11 @@ class SettingsScreen extends StatelessWidget {
                   options: ['Slow', 'Normal', 'Fast'],
                   selectedValue: settings.voiceSpeed,
                   optionLabel: getSpeedLabel,
-                  onSelected: (val) => settings.setVoiceSpeed(val),
+                  onSelected: (val) =>
+                      _update(context, () => settings.setVoiceSpeed(val)),
                 ),
               ),
-              _buildSettingItem(
-                tr('voice_gender'),
-                getGenderLabel(settings.voiceGender),
-                onTap: () => _showSelectionBottomSheet<String>(
-                  context: context,
-                  title: tr('voice_gender'),
-                  options: ['Male', 'Female'],
-                  selectedValue: settings.voiceGender,
-                  optionLabel: getGenderLabel,
-                  onSelected: (val) => settings.setVoiceGender(val),
-                ),
-              ),
+              _buildSettingItem(tr('voice_gender'), tr('voice_unavailable')),
               _buildSettingItem(
                 tr('default_language'),
                 getLanguageLabel(settings.language),
@@ -97,7 +82,8 @@ class SettingsScreen extends StatelessWidget {
                   options: ['vi', 'en'],
                   selectedValue: settings.language,
                   optionLabel: getLanguageLabel,
-                  onSelected: (val) => settings.setLanguage(val),
+                  onSelected: (val) =>
+                      _update(context, () => settings.setLanguage(val)),
                 ),
               ),
               _buildSettingItem(
@@ -106,12 +92,80 @@ class SettingsScreen extends StatelessWidget {
                 onTap: null, // AI Mode chỉ hiển thị, không xử lý
               ),
 
-              const Spacer(),
+              SwitchListTile(
+                title: Text(
+                  tr('local_history'),
+                  style: const TextStyle(color: Color(0xFF1E293B)),
+                ),
+                subtitle: Text(
+                  tr('history_privacy'),
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                value: settings.historyEnabled,
+                onChanged: (value) async {
+                  if (value) {
+                    final agreed = await _confirm(
+                      context,
+                      tr('enable_history'),
+                      tr('history_consent'),
+                    );
+                    if (!agreed || !context.mounted) return;
+                  }
+                  if (context.mounted) {
+                    await _update(
+                      context,
+                      () => settings.setHistoryEnabled(value),
+                    );
+                  }
+                },
+              ),
+              _buildSettingItem(
+                tr('retention'),
+                '${settings.historyRetentionDays} ${tr('days')} · ${tr('retention_new')}',
+                onTap: () => _showSelectionBottomSheet<int>(
+                  context: context,
+                  title: tr('retention'),
+                  options: [1, 3, 7, 14, 30],
+                  selectedValue: settings.historyRetentionDays,
+                  optionLabel: (days) => '$days ${tr('days')}',
+                  onSelected: (days) => _update(
+                    context,
+                    () => settings.setHistoryRetentionDays(days),
+                  ),
+                ),
+              ),
+              _buildSettingItem(
+                tr('clear_history'),
+                tr('clear_history_hint'),
+                onTap: () async {
+                  final agreed = await _confirm(
+                    context,
+                    tr('clear_history_confirm'),
+                    tr('clear_history_warning'),
+                  );
+                  if (agreed && context.mounted) {
+                    await _update(
+                      context,
+                      HistoryStorageService.instance.clearAllByUser,
+                    );
+                  }
+                },
+              ),
+              _buildSettingItem(
+                tr('logout'),
+                tr('logout_hint'),
+                onTap: () =>
+                    _update(context, AuthSessionService.instance.logout),
+              ),
+              const SizedBox(height: 24),
 
               // Thông tin phiên bản ở dưới cùng
               const Text(
                 "Voice Translate AI",
-                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 5),
               Text(
@@ -124,6 +178,51 @@ class SettingsScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<bool> _confirm(
+    BuildContext context,
+    String title,
+    String message,
+  ) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(tr('cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(tr('agree')),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _update(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('update_success'))));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('update_failed'))));
+      }
+    }
   }
 
   void _showSelectionBottomSheet<T>({
@@ -167,7 +266,10 @@ class SettingsScreen extends StatelessWidget {
                   },
                   borderRadius: BorderRadius.circular(15),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 8,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -176,7 +278,9 @@ class SettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             color: const Color(0xFF1E293B),
                             fontSize: 16,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         if (isSelected)
@@ -204,8 +308,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingItem(String title, String subtitle, {VoidCallback? onTap}) {
-    return GestureDetector(
+  Widget _buildSettingItem(
+    String title,
+    String subtitle, {
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -215,7 +323,7 @@ class SettingsScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -243,7 +351,8 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            if (onTap != null)
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
           ],
         ),
       ),

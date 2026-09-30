@@ -1,0 +1,874 @@
+[
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.01",
+    "name": "Rapid debounce spam (50 start/stop cycles)",
+    "status_after": "PASS",
+    "latency_ms": 0.05,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.02",
+    "name": "Concurrent start calls mutex",
+    "status_after": "PASS",
+    "latency_ms": 2.84,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.03",
+    "name": "Concurrent stop calls safety",
+    "status_after": "PASS",
+    "latency_ms": 2.27,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.04",
+    "name": "Double reset during startup",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.05",
+    "name": "Audio silence buffer VAD rejection",
+    "status_after": "PASS",
+    "latency_ms": 2219.84,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.06",
+    "name": "Audio clipping & DC offset normalization",
+    "status_after": "PASS",
+    "latency_ms": 589.86,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.07",
+    "name": "Tiny undersized chunk buffer handling",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.08",
+    "name": "Odd byte count PCM rejection",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.09",
+    "name": "Resampling 8kHz to 16kHz mono conversion",
+    "status_after": "PASS",
+    "latency_ms": 0.48,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.10",
+    "name": "Stereo to mono downmixing",
+    "status_after": "PASS",
+    "latency_ms": 0.25,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.11",
+    "name": "Rapid mic toggle 10x per second",
+    "status_after": "PASS",
+    "latency_ms": 0.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.12",
+    "name": "Barge-in: late turn chunk rejection & isolation",
+    "status_after": "PASS",
+    "latency_ms": 0.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.13",
+    "name": "Cancelled turn chunk discard",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.14",
+    "name": "Unregistered turn chunk rejection",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.15",
+    "name": "Playback rate bounds validation (0.8x - 1.25x)",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.16",
+    "name": "Player handles empty audio payload",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.17",
+    "name": "Corrupted base64 audio decoding exception",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.18",
+    "name": "Microphone permission denied handling",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.19",
+    "name": "Audio hardware unplug event catch",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.20",
+    "name": "Controller disposal resets mic state machine",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.21",
+    "name": "Dual instance recorder state isolation",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 1",
+    "case_id": "CASE 1.22",
+    "name": "Re-enabling mic after permission grant",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.01",
+    "name": "Mid-turn config change is safely deferred to next turn",
+    "status_after": "PASS",
+    "latency_ms": 34.83,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.02",
+    "name": "Language swap cleanly cancels active turn",
+    "status_after": "PASS",
+    "latency_ms": 6.45,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.03",
+    "name": "Rapid language toggling 20x without crash",
+    "status_after": "PASS",
+    "latency_ms": 5.67,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.04",
+    "name": "Turn metadata language immutability",
+    "status_after": "PASS",
+    "latency_ms": 2.18,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.05",
+    "name": "Quick alternating turn language pairs",
+    "status_after": "PASS",
+    "latency_ms": 6.7,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.06",
+    "name": "Resolve source language aliases (vi/vie_Latn/en/eng_Latn)",
+    "status_after": "PASS",
+    "latency_ms": 605.8,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.07",
+    "name": "Resolve target language aliases to BCP-47",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.08",
+    "name": "Unsupported source language 'fr' raises ValueError",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.09",
+    "name": "Unsupported target language 'ja' raises ValueError",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.10",
+    "name": "Empty string language code raises ValueError",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.11",
+    "name": "NLLB language code mapping integrity",
+    "status_after": "PASS",
+    "latency_ms": 19.79,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.12",
+    "name": "Whisper STT language code mapping integrity",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.13",
+    "name": "Code-switching mixed text processing",
+    "status_after": "PASS",
+    "latency_ms": 3.38,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.14",
+    "name": "Speaker identity toggle 'partner'",
+    "status_after": "PASS",
+    "latency_ms": 6.78,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.15",
+    "name": "Missing speaker defaults safely to 'me'",
+    "status_after": "PASS",
+    "latency_ms": 1.22,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.16",
+    "name": "Duplicate start_turn idempotently accepted",
+    "status_after": "PASS",
+    "latency_ms": 4.8,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.17",
+    "name": "Out-of-order end_turn handled without server crash",
+    "status_after": "PASS",
+    "latency_ms": 0.9,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.18",
+    "name": "Idempotent language config updates",
+    "status_after": "PASS",
+    "latency_ms": 0.08,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.19",
+    "name": "Simultaneous speaker and language swap",
+    "status_after": "PASS",
+    "latency_ms": 1.05,
+    "detail": ""
+  },
+  {
+    "group": "Group 2",
+    "case_id": "CASE 2.20",
+    "name": "Null values in language config handled safely",
+    "status_after": "PASS",
+    "latency_ms": 0.07,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.01",
+    "name": "Quiet audio filter rejects faint background hum",
+    "status_after": "PASS",
+    "latency_ms": 1.48,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.02",
+    "name": "Ultra-long audio buffer bounded by MAX_BUFFER_BYTES",
+    "status_after": "PASS",
+    "latency_ms": 0.6,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.03",
+    "name": "Audio under MIN_BUFFER_BYTES safely skipped",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.04",
+    "name": "White noise below energy threshold skipped",
+    "status_after": "PASS",
+    "latency_ms": 0.18,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.05",
+    "name": "Repetitive pulse click array processing",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.06",
+    "name": "1kHz pure sine wave processing",
+    "status_after": "PASS",
+    "latency_ms": 0.25,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.07",
+    "name": "High-frequency burst noise processing",
+    "status_after": "PASS",
+    "latency_ms": 0.11,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.08",
+    "name": "VAD frame slicing remainder preserved across chunks",
+    "status_after": "PASS",
+    "latency_ms": 0.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.09",
+    "name": "WebRtcVadStream reset clears buffers",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.10",
+    "name": "Semantic correction on empty string",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.11",
+    "name": "Semantic correction on punctuation-only string",
+    "status_after": "PASS",
+    "latency_ms": 0.08,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.12",
+    "name": "Semantic correction preserves Unicode emojis",
+    "status_after": "PASS",
+    "latency_ms": 0.06,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.13",
+    "name": "TTS text splitter single word",
+    "status_after": "PASS",
+    "latency_ms": 1.25,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.14",
+    "name": "TTS text splitter compound sentences",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.15",
+    "name": "TTS text splitter sentence without punctuation",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.16",
+    "name": "MMS-TTS handles empty string gracefully",
+    "status_after": "PASS",
+    "latency_ms": 41.66,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.17",
+    "name": "MMS-TTS speech synthesis model loader guard",
+    "status_after": "PASS",
+    "latency_ms": 2.7,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.18",
+    "name": "DeepFilter denoise clean numpy array",
+    "status_after": "PASS",
+    "latency_ms": 0.55,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.19",
+    "name": "GPU manager adaptive memory cleanup",
+    "status_after": "PASS",
+    "latency_ms": 1.7,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.20",
+    "name": "NLLB translation 'Xin chào' -> 'How are you?' / 'Hello'",
+    "status_after": "PASS",
+    "latency_ms": 473.95,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.21",
+    "name": "Global telemetry stage tracking & completion",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.22",
+    "name": "Queue put/get non-blocking integrity",
+    "status_after": "PASS",
+    "latency_ms": 0.03,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.23",
+    "name": "Translation cache exact hit",
+    "status_after": "PASS",
+    "latency_ms": 0.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.24",
+    "name": "Translation cache miss on reverse language pair",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 3",
+    "case_id": "CASE 3.25",
+    "name": "Translation cache client ID namespace isolation",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.01",
+    "name": "Abrupt TCP socket abort & resource cleanup",
+    "status_after": "PASS",
+    "latency_ms": 518.38,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.02",
+    "name": "Reconnection with active token succeeds",
+    "status_after": "PASS",
+    "latency_ms": 6.06,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.03",
+    "name": "Handshake burst rate limit protection",
+    "status_after": "PASS",
+    "latency_ms": 46.78,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.04",
+    "name": "Exceeding bytes/sec triggers WS close/error (4429/4400)",
+    "status_after": "PASS",
+    "latency_ms": 4.42,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.05",
+    "name": "Oversized JSON config (>64KB) rejected",
+    "status_after": "PASS",
+    "latency_ms": 3.31,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.06",
+    "name": "Oversized audio frame (>64KB) rejected",
+    "status_after": "PASS",
+    "latency_ms": 5.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.07",
+    "name": "Malformed JSON frame causes controlled close/error (4400)",
+    "status_after": "PASS",
+    "latency_ms": 3.46,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.08",
+    "name": "Unknown message type rejected",
+    "status_after": "PASS",
+    "latency_ms": 7.34,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.09",
+    "name": "Audio frame before authentication rejected",
+    "status_after": "PASS",
+    "latency_ms": 3.92,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.10",
+    "name": "Config frame without access token rejected",
+    "status_after": "PASS",
+    "latency_ms": 2.94,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.11",
+    "name": "Expired JWT token rejected",
+    "status_after": "PASS",
+    "latency_ms": 3.76,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.12",
+    "name": "Tampered JWT token rejected",
+    "status_after": "PASS",
+    "latency_ms": 3.29,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.13",
+    "name": "Mid-session audio format alteration blocked (4400)",
+    "status_after": "PASS",
+    "latency_ms": 5.56,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.14",
+    "name": "Mid-session identity change blocked",
+    "status_after": "PASS",
+    "latency_ms": 5.09,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.15",
+    "name": "Untrusted WebSocket Origin header blocked",
+    "status_after": "PASS",
+    "latency_ms": 0.9,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.16",
+    "name": "Trusted Origin http://localhost:5173 accepted",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.17",
+    "name": "Realtime connection heartbeat loop initialization",
+    "status_after": "PASS",
+    "latency_ms": 4.72,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.18",
+    "name": "Connection slots acquire and release lifecycle",
+    "status_after": "PASS",
+    "latency_ms": 0.02,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.19",
+    "name": "Concurrent connection slot limit (4 per owner) enforced",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 4",
+    "case_id": "CASE 4.20",
+    "name": "Send queue overflow backpressure protection",
+    "status_after": "PASS",
+    "latency_ms": 2.15,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.01",
+    "name": "TM lookup with SQL injection payload",
+    "status_after": "PASS",
+    "latency_ms": 0.05,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.02",
+    "name": "TM lookup with NoSQL injection payload",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.03",
+    "name": "TM lookup with Regex metacharacters",
+    "status_after": "PASS",
+    "latency_ms": 0.0,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.04",
+    "name": "TM add/lookup/delete with Unicode Emojis",
+    "status_after": "PASS",
+    "latency_ms": 5.78,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.05",
+    "name": "TM handles raw HTML/XSS strings safely",
+    "status_after": "PASS",
+    "latency_ms": 3.47,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.06",
+    "name": "Data isolation: User A term invisible to User B",
+    "status_after": "PASS",
+    "latency_ms": 3.43,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.07",
+    "name": "Guest volatile TM add, lookup and forget",
+    "status_after": "PASS",
+    "latency_ms": 0.07,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.08",
+    "name": "Guest registration rejects already-expired TTL",
+    "status_after": "PASS",
+    "latency_ms": 0.01,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.09",
+    "name": "Guest TM capacity limit (50 terms) enforced",
+    "status_after": "PASS",
+    "latency_ms": 0.16,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.10",
+    "name": "Concurrent writes from 10 threads thread-safety",
+    "status_after": "PASS",
+    "latency_ms": 39.23,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.11",
+    "name": "TM persistence atomic JSON file integrity",
+    "status_after": "PASS",
+    "latency_ms": 0.04,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.12",
+    "name": "TM language direction verification (vi->en vs en->vi)",
+    "status_after": "PASS",
+    "latency_ms": 3.4,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.13",
+    "name": "Glossary context prompt formatting for Whisper",
+    "status_after": "PASS",
+    "latency_ms": 3.18,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.14",
+    "name": "Admin login rejects SQL injection in username",
+    "status_after": "PASS",
+    "latency_ms": 232.38,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.15",
+    "name": "Admin dictionary search with URL-encoded special chars",
+    "status_after": "PASS",
+    "latency_ms": 25.11,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.16",
+    "name": "Admin dictionary add with empty key returns 400/422",
+    "status_after": "PASS",
+    "latency_ms": 22.67,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.17",
+    "name": "Admin dictionary add with empty value returns 400/422",
+    "status_after": "PASS",
+    "latency_ms": 10.03,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.18",
+    "name": "Admin dictionary delete non-existent key returns 404",
+    "status_after": "PASS",
+    "latency_ms": 20.62,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.19",
+    "name": "Admin quality logs pagination limit=5 returns list",
+    "status_after": "PASS",
+    "latency_ms": 8.84,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.20",
+    "name": "Flag inaccurate translation POST /api/flag-translation",
+    "status_after": "PASS",
+    "latency_ms": 24.71,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.21",
+    "name": "Database logging exception swallowed safely",
+    "status_after": "PASS",
+    "latency_ms": 12.89,
+    "detail": ""
+  },
+  {
+    "group": "Group 5",
+    "case_id": "CASE 5.22",
+    "name": "Admin system status returns GPU & telemetry",
+    "status_after": "PASS",
+    "latency_ms": 114.97,
+    "detail": ""
+  }
+]

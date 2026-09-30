@@ -1,5 +1,8 @@
+"""
+T-Langua Backend — Entry point.
+Apply compatibility patches, then start uvicorn.
+"""
 import sys
-import types
 import io
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -7,56 +10,19 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
-import torch
-if not hasattr(torch, "float8_e8m0fnu"):
-    torch.float8_e8m0fnu = torch.float8_e4m3fn
-
-
-# 1. Tự định nghĩa một Mock Class giả lập cấu trúc AudioMetaData đúng chuẩn Python
-class MockAudioMetaData:
-    def __init__(self, sample_rate: int = 48000, num_frames: int = 0, num_channels: int = 1, bits_per_sample: int = 16, encoding: str = "PCM_S"):
-        self.sample_rate = sample_rate
-        self.num_frames = num_frames
-        self.num_channels = num_channels
-        self.bits_per_sample = bits_per_sample
-        self.encoding = encoding
-
-# 2. Tạo module giả lập 'torchaudio.info' ngay trên RAM để đánh lừa DeepFilterNet
-info_module = types.ModuleType("torchaudio.info")
-info_module.AudioMetaData = MockAudioMetaData
-
-# Đăng ký module giả lập này trực tiếp vào hệ thống nạp module của Python
-sys.modules["torchaudio.info"] = info_module
-
-
-# 3. Ép module torchaudio gốc (nếu được import) cũng phải nhận diện class Mock này
-try:
-    import torchaudio
-    torchaudio.AudioMetaData = MockAudioMetaData
-except Exception:
-    pass
-
-# 4. Vá tiếp hàm resample phòng hờ lỗi truyền tham số nâng cao ở các bước sau
-try:
-    from torchaudio.functional import resample as original_resample
-    
-    def safe_resample(audio, orig_sr, new_sr, **kwargs):
-        return original_resample(audio, orig_sr, new_sr)
-        
-    import torchaudio.functional
-    torchaudio.functional.resample = safe_resample
-except Exception:
-    pass
-# =====================================================================
+# Apply torch ecosystem patches before any AI imports.
+from app.core.compat import apply_torch_patches
+apply_torch_patches()
 
 import asyncio
 import logging
 import uvicorn
 
-from app.core.config import (
-    HOST,
-    PORT
-)
+from app.core.config import settings
+from app.core.logging_config import setup_logging
+
+setup_logging()
+
 
 if __name__ == "__main__":
 
@@ -66,9 +32,17 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "app.main:app",
-        host=HOST,
-        port=PORT,
+        host=settings.API_HOST,
+        port=settings.API_PORT,
         reload=False,
+        workers=1,  # GPU models không chia sẻ qua workers → giữ 1
+        ws_max_size=settings.WS_MAX_MESSAGE_BYTES,
+        ws_max_queue=4,
+        ws_per_message_deflate=False,
+        limit_concurrency=64,
+        timeout_keep_alive=10,
+        forwarded_allow_ips=settings.PROXY_TRUSTED_IPS,
+        access_log=False,  # Paths can contain dictionary text; never log request content.
         ws_ping_interval=30,
-        ws_ping_timeout=120
+        ws_ping_timeout=120,
     )

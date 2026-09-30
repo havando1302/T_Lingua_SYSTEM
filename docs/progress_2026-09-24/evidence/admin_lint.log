@@ -1,0 +1,6 @@
+
+> admin_web@0.0.0 lint
+> oxlint
+
+src/components/ThemeProvider.tsx:63:14: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+src/components/ui/Button.tsx:5:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.

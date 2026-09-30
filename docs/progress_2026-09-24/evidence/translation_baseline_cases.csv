@@ -1,0 +1,31 @@
+﻿case_id,source_lang,target_lang,source,reference,hypothesis,latency_ms,char_similarity,token_f1,required_terms,term_hits,term_total
+VI_EN_01,vi,en,"Xin chào, rất vui được gặp bạn.","Hello, nice to meet you.","Hello, nice to meet you.",3384.371,1.0,1.0,,0,0
+VI_EN_02,vi,en,Hôm nay thời tiết khá dễ chịu.,The weather is quite pleasant today.,The weather is quite pleasant today.,327.516,1.0,1.0,,0,0
+VI_EN_03,vi,en,Cuộc họp bắt đầu lúc chín giờ sáng.,The meeting starts at nine in the morning.,The meeting started at nine in the morning.,500.564,0.9647,0.875,nine,1,1
+VI_EN_04,vi,en,Vui lòng gửi báo cáo trước thứ Sáu.,Please send the report before Friday.,Please submit your report by Friday.,438.355,0.7123,0.5,Friday,1,1
+VI_EN_05,vi,en,Tôi muốn đặt một vé máy bay đến Hà Nội.,I would like to book a flight to Hanoi.,I want to book a plane ticket to Hanoi.,593.787,0.6923,0.6667,Hanoi,1,1
+VI_EN_06,vi,en,"Giá trị hợp đồng là 1,5 tỷ đồng.",The contract value is 1.5 billion dong.,The contract is worth 1.5 billion VND.,495.624,0.7792,0.75,1.5,1,1
+VI_EN_07,vi,en,Hệ thống đang xử lý yêu cầu của bạn.,The system is processing your request.,The system is processing your request.,380.434,1.0,1.0,system,1,1
+VI_EN_08,vi,en,Bạn có thể nói chậm hơn được không?,Could you speak more slowly?,Can you speak slower?,349.194,0.6939,0.4444,,0,0
+VI_EN_09,vi,en,Tài khoản này đã bị khóa vì lý do bảo mật.,This account has been locked for security reasons.,This account has been locked for security reasons.,582.149,1.0,1.0,account | security,2,2
+VI_EN_10,vi,en,Dữ liệu phải được sao lưu trước khi nâng cấp.,The data must be backed up before the upgrade.,Data must be backed up before upgrading.,409.143,0.8605,0.75,data,1,1
+VI_EN_11,vi,en,Trí tuệ nhân tạo hỗ trợ dịch hội thoại theo thời gian thực.,Artificial intelligence supports real-time conversation translation.,The AI supports real-time translation of conversations.,366.333,0.5854,0.5333,Artificial intelligence,0,1
+VI_EN_12,vi,en,Không được chia sẻ khóa API với người không có thẩm quyền.,Do not share the API key with unauthorized people.,Do not share API keys with unauthorized persons.,404.179,0.8776,0.7059,API key,1,1
+VI_EN_13,vi,en,"Nếu mất kết nối, ứng dụng sẽ tự động thử lại.","If the connection is lost, the application will retry automatically.","If the connection is lost, the app will automatically try again.",423.743,0.8182,0.7619,,0,0
+VI_EN_14,vi,en,Kết quả dịch cần giữ nguyên tên riêng và số liệu.,The translation must preserve proper names and numbers.,The translation results should retain their proper names and numbers.,473.431,0.7581,0.6667,,0,0
+VI_EN_15,vi,en,Cảm ơn bạn đã phản hồi về chất lượng bản dịch.,Thank you for your feedback on the translation quality.,Thank you for your feedback on the quality of the translation.,622.041,0.8034,0.9,translation,1,1
+EN_VI_01,en,vi,Good morning. How can I help you?,Chào buổi sáng. Tôi có thể giúp gì cho bạn?,"Chào buổi sáng, tôi có thể giúp gì cho anh?",510.4,0.9302,0.9,,0,0
+EN_VI_02,en,vi,Please check your internet connection.,Vui lòng kiểm tra kết nối Internet của bạn.,Xin hãy kiểm tra kết nối internet của bạn.,438.888,0.8706,0.7778,Internet,1,1
+EN_VI_03,en,vi,The train will arrive at 10:30.,Tàu sẽ đến lúc 10 giờ 30.,Tàu sẽ đến lúc 10h30.,271.574,0.8696,0.6667,10,1,1
+EN_VI_04,en,vi,Your password must contain at least twelve characters.,Mật khẩu của bạn phải chứa ít nhất mười hai ký tự.,Mật khẩu của bạn phải chứa ít nhất mười hai ký tự.,494.424,1.0,1.0,mười hai,1,1
+EN_VI_05,en,vi,The administrator revoked the old API key.,Quản trị viên đã thu hồi khóa API cũ.,Người quản trị đã thu hồi khóa API cũ.,280.538,0.8533,0.8889,khóa API,1,1
+EN_VI_06,en,vi,We need a backup before running the database migration.,Chúng ta cần sao lưu trước khi chạy quá trình di chuyển cơ sở dữ liệu.,Chúng ta cần sao lưu trước khi chạy chuyển dữ liệu.,321.632,0.843,0.8148,sao lưu,1,1
+EN_VI_07,en,vi,Speech recognition may be less accurate in a noisy room.,Nhận dạng giọng nói có thể kém chính xác hơn trong phòng nhiều tiếng ồn.,Nhận dạng giọng nói có thể không chính xác trong một căn phòng ồn ào.,557.58,0.766,0.7333,Nhận dạng giọng nói,1,1
+EN_VI_08,en,vi,Do not close the application while audio is being uploaded.,Không đóng ứng dụng khi âm thanh đang được tải lên.,Đừng đóng ứng dụng trong khi tải lên âm thanh.,305.587,0.6186,0.7619,,0,0
+EN_VI_09,en,vi,The response time improved after enabling the cache.,Thời gian phản hồi được cải thiện sau khi bật bộ nhớ đệm.,Thời gian phản hồi được cải thiện sau khi kích hoạt bộ nhớ cache.,412.014,0.8525,0.8148,bộ nhớ đệm,0,1
+EN_VI_10,en,vi,Could you repeat the last sentence?,Bạn có thể lặp lại câu cuối cùng không?,Ông có thể lặp lại câu cuối cùng không?,348.172,0.9487,0.8889,,0,0
+EN_VI_11,en,vi,The quality reviewer corrected the translation.,Người đánh giá chất lượng đã sửa bản dịch.,Người kiểm tra chất lượng đã sửa dịch.,457.575,0.775,0.7059,,0,0
+EN_VI_12,en,vi,Hanoi is the capital of Vietnam.,Hà Nội là thủ đô của Việt Nam.,Hà Nội là thủ đô của Việt Nam.,317.058,1.0,1.0,Hà Nội | Việt Nam,2,2
+EN_VI_13,en,vi,The system supports Vietnamese and English.,Hệ thống hỗ trợ tiếng Việt và tiếng Anh.,Hệ thống hỗ trợ tiếng Việt và tiếng Anh.,558.348,1.0,1.0,tiếng Việt | tiếng Anh,2,2
+EN_VI_14,en,vi,An expired session must not access private history.,Phiên đã hết hạn không được truy cập lịch sử riêng tư.,Một phiên đã hết hạn không được truy cập lịch sử riêng tư.,817.555,0.9643,0.96,,0,0
+EN_VI_15,en,vi,Please review the result before adding it to the shared dictionary.,Vui lòng xem lại kết quả trước khi thêm vào từ điển dùng chung.,Vui lòng xem xét kết quả trước khi thêm nó vào từ điển chung.,754.618,0.8871,0.8571,từ điển,1,1
