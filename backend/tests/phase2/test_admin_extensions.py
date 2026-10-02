@@ -114,6 +114,8 @@ class AdminExtensionTests(unittest.TestCase):
             json={
                 "corrected_source_text": "Xin chao", "corrected_text": "Hello there",
                 "translation_status": "corrected",
+                "consent_for_training": True, "pii_status": "clean",
+                "use_for_nllb": True,
             },
         )
         self.assertEqual(response.status_code, 200, response.text)
@@ -133,6 +135,43 @@ class AdminExtensionTests(unittest.TestCase):
         row = __import__("json").loads(training.text)
         self.assertEqual(row["source"], "Xin chao")
         self.assertEqual(row["target"], "Hello there")
+
+    def test_training_export_and_preview_require_data_clearance(self):
+        log = TranslationLog(
+            client_id="synthetic", source_text="Cam on", translated_text="Thanks",
+            source_lang="vie_Latn", target_lang="eng_Latn", is_flagged=True,
+        )
+        self.db.add(log)
+        self.db.commit()
+        unresolved = self.client.post(
+            f"/admin/quality/logs/{log.id}/resolve", headers=self.headers,
+            json={
+                "corrected_source_text": "Cam on", "corrected_text": "Thanks",
+                "translation_status": "correct", "use_for_nllb": True,
+            },
+        )
+        self.assertEqual(unresolved.status_code, 200, unresolved.text)
+        blocked_export = self.client.get("/admin/training/export/nllb", headers=self.headers)
+        self.assertEqual(blocked_export.text, "")
+
+        approved = self.client.post(
+            f"/admin/quality/logs/{log.id}/resolve", headers=self.headers,
+            json={
+                "corrected_source_text": "Cam on", "corrected_text": "Thanks",
+                "translation_status": "correct", "consent_for_training": True,
+                "pii_status": "redacted", "use_for_nllb": True,
+            },
+        )
+        self.assertEqual(approved.status_code, 200, approved.text)
+        exported = self.client.get("/admin/training/export/nllb", headers=self.headers)
+        row = __import__("json").loads(exported.text)
+        self.assertEqual((row["source_lang"], row["target_lang"]), ("vi", "en"))
+        preview = self.client.post(
+            "/admin/training/datasets/preview-from-qa", headers=self.headers,
+            json={"name": "preview-data", "version": "v1", "task": "nllb", "language": "all"},
+        )
+        self.assertEqual(preview.status_code, 200, preview.text)
+        self.assertEqual(preview.json()["eligible"], 1)
 
     def test_dictionary_export_is_csv_and_does_not_expose_secrets(self):
         rows = [{

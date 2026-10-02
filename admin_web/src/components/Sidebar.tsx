@@ -75,7 +75,7 @@ const Sidebar = () => {
       <div id="admin-sidebar" ref={sidebarRef} className={`fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-surface border-r border-border flex flex-col transition-transform duration-300 md:relative md:translate-x-0 md:visible ${isOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'}`}>
         <div className="p-6 pt-20 md:pt-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-surface font-bold text-lg">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-lg">
               T
             </div>
             <span className="text-xl font-bold text-text">Translator AI</span>
@@ -93,7 +93,7 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive
-                    ? 'bg-primary text-surface font-medium shadow-md shadow-primary/20'
+                    ? 'bg-primary text-white font-medium shadow-md shadow-primary/20'
                     : 'text-text-muted hover:bg-background hover:text-text'
                 }`
               }

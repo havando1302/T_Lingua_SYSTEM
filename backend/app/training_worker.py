@@ -182,7 +182,15 @@ def run_job(job_id: str, worker_id: str) -> None:
             add_event(db, job.id, "Dataset checksum verified; starting the isolated trainer", event_type="training")
             db.commit()
             command = command_for(job, dataset_path, output_path)
-            epochs = float(json.loads(job.config_json)["epochs"])
+            job_config = json.loads(job.config_json)
+            epochs = float(job_config["epochs"])
+            compute_target = job_config.get("runtime", "worker")
+            if compute_target == "local_gpu" and not __import__("torch").cuda.is_available():
+                raise RuntimeError("Job requires a local GPU, but CUDA is not available on this worker")
+            process_env = os.environ.copy()
+            if compute_target == "local_cpu":
+                process_env["CUDA_VISIBLE_DEVICES"] = ""
+            add_event(db, job.id, f"Compute target: {compute_target}", event_type="preparing")
         except Exception as exc:
             job.status = "failed"
             job.error_code = "PREPARE_FAILED"
@@ -195,7 +203,7 @@ def run_job(job_id: str, worker_id: str) -> None:
 
     process = subprocess.Popen(
         command, cwd=str(BACKEND_DIR), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        text=True, encoding="utf-8", errors="replace", bufsize=1,
+        text=True, encoding="utf-8", errors="replace", bufsize=1, env=process_env,
     )
     output_queue: queue.Queue[str] = queue.Queue()
     reader = threading.Thread(target=_read_output, args=(process.stdout, output_queue), daemon=True)

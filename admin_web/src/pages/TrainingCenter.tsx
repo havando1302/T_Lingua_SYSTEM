@@ -16,10 +16,18 @@ type Task = 'nllb' | 'whisper';
 type TrainingTask = Task | 'both';
 
 interface Overview {
-  runtime: { status: string; gpu: Record<string, unknown>; worker: string; active_job_id?: string };
+  runtime: { status: string; gpu: Record<string, unknown>; worker: string; active_job_id?: string; scope?: string };
+  qa?: { reviewed: number; pending: number; eligible_nllb: number; eligible_whisper: number; blocked_consent: number; blocked_pii: number };
   whisper: { samples: number; hours: number; hours_by_language: Record<string, number>; splits: Record<string, number>; ready: boolean; recommended_hours: number };
   nllb: { samples: number; directions: Record<string, number>; splits: Record<string, number>; ready: boolean; recommended_pairs_per_direction: number };
   playground: { available: boolean; reason: string };
+}
+
+interface DatasetPreview {
+  task: Task; reviewed: number; eligible: number; splits: Record<string, number>;
+  directions: Record<string, number>; duration_seconds: number; ready: boolean;
+  blockers: { no_consent: number; pii_not_cleared: number; not_approved: number; missing_audio: number };
+  reasons: string[];
 }
 
 interface Dataset {
@@ -166,24 +174,29 @@ export default function TrainingCenter() {
     <header className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
         <div className="flex items-center gap-4">
-          <div className="rounded-2xl bg-primary p-3 text-surface"><BrainCircuit size={28} /></div>
+          <div className="rounded-2xl bg-primary p-3 text-white"><BrainCircuit size={28} /></div>
           <div><h1 className="text-2xl font-bold md:text-3xl">Trung tâm huấn luyện AI</h1><p className="text-sm text-text-muted">Dataset · Training · Models · A/B Testing</p></div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"><span className="h-2 w-2 rounded-full bg-emerald-500" />Runtime: {overview?.runtime.status ?? '...'}</span>
-          <span className="rounded-lg border border-border px-3 py-2"><Cpu className="mr-2 inline" size={15} />{overview ? gpuLabel(overview.runtime.gpu) : 'Đang đọc GPU'}</span>
+          <span className="rounded-lg border border-border px-3 py-2" title="Tài nguyên của máy đang chạy API; worker bên ngoài có thể khác"><Cpu className="mr-2 inline" size={15} />API host: {overview ? gpuLabel(overview.runtime.gpu) : 'Đang đọc GPU'}</span>
           <span className="rounded-lg border border-border px-3 py-2">Worker: {statusLabels[overview?.runtime.worker ?? ''] ?? '...'}</span>
           <Badge value={user?.role ?? 'admin'} />
           <Button variant="secondary" size="sm" onClick={() => load()} isLoading={busy === 'refresh'}><RefreshCw size={14} className="mr-1" />Làm mới</Button>
         </div>
       </div>
       <div role="tablist" aria-label="Các khu vực huấn luyện" className="mt-5 flex gap-1 overflow-x-auto border-t border-border pt-4">
-        {tabs.map((item) => <button key={item.key} role="tab" aria-selected={tab === item.key} onClick={() => setTab(item.key)} className={cn('flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors', tab === item.key ? 'bg-primary text-surface' : 'text-text-muted hover:bg-background hover:text-text')}><item.icon size={16} />{item.label}</button>)}
+        {tabs.map((item) => <button key={item.key} role="tab" aria-selected={tab === item.key} onClick={() => setTab(item.key)} className={cn('flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors', tab === item.key ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:bg-background hover:text-text')}><item.icon size={16} />{item.label}</button>)}
       </div>
     </header>
 
     {notice && <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-700 dark:text-emerald-300"><CheckCircle2 size={18} />{notice}</div>}
     {error && <div role="alert" className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-700 dark:text-red-300"><AlertTriangle size={18} />{error}</div>}
+
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      {['1. Duyệt QA', '2. Tạo dataset', '3. Validate & Freeze', '4. Chọn máy chạy', '5. Train & đánh giá'].map((step, index) =>
+        <div key={step} className="rounded-xl border border-border bg-surface px-3 py-2 text-sm"><span className="mr-2 font-bold text-primary">{index + 1}</span>{step.replace(/^\d+\. /, '')}</div>)}
+    </div>
 
     {tab === 'overview' && <OverviewTab overview={overview} navigateQA={() => navigate('/qa')} download={download} />}
     {tab === 'datasets' && <DatasetsTab datasets={datasets} busy={busy} act={act} download={download} />}
@@ -198,7 +211,18 @@ function OverviewTab({ overview, navigateQA, download }: { overview: Overview | 
   const whisperProgress = overview.whisper.recommended_hours ? overview.whisper.hours / overview.whisper.recommended_hours * 100 : 0;
   const viProgress = overview.nllb.directions['vi-en'] / overview.nllb.recommended_pairs_per_direction * 100;
   const enProgress = overview.nllb.directions['en-vi'] / overview.nllb.recommended_pairs_per_direction * 100;
-  return <div className="grid gap-6 xl:grid-cols-2">
+  return <div className="space-y-6">
+    <Card><CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck size={20}/>Trạng thái nguồn dữ liệu</CardTitle><CardDescription>Chỉ mẫu đã QA, có quyền huấn luyện và PII sạch/đã che mới được tính.</CardDescription></CardHeader><CardContent>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Metric label="Đã QA" value={(overview.qa?.reviewed ?? 0).toLocaleString('vi-VN')} />
+        <Metric label="Chờ QA" value={(overview.qa?.pending ?? 0).toLocaleString('vi-VN')} />
+        <Metric label="Đủ điều kiện NLLB" value={(overview.qa?.eligible_nllb ?? overview.nllb.samples).toLocaleString('vi-VN')} />
+        <Metric label="Đủ điều kiện Whisper" value={(overview.qa?.eligible_whisper ?? overview.whisper.samples).toLocaleString('vi-VN')} />
+        <Metric label="Bị chặn quyền/PII" value={Math.max(overview.qa?.blocked_consent ?? 0, overview.qa?.blocked_pii ?? 0).toLocaleString('vi-VN')} />
+      </div>
+      <div className="mt-4"><Button onClick={navigateQA}>Mở hàng đợi QA</Button></div>
+    </CardContent></Card>
+    <div className="grid gap-6 xl:grid-cols-2">
     <Card>
       <CardHeader><div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2"><Mic2 size={20} />Whisper</CardTitle><Badge value={overview.whisper.ready ? 'validated' : 'draft'} /></div><CardDescription>Sẵn sàng kỹ thuật dựa trên train/validation; 10 giờ audio là mốc khuyến nghị.</CardDescription></CardHeader>
       <CardContent className="space-y-5">
@@ -222,6 +246,7 @@ function OverviewTab({ overview, navigateQA, download }: { overview: Overview | 
         <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={navigateQA}>Mở QA NLLB</Button><Button variant="secondary" onClick={() => download('/training/export/nllb', 'nllb-training.jsonl')}><Download size={15} className="mr-1" />Xuất NLLB JSONL</Button></div>
       </CardContent>
     </Card>
+    </div>
   </div>;
 }
 
@@ -243,8 +268,21 @@ function DatasetsTab({ datasets, busy, act, download }: { datasets: Dataset[]; b
   const [createdTo, setCreatedTo] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [rights, setRights] = useState(false);
+  const [preview, setPreview] = useState<(DatasetPreview & { signature: string }) | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+  const signature = JSON.stringify({ task, language, domain, createdFrom, createdTo });
+  const qaPayload = { name: name || `${task}-preview`, version, task, language, domain: domain || null, created_from: createdFrom || null, created_to: createdTo || null };
+  const runPreview = async () => {
+    setPreviewing(true); setPreviewError('');
+    try {
+      const response = await api.post<DatasetPreview>('/training/datasets/preview-from-qa', qaPayload);
+      setPreview({ ...response.data, signature });
+    } catch (caught) { setPreviewError(apiErrorMessage(caught, 'Không xem trước được dữ liệu.')); }
+    finally { setPreviewing(false); }
+  };
   const create = async () => {
-    if (mode === 'qa') return api.post('/training/datasets/from-qa', { name, version, task, language, domain: domain || null, created_from: createdFrom || null, created_to: createdTo || null });
+    if (mode === 'qa') return api.post('/training/datasets/from-qa', qaPayload);
     const form = new FormData(); form.append('name', name); form.append('version', version); form.append('task', task); form.append('rights_confirmed', String(rights)); if (file) form.append('file', file);
     return api.post('/training/datasets/upload', form, { timeout: 600_000 });
   };
@@ -259,7 +297,15 @@ function DatasetsTab({ datasets, busy, act, download }: { datasets: Dataset[]; b
       </div>
       {mode === 'qa' && <div className="grid gap-4 md:grid-cols-3"><Field label="Domain (để trống = tất cả)"><input value={domain} onChange={(event) => setDomain(event.target.value)} placeholder="general" className="field" /></Field><Field label="Từ ngày"><input type="date" value={createdFrom} onChange={(event) => setCreatedFrom(event.target.value)} className="field" /></Field><Field label="Đến ngày"><input type="date" value={createdTo} onChange={(event) => setCreatedTo(event.target.value)} className="field" /></Field></div>}
       {mode === 'upload' && <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} className="mt-1" /><span>Tôi xác nhận có quyền sử dụng dữ liệu này để huấn luyện model.</span></label>}
-      <Button disabled={!name || (mode === 'upload' && (!file || !rights))} isLoading={busy === 'dataset:create'} onClick={() => act('dataset:create', create, 'Đã tạo dataset bản nháp. Hãy chạy Validate trước khi Freeze.')}>Tạo dataset</Button>
+      {mode === 'qa' && <div className="space-y-3 rounded-xl border border-border bg-background/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-medium">Xem trước trước khi tạo</div><div className="text-xs text-text-muted">Dùng đúng bộ lọc và quy tắc sẽ áp dụng cho snapshot.</div></div><Button variant="secondary" isLoading={previewing} onClick={runPreview}><FlaskConical size={14} className="mr-1"/>Kiểm tra dữ liệu</Button></div>
+        {previewError && <p className="text-sm text-red-600">{previewError}</p>}
+        {preview && preview.signature === signature && <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4"><Metric label="Đã QA" value={String(preview.reviewed)}/><Metric label="Đủ điều kiện" value={String(preview.eligible)}/><Metric label="Train / Val / Test" value={`${preview.splits.train}/${preview.splits.validation}/${preview.splits.test}`}/><Metric label={task === 'whisper' ? 'Thời lượng' : 'Số chiều dịch'} value={task === 'whisper' ? `${(preview.duration_seconds / 3600).toFixed(2)} giờ` : String(Object.keys(preview.directions).length)}/></div>
+          {preview.ready ? <p className="flex items-center gap-2 text-sm font-medium text-emerald-600"><CheckCircle2 size={16}/>Đủ điều kiện kỹ thuật để tạo snapshot.</p> : <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-600"><div className="font-medium">Chưa thể tạo dataset train được</div><ul className="mt-1 list-disc pl-5">{preview.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul><div className="mt-2 text-xs">Chặn bởi quyền: {preview.blockers.no_consent} · PII: {preview.blockers.pii_not_cleared} · Chưa duyệt: {preview.blockers.not_approved}{task === 'whisper' ? ` · Thiếu audio: ${preview.blockers.missing_audio}` : ''}</div></div>}
+        </div>}
+      </div>}
+      <Button disabled={!name || (mode === 'qa' ? !preview?.ready || preview.signature !== signature : (!file || !rights))} isLoading={busy === 'dataset:create'} onClick={() => act('dataset:create', create, 'Đã tạo dataset bản nháp. Hãy chạy Validate trước khi Freeze.')}>Tạo dataset</Button>
     </CardContent></Card>
     <Card><CardHeader><CardTitle>Dataset Registry</CardTitle><CardDescription>Dataset đã Frozen là bất biến; muốn thay đổi phải tạo phiên bản mới.</CardDescription></CardHeader><CardContent>
       <Table><TableHeader><TableRow><TableHead>Phiên bản</TableHead><TableHead>Model</TableHead><TableHead>Train / Val / Test</TableHead><TableHead>Dung lượng</TableHead><TableHead>Trạng thái</TableHead><TableHead>Thao tác</TableHead></TableRow></TableHeader><TableBody>
@@ -288,7 +334,7 @@ function TrainingTab({ datasets, jobs, events, selectedJob, selectedJobId, setSe
   const [whisperDatasetId, setWhisperDatasetId] = useState('');
   const [preset, setPreset] = useState('recommended');
   const [output, setOutput] = useState('');
-  const [config, setConfig] = useState({ epochs: 3, batch_size: 2, gradient_accumulation: 8, learning_rate: 0.0002, seed: 42, max_source_length: 256, max_target_length: 256, runtime: 'colab' });
+  const [config, setConfig] = useState({ epochs: 3, batch_size: 2, gradient_accumulation: 8, learning_rate: 0.0002, seed: 42, max_source_length: 256, max_target_length: 256, runtime: 'local_auto' });
   useEffect(() => { if (!frozen.some((item) => item.id === datasetId)) setDatasetId(frozen[0]?.id ?? ''); }, [task, datasets, datasetId, frozen]);
   useEffect(() => { if (!frozenNllb.some((item) => item.id === nllbDatasetId)) setNllbDatasetId(frozenNllb[0]?.id ?? ''); }, [datasets, nllbDatasetId, frozenNllb]);
   useEffect(() => { if (!frozenWhisper.some((item) => item.id === whisperDatasetId)) setWhisperDatasetId(frozenWhisper[0]?.id ?? ''); }, [datasets, whisperDatasetId, frozenWhisper]);
@@ -308,7 +354,7 @@ function TrainingTab({ datasets, jobs, events, selectedJob, selectedJobId, setSe
     : { task, dataset_id: datasetId, base_model: baseModel, output_version: output, method: 'lora', config });
   const canQueue = task === 'both' ? Boolean(nllbDatasetId && whisperDatasetId && output) : Boolean(datasetId && output);
   return <div className="grid gap-6 xl:grid-cols-[430px_minmax(0,1fr)]">
-    <Card><CardHeader><CardTitle>Cấu hình huấn luyện</CardTitle><CardDescription>Job được lưu bền vững; worker Colab hoặc worker GPU riêng sẽ nhận job. Chỉ LoRA được phép từ giao diện.</CardDescription></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader><CardTitle>Cấu hình huấn luyện</CardTitle><CardDescription>Chọn dataset, máy chạy và preset. Cùng một worker có thể chạy trên máy cá nhân, Colab hoặc GPU/CPU thuê ngoài.</CardDescription></CardHeader><CardContent className="space-y-4">
       <div className="grid grid-cols-3 gap-2"><Button variant={task === 'nllb' ? 'primary' : 'secondary'} onClick={() => chooseTask('nllb')}><Languages size={15} className="mr-1" />NLLB</Button><Button variant={task === 'whisper' ? 'primary' : 'secondary'} onClick={() => chooseTask('whisper')}><Mic2 size={15} className="mr-1" />Whisper</Button><Button variant={task === 'both' ? 'primary' : 'secondary'} onClick={() => chooseTask('both')}>Cả hai</Button></div>
       {task === 'both' ? <><Field label="Dataset NLLB đã Frozen"><select value={nllbDatasetId} onChange={(event) => setNllbDatasetId(event.target.value)} className="field"><option value="">Chọn dataset NLLB</option>{frozenNllb.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}</select></Field><Field label="Dataset Whisper đã Frozen"><select value={whisperDatasetId} onChange={(event) => setWhisperDatasetId(event.target.value)} className="field"><option value="">Chọn dataset Whisper</option>{frozenWhisper.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}</select></Field><div className="rounded-xl border border-border bg-background p-3 text-sm">Hệ thống tạo hai job nối tiếp: NLLB dùng preset khuyến nghị trước, Whisper chỉ được worker nhận sau khi NLLB hoàn thành.</div></> : <>
       <Field label="Dataset đã Frozen"><select value={datasetId} onChange={(event) => setDatasetId(event.target.value)} className="field"><option value="">Chọn dataset</option>{frozen.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name} · {dataset.train_count}/{dataset.validation_count}/{dataset.test_count}</option>)}</select></Field>
@@ -320,11 +366,13 @@ function TrainingTab({ datasets, jobs, events, selectedJob, selectedJobId, setSe
         <NumberField label="Gradient accum." value={config.gradient_accumulation} step="1" set={(value) => setConfig({ ...config, gradient_accumulation: value })} />
         <NumberField label="Learning rate" value={config.learning_rate} step="0.00001" set={(value) => setConfig({ ...config, learning_rate: value })} />
         <NumberField label="Seed" value={config.seed} step="1" set={(value) => setConfig({ ...config, seed: value })} />
-        <Field label="Thiết bị"><select value={config.runtime} onChange={(event) => setConfig({ ...config, runtime: event.target.value })} className="field"><option value="colab">Google Colab</option><option value="worker">GPU worker riêng</option></select></Field>
+        <Field label="Máy thực thi"><select value={config.runtime} onChange={(event) => setConfig({ ...config, runtime: event.target.value })} className="field"><option value="local_auto">Máy hiện tại · tự chọn CPU/GPU</option><option value="local_gpu">GPU trên máy hiện tại</option><option value="local_cpu">CPU trên máy hiện tại · kiểm tra nhanh</option><option value="external_worker">Worker/GPU thuê bên ngoài</option><option value="colab">Google Colab</option></select></Field>
         {task === 'nllb' && <><NumberField label="Max source length" value={config.max_source_length} step="1" set={(value) => setConfig({ ...config, max_source_length: value })} /><NumberField label="Max target length" value={config.max_target_length} step="1" set={(value) => setConfig({ ...config, max_target_length: value })} /></>}
       </div></>}
       <Field label="Phiên bản đầu ra"><input value={output} onChange={(event) => setOutput(event.target.value)} placeholder={`${task}-v1.1`} className="field" /></Field>
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"><Cloud size={16} className="mr-1 inline" />Trên Colab Free: không chạy FastAPI inference và training cùng lúc; chạy worker bằng job ID sau khi dừng backend.</div>
+      {config.runtime === 'local_cpu' && <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"><Cpu size={16} className="mr-1 inline" />CPU phù hợp để smoke test hoặc model nhỏ; huấn luyện đầy đủ có thể rất chậm.</div>}
+      {config.runtime === 'colab' && <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"><Cloud size={16} className="mr-1 inline" />Colab cần truy cập cùng database và TRAINING_CONTROL_ROOT. Không chạy inference và training trên cùng GPU.</div>}
+      {config.runtime === 'external_worker' && <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-800 dark:text-blue-200"><Cloud size={16} className="mr-1 inline" />GPU/CPU thuê ngoài cần repository, database trung tâm và vùng lưu trữ dataset dùng chung; worker sẽ xác minh checksum trước khi train.</div>}
       <Button className="w-full" disabled={!isSuperadmin || !canQueue} isLoading={busy === 'job:create'} onClick={() => act('job:create', createJob, 'Job đã được đưa vào hàng đợi. Khởi động worker riêng để bắt đầu train.')}><Play size={16} className="mr-2" />Đưa vào hàng đợi</Button>
       {!isSuperadmin && <p className="text-xs text-text-muted">Chỉ superadmin có quyền tạo hoặc dừng job huấn luyện.</p>}
     </CardContent></Card>

@@ -1,5 +1,6 @@
 """Administrative control plane for immutable datasets and offline training jobs."""
 from __future__ import annotations
+from typing import Any
 
 import asyncio
 from datetime import date, datetime, timezone
@@ -23,7 +24,8 @@ from app.db.models import (
     TranslationLog, User,
 )
 from app.services.training_control import (
-    artifact_directory, create_qa_snapshot, directory_fingerprint, file_sha256,
+    artifact_directory, canonical_language, create_qa_snapshot, directory_fingerprint,
+    eligible_for_nllb, eligible_for_whisper, file_sha256, preview_qa_snapshot,
     relative_storage_uri, resolve_storage_uri, store_uploaded_dataset,
     validate_dataset_file, validate_dataset_name,
 )
@@ -62,7 +64,7 @@ def _json(value: str | None, fallback):
 
 
 def _audit(db: Session, actor: User, action: str, resource_type: str,
-           resource_id: str | int | None = None, details: dict | None = None) -> None:
+           resource_id: Any = None, details: dict | None = None) -> None:
     db.add(AuditLog(
         actor_user_id=actor.id, actor_username=actor.username, action=action,
         resource_type=resource_type, resource_id=str(resource_id) if resource_id is not None else None,
@@ -130,8 +132,8 @@ class JobConfig(BaseModel):
     @field_validator("runtime")
     @classmethod
     def runtime_is_supported(cls, value: str) -> str:
-        if value not in {"worker", "colab"}:
-            raise ValueError("Runtime must be worker or colab")
+        if value not in {"worker", "local_auto", "local_cpu", "local_gpu", "external_worker", "colab"}:
+            raise ValueError("Unsupported compute target")
         return value
 
 
@@ -226,14 +228,13 @@ def _artifact_payload(row: ModelArtifact, deployment: ModelDeployment | None = N
 
 @router.get("/overview")
 def training_overview(db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    approved = db.query(QualityReview, TranslationLog).join(
+    reviewed = db.query(QualityReview, TranslationLog).join(
         TranslationLog, TranslationLog.id == QualityReview.translation_log_id
     ).all()
     assets = {row.translation_log_id: row for row in db.query(TrainingAudioAsset).all()}
-    whisper = [(review, log, assets.get(log.id)) for review, log in approved
-               if assets.get(log.id) is not None and review.stt_status in {"correct", "corrected"}]
-    nllb = [(review, log) for review, log in approved
-            if review.translation_status in {"correct", "corrected"}]
+    whisper = [(review, log, assets.get(log.id)) for review, log in reviewed
+               if eligible_for_whisper(review, assets.get(log.id))]
+    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review)]
     whisper_splits = {split: sum(review.whisper_split == split for review, _, _ in whisper)
                       for split in ("train", "validation", "test")}
     nllb_splits = {split: sum(review.nllb_split == split for review, _ in nllb)
@@ -251,7 +252,17 @@ def training_overview(db: Session = Depends(get_db), user: User = Depends(requir
     return {
         "runtime": {"status": "online", "gpu": gpu,
                     "worker": "busy" if active_job and active_job.worker_id else "waiting" if active_job else "idle",
-                    "active_job_id": active_job.id if active_job else None},
+                    "active_job_id": active_job.id if active_job else None,
+                    "scope": "api_host"},
+        "qa": {
+            "reviewed": len(reviewed),
+            "pending": db.query(TranslationLog).filter(
+                TranslationLog.is_flagged == True, TranslationLog.is_reviewed == False
+            ).count(),
+            "eligible_nllb": len(nllb), "eligible_whisper": len(whisper),
+            "blocked_consent": sum(not review.consent_for_training for review, _ in reviewed),
+            "blocked_pii": sum(review.pii_status not in {"clean", "redacted"} for review, _ in reviewed),
+        },
         "whisper": {
             "samples": len(whisper), "hours": round(sum(asset.duration_ms for _, _, asset in whisper) / 3_600_000, 3),
             "hours_by_language": hours_by_language, "splits": whisper_splits,
@@ -260,14 +271,25 @@ def training_overview(db: Session = Depends(get_db), user: User = Depends(requir
         },
         "nllb": {
             "samples": len(nllb), "directions": {
-                "vi-en": sum((log.source_lang, log.target_lang) == ("vi", "en") for _, log in nllb),
-                "en-vi": sum((log.source_lang, log.target_lang) == ("en", "vi") for _, log in nllb),
+                "vi-en": sum((canonical_language(log.source_lang), canonical_language(log.target_lang)) == ("vi", "en") for _, log in nllb),
+                "en-vi": sum((canonical_language(log.source_lang), canonical_language(log.target_lang)) == ("en", "vi") for _, log in nllb),
             }, "splits": nllb_splits,
             "ready": bool(nllb_splits["train"] and nllb_splits["validation"]),
             "recommended_pairs_per_direction": 5000,
         },
         "playground": {"available": False, "reason": "Candidate inference runner is not configured"},
     }
+
+
+@router.post("/datasets/preview-from-qa")
+def preview_dataset_from_qa(req: DatasetFromQARequest, db: Session = Depends(get_db),
+                            user: User = Depends(require_admin)):
+    if req.created_from and req.created_to and req.created_from > req.created_to:
+        raise HTTPException(422, "created_from must not be after created_to")
+    return preview_qa_snapshot(
+        db, req.task, domain=req.domain, language=None if req.language == "all" else req.language,
+        created_from=req.created_from, created_to=req.created_to,
+    )
 
 
 @router.get("/datasets")
@@ -280,6 +302,12 @@ def create_dataset_from_qa(req: DatasetFromQARequest, db: Session = Depends(get_
                            user: User = Depends(require_admin)):
     if req.created_from and req.created_to and req.created_from > req.created_to:
         raise HTTPException(422, "created_from must not be after created_to")
+    preview = preview_qa_snapshot(
+        db, req.task, domain=req.domain, language=None if req.language == "all" else req.language,
+        created_from=req.created_from, created_to=req.created_to,
+    )
+    if not preview["ready"]:
+        raise HTTPException(422, "; ".join(preview["reasons"]) or "Dataset is not ready")
     row = TrainingDataset(
         name=req.name, task=req.task, source_type="qa", source_langs="[]", version=req.version,
         status="draft", storage_uri="pending", created_by_user_id=user.id,

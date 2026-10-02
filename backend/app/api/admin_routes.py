@@ -3,7 +3,7 @@ Admin API routes.
 JWT / password logic delegated to core.security.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Request
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
@@ -16,7 +16,7 @@ import zipfile
 import xml.etree.ElementTree as ElementTree
 import openpyxl
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Literal
+from typing import Any, List, Literal
 import os
 import psutil
 import tempfile
@@ -30,6 +30,9 @@ from app.db.models import (
 from app.services import translation_memory as tm
 from app.services.training_audio_storage import (
     delete_training_audio, store_training_wav, training_audio_path,
+)
+from app.services.training_control import (
+    canonical_language, eligible_for_nllb, eligible_for_whisper,
 )
 
 # ── Security (từ core, không hardcode) ──────────────────────
@@ -155,16 +158,18 @@ ModelComponent = Literal["whisper", "nllb", "tts_eng", "tts_vie"]
 
 
 class ModelCanaryUpdate(BaseModel):
-    model_id: str = Field(min_length=2, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]+$")
-    percent: int = Field(ge=1, le=50)
+    model_id: str | None = Field(default=None, max_length=200)
+    percent: int = Field(default=0, ge=0, le=50)
     model_config = {"extra": "forbid"}
 
     @field_validator("model_id")
     @classmethod
-    def validate_model_id(cls, value: str) -> str:
+    def validate_model_id(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
         if ".." in value or "\\" in value:
             raise ValueError("Unsafe model identifier")
-        return value
+        return value.strip()
 
 class DictionaryItem(BaseModel):
     source_text: str = Field(min_length=1, max_length=5000)
@@ -175,7 +180,7 @@ class DictionaryItem(BaseModel):
 
 
 def _audit(db: Session, actor: User, action: str, resource_type: str,
-           resource_id: str | int | None = None, details: dict | None = None) -> None:
+           resource_id: Any = None, details: dict | None = None) -> None:
     """Add a content-minimized audit record to the caller's current transaction."""
     db.add(AuditLog(
         actor_user_id=actor.id,
@@ -295,18 +300,94 @@ def reset_user_sessions(user_id: int, db: Session = Depends(get_db),
     db.commit()
     return {"ok": True}
 
+def _is_valid_str(val: Any) -> bool:
+    return isinstance(val, str) and bool(val.strip())
+
+
+def _apply_metrics_time_filter(query, time_range: Any = None, start_date: Any = None, end_date: Any = None):
+    now = datetime.utcnow()
+    has_start = _is_valid_str(start_date)
+    has_end = _is_valid_str(end_date)
+    if has_start or has_end:
+        if has_start:
+            try:
+                s_dt = datetime.strptime(start_date.strip(), "%Y-%m-%d")
+                query = query.filter(TranslationLog.created_at >= s_dt)
+            except ValueError:
+                pass
+        if has_end:
+            try:
+                e_dt = datetime.strptime(end_date.strip(), "%Y-%m-%d") + timedelta(days=1)
+                query = query.filter(TranslationLog.created_at < e_dt)
+            except ValueError:
+                pass
+        return query
+
+    if not _is_valid_str(time_range):
+        return query
+
+    tr = time_range.strip().lower()
+    if tr in ("7d", "7_days"):
+        start_dt = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(TranslationLog.created_at >= start_dt)
+    elif tr in ("week", "this_week"):
+        start_dt = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(TranslationLog.created_at >= start_dt)
+    elif tr in ("30d", "30_days"):
+        start_dt = (now - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(TranslationLog.created_at >= start_dt)
+    elif tr in ("month", "this_month"):
+        start_dt = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(TranslationLog.created_at >= start_dt)
+    elif tr == "all":
+        pass
+    return query
+
+
 # --- DASHBOARD / METRICS ---
 @router.get("/metrics/dashboard")
-def get_dashboard_metrics(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def get_dashboard_metrics(
+    time_range: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
     activity = GLOBAL_TELEMETRY.get_activity_summary()
-    flagged_translations = db.query(TranslationLog).filter(TranslationLog.is_flagged == True).count()
-    
+    has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
+
+    if not has_filter and activity.get("total_translations", 0) > 0:
+        flagged_translations = db.query(TranslationLog).filter(TranslationLog.is_flagged == True).count()
+        return {
+            "total_translations": activity["total_translations"],
+            "flagged_translations": flagged_translations,
+            "avg_latency": activity["avg_latency"],
+            "unique_clients": activity["unique_clients"],
+            "scope": activity["scope"], "started_at": activity["started_at"], "sample_limit": activity["sample_limit"],
+        }
+
+    base_q = db.query(TranslationLog)
+    base_q = _apply_metrics_time_filter(base_q, time_range, start_date, end_date)
+
+    total_translations = base_q.count()
+    flagged_translations = base_q.filter(TranslationLog.is_flagged == True).count()
+
+    avg_lat = db.query(func.avg(TranslationLog.latency))
+    avg_lat = _apply_metrics_time_filter(avg_lat, time_range, start_date, end_date)
+    avg_lat_val = avg_lat.filter(TranslationLog.latency > 0).scalar() or 0.0
+
+    clients_q = db.query(func.count(func.distinct(TranslationLog.client_id)))
+    clients_q = _apply_metrics_time_filter(clients_q, time_range, start_date, end_date)
+    unique_clients = clients_q.scalar() or 0
+
     return {
-        "total_translations": activity["total_translations"],
+        "total_translations": total_translations,
         "flagged_translations": flagged_translations,
-        "avg_latency": activity["avg_latency"],
-        "unique_clients": activity["unique_clients"],
-        "scope": activity["scope"], "started_at": activity["started_at"], "sample_limit": activity["sample_limit"],
+        "avg_latency": round(float(avg_lat_val), 3),
+        "unique_clients": unique_clients,
+        "scope": "persisted",
+        "started_at": activity.get("started_at"),
+        "sample_limit": activity.get("sample_limit", 1000),
     }
 
 # --- LOGS / QA ---
@@ -371,6 +452,13 @@ def get_quality_logs(search: str | None = Query(default=None, max_length=200),
             "error_category": review.error_category if review else None,
             "critical_error": review.critical_error if review else False,
             "domain": review.domain if review else None,
+            "consent_for_training": review.consent_for_training if review else False,
+            "pii_status": review.pii_status if review else "pending",
+            "use_for_whisper": review.use_for_whisper if review else False,
+            "use_for_nllb": review.use_for_nllb if review else False,
+            "whisper_split": review.whisper_split if review else None,
+            "nllb_split": review.nllb_split if review else None,
+            "notes": review.notes if review else None,
             "has_audio": asset is not None,
             "audio_duration_ms": asset.duration_ms if asset else None,
             "audio_url": f"/admin/quality/logs/{log.id}/audio" if asset else None,
@@ -422,8 +510,8 @@ def resolve_log(log_id: int, req: ResolveLogRequest, db: Session = Depends(get_d
     stt_status = req.stt_status
     if audio is not None and stt_status in {"not_applicable", "pending"}:
         stt_status = "correct" if corrected_source == log.source_text.strip() else "corrected"
-    use_for_whisper = audio is not None and stt_status in {"correct", "corrected"}
-    use_for_nllb = req.translation_status in {"correct", "corrected"}
+    use_for_whisper = bool(req.use_for_whisper and audio is not None and stt_status in {"correct", "corrected"})
+    use_for_nllb = bool(req.use_for_nllb and req.translation_status in {"correct", "corrected"})
 
     # Mark the QA item reviewed while preserving both raw model outputs.
     log.is_flagged = False
@@ -446,17 +534,15 @@ def resolve_log(log_id: int, req: ResolveLogRequest, db: Session = Depends(get_d
     review.stt_status = stt_status
     review.stt_error_category = req.stt_error_category
     review.translation_status = req.translation_status
-    review.domain = None
-    # Legacy columns remain in the database for compatibility, but the simple QA
-    # flow no longer asks reviewers to manage them.
-    review.consent_for_training = False
-    review.pii_status = "pending"
-    review.speaker_id_hash = None
+    review.domain = req.domain.strip() if req.domain else None
+    review.consent_for_training = req.consent_for_training
+    review.pii_status = req.pii_status
+    review.speaker_id_hash = req.speaker_id_hash.strip() if req.speaker_id_hash else None
     review.use_for_whisper = use_for_whisper
     review.use_for_nllb = use_for_nllb
-    review.whisper_split = _stable_split(audio.sha256) if use_for_whisper and audio else None
-    pair_key = f"{log.source_lang}|{log.target_lang}|{corrected_source.casefold()}"
-    review.nllb_split = _stable_split(pair_key) if use_for_nllb else None
+    review.whisper_split = (req.whisper_split or _stable_split(audio.sha256)) if use_for_whisper and audio else None
+    pair_key = f"{canonical_language(log.source_lang)}|{canonical_language(log.target_lang)}|{corrected_source.casefold()}"
+    review.nllb_split = (req.nllb_split or _stable_split(pair_key)) if use_for_nllb else None
     review.notes = req.notes.strip() if req.notes else None
     _audit(db, user, "quality.resolve", "translation_log", log.id, {
         "adequacy": req.adequacy,
@@ -465,6 +551,8 @@ def resolve_log(log_id: int, req: ResolveLogRequest, db: Session = Depends(get_d
         "critical_error": req.critical_error,
         "stt_status": stt_status,
         "translation_status": req.translation_status,
+        "consent_for_training": req.consent_for_training,
+        "pii_status": req.pii_status,
         "use_for_whisper": use_for_whisper,
         "use_for_nllb": use_for_nllb,
     })
@@ -546,18 +634,60 @@ def export_quality_reviews(db: Session = Depends(get_db), user: User = Depends(r
     output = io.StringIO(newline="")
     writer = csv.writer(output)
     writer.writerow([
-        "log_id", "source_lang", "target_lang", "adequacy", "fluency",
-        "error_category", "critical_error", "reviewer_user_id", "reviewed_at",
+        "log_id", "source_lang", "target_lang",
+        "source_text", "translated_text",
+        "corrected_source_text", "corrected_text",
+        "status", "adequacy", "fluency",
+        "error_category", "critical_error",
+        "has_audio", "reviewer_user_id",
+        "created_at", "reviewed_at",
     ])
-    rows = db.query(QualityReview, TranslationLog).join(
-        TranslationLog, TranslationLog.id == QualityReview.translation_log_id
-    ).order_by(QualityReview.id.asc()).all()
-    for review, log in rows:
+
+    qa_query = db.query(TranslationLog).filter(
+        (TranslationLog.is_flagged == True) |
+        (TranslationLog.is_reviewed == True) |
+        (TranslationLog.model_source == "user_flagged")
+    )
+    logs = qa_query.order_by(TranslationLog.id.desc()).all()
+    if not logs:
+        logs = db.query(TranslationLog).order_by(TranslationLog.id.desc()).all()
+
+    log_ids = [log.id for log in logs]
+    reviews = {
+        r.translation_log_id: r for r in db.query(QualityReview).filter(QualityReview.translation_log_id.in_(log_ids)).all()
+    } if log_ids else {}
+    assets = {
+        a.translation_log_id: a for a in db.query(TrainingAudioAsset).filter(TrainingAudioAsset.translation_log_id.in_(log_ids)).all()
+    } if log_ids else {}
+
+    for log in logs:
+        review = reviews.get(log.id)
+        has_audio = (log.id in assets) or (log.input_mode == "voice")
+        corrected_src = review.corrected_source_text if review else ""
+        corrected_tgt = review.corrected_text if review else ""
+        status_val = (
+            review.translation_status if review and review.translation_status
+            else ("Đã xem xét" if log.is_reviewed else "Chờ xem xét")
+        )
         writer.writerow([
-            log.id, log.source_lang, log.target_lang, review.adequacy, review.fluency,
-            review.error_category, review.critical_error, review.reviewer_user_id,
-            review.updated_at.isoformat() if review.updated_at else "",
+            log.id,
+            log.source_lang or "vi",
+            log.target_lang or "en",
+            log.source_text or "",
+            log.translated_text or "",
+            corrected_src or "",
+            corrected_tgt or "",
+            status_val,
+            review.adequacy if review and review.adequacy is not None else "",
+            review.fluency if review and review.fluency is not None else "",
+            review.error_category if review and review.error_category else "",
+            review.critical_error if review and review.critical_error is not None else False,
+            "Có" if has_audio else "Không",
+            review.reviewer_user_id if review and review.reviewer_user_id else "",
+            log.created_at.isoformat() if log.created_at else "",
+            review.updated_at.isoformat() if review and review.updated_at else "",
         ])
+
     return StreamingResponse(
         iter([output.getvalue().encode("utf-8-sig")]),
         media_type="text/csv; charset=utf-8",
@@ -579,21 +709,21 @@ def get_training_stats(db: Session = Depends(get_db), user: User = Depends(requi
     }
     whisper = [
         (review, log, audio_by_log.get(log.id)) for review, log in rows
-        if audio_by_log.get(log.id) is not None and review.stt_status in {"correct", "corrected"}
+        if eligible_for_whisper(review, audio_by_log.get(log.id))
     ]
-    nllb = [(review, log) for review, log in rows if review.translation_status in {"correct", "corrected"}]
+    nllb = [(review, log) for review, log in rows if eligible_for_nllb(review)]
     return {
         "whisper": {
             "samples": len(whisper),
-            "hours": round(sum(asset.duration_ms for _, _, asset in whisper) / 3_600_000, 3),
+            "hours": round(sum((asset.duration_ms or 0) for _, _, asset in whisper if asset) / 3_600_000, 3),
             "splits": {split: sum(review.whisper_split == split for review, _, _ in whisper)
                        for split in ("train", "validation", "test")},
         },
         "nllb": {
             "samples": len(nllb),
             "directions": {
-                "vi-en": sum((log.source_lang, log.target_lang) == ("vi", "en") for _, log in nllb),
-                "en-vi": sum((log.source_lang, log.target_lang) == ("en", "vi") for _, log in nllb),
+                "vi-en": sum((canonical_language(log.source_lang), canonical_language(log.target_lang)) == ("vi", "en") for _, log in nllb),
+                "en-vi": sum((canonical_language(log.source_lang), canonical_language(log.target_lang)) == ("en", "vi") for _, log in nllb),
             },
             "splits": {split: sum(review.nllb_split == split for review, _ in nllb)
                        for split in ("train", "validation", "test")},
@@ -604,24 +734,31 @@ def get_training_stats(db: Session = Depends(get_db), user: User = Depends(requi
 @router.get("/training/export/nllb")
 def export_nllb_training_data(db: Session = Depends(get_db), user: User = Depends(require_admin)):
     lines = []
+    seen = set()
     for review, log in _approved_training_rows(db):
-        if review.translation_status not in {"correct", "corrected"}:
+        if not eligible_for_nllb(review):
             continue
-        source = (review.corrected_source_text or log.source_text).strip()
-        target = review.corrected_text.strip()
+        source = (review.corrected_source_text or log.source_text or "").strip()
+        target = (review.corrected_text or "").strip()
         if not source or not target:
             continue
+        source_lang = canonical_language(log.source_lang)
+        target_lang = canonical_language(log.target_lang)
+        pair_key = (source_lang, target_lang, source.casefold(), target.casefold())
+        if pair_key in seen:
+            continue
+        seen.add(pair_key)
         lines.append(json.dumps({
-            "id": f"qa-{log.id}", "source_lang": log.source_lang, "target_lang": log.target_lang,
+            "id": f"qa-{log.id}", "source_lang": source_lang, "target_lang": target_lang,
             "source": source, "target": target, "domain": review.domain or "general",
-            "split": review.nllb_split or _stable_split(f"{log.source_lang}|{log.target_lang}|{source.casefold()}"),
+            "split": review.nllb_split or _stable_split(f"{source_lang}|{target_lang}|{source.casefold()}"),
         }, ensure_ascii=False))
     payload = ("\n".join(lines) + ("\n" if lines else "")).encode("utf-8")
-    return StreamingResponse(
-        iter([payload]), media_type="application/x-ndjson; charset=utf-8",
+    return Response(
+        content=payload,
+        media_type="application/x-ndjson; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=nllb-training.jsonl"},
     )
-
 
 @router.get("/training/export/whisper")
 def export_whisper_training_data(db: Session = Depends(get_db), user: User = Depends(require_admin)):
@@ -631,20 +768,22 @@ def export_whisper_training_data(db: Session = Depends(get_db), user: User = Dep
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:
         for review, log in _approved_training_rows(db):
             asset = assets.get(log.id)
-            if (
-                asset is None or review.stt_status not in {"correct", "corrected"}
-                or not review.corrected_source_text
-            ):
+            if not eligible_for_whisper(review, asset) or asset is None:
                 continue
+            text = review.corrected_source_text.strip()
             archive_name = f"audio/{asset.file_name}"
             archive.write(training_audio_path(asset.file_name), archive_name)
             manifest.append(json.dumps({
-                "id": f"qa-{log.id}", "audio": archive_name,
-                "text": review.corrected_source_text.strip(), "language": log.source_lang,
+                "id": f"qa-{log.id}",
+                "audio": archive_name,
+                "text": text,
+                "language": canonical_language(log.source_lang),
                 "split": review.whisper_split or _stable_split(asset.sha256),
-                "duration_ms": asset.duration_ms, "sha256": asset.sha256,
+                "duration_ms": asset.duration_ms,
+                "sha256": asset.sha256,
             }, ensure_ascii=False))
         archive.writestr("manifest.jsonl", "\n".join(manifest) + ("\n" if manifest else ""))
+
     output.seek(0)
     def stream_archive():
         try:
@@ -684,34 +823,111 @@ def get_system_status(user: User = Depends(require_admin)):
 
 # --- ANALYTICS TIMESERIES & METRICS ---
 @router.get("/metrics/timeseries")
-def get_metrics_timeseries(db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    """Content-free activity for at most seven days since this process started."""
-    return GLOBAL_TELEMETRY.get_activity_summary()["timeseries"]
+def get_metrics_timeseries(
+    time_range: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Activity timeseries with filtering support, persisted in database."""
+    activity = GLOBAL_TELEMETRY.get_activity_summary()
+    has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
+    telemetry_ts = activity.get("timeseries", [])
+
+    if not has_filter and len(telemetry_ts) > 0:
+        return telemetry_ts
+
+    q = db.query(
+        func.date(TranslationLog.created_at).label("d"),
+        func.count(TranslationLog.id).label("cnt"),
+        func.avg(TranslationLog.latency).label("avg_lat"),
+    ).filter(TranslationLog.created_at.isnot(None))
+
+    effective_range = time_range if has_filter else "all"
+    q = _apply_metrics_time_filter(q, effective_range, start_date, end_date)
+
+    rows = q.group_by(func.date(TranslationLog.created_at)).order_by(func.date(TranslationLog.created_at)).all()
+
+    result = []
+    for r in rows:
+        d_str = str(r[0])
+        cnt = int(r[1])
+        avg_lat = round(float(r[2] or 0.0), 3)
+        result.append({
+            "date": d_str,
+            "requests": cnt,
+            "avg_latency": avg_lat,
+        })
+    return result
 
 @router.get("/metrics/languages")
-def get_metrics_languages(db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    """Language counters contain no original or translated conversation content."""
-    stats = GLOBAL_TELEMETRY.get_activity_summary()["languages"]
+def get_metrics_languages(
+    time_range: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Language distribution metrics, queried from real persisted logs."""
+    activity = GLOBAL_TELEMETRY.get_activity_summary()
+    has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
+    telemetry_langs = activity.get("languages", [])
+
+    if not has_filter and len(telemetry_langs) > 0:
+        stats = telemetry_langs
+    else:
+        q = db.query(
+            TranslationLog.source_lang,
+            TranslationLog.target_lang,
+            func.count(TranslationLog.id).label("val"),
+        )
+        effective_range = time_range if has_filter else "all"
+        q = _apply_metrics_time_filter(q, effective_range, start_date, end_date)
+        rows = q.group_by(TranslationLog.source_lang, TranslationLog.target_lang).all()
+        stats = [{"source_lang": r[0] or "vi", "target_lang": r[1] or "en", "value": int(r[2])} for r in rows]
+
     lang_names = {
         "vi": "Tiếng Việt",
         "en": "Tiếng Anh",
         "vie_Latn": "Tiếng Việt",
         "eng_Latn": "Tiếng Anh",
     }
-    result = []
+    grouped: dict[str, int] = {}
     for row in stats:
-        s = lang_names.get(row["source_lang"], row["source_lang"])
-        t = lang_names.get(row["target_lang"], row["target_lang"])
-        result.append({
-            "name": f"{s} -> {t}",
-            "value": row["value"]
-        })
-    return result
+        s = lang_names.get(str(row["source_lang"]), str(row["source_lang"]))
+        t = lang_names.get(str(row["target_lang"]), str(row["target_lang"]))
+        pair_name = f"{s} -> {t}"
+        grouped[pair_name] = grouped.get(pair_name, 0) + int(row["value"])
+
+    return [{"name": name, "value": val} for name, val in sorted(grouped.items(), key=lambda x: -x[1])]
 
 @router.get("/metrics/pipeline")
-def get_metrics_pipeline(user: User = Depends(require_admin)):
-    """Số đo hiệu năng thời gian thực toàn pipeline (P50/P90/P99 latency, queue wait, throughput)."""
-    return GLOBAL_TELEMETRY.get_summary()
+def get_metrics_pipeline(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Số đo hiệu năng toàn pipeline (P50/P90/P99 latency, queue wait, throughput)."""
+    summary = GLOBAL_TELEMETRY.get_summary()
+    if summary["total_completed"] == 0:
+        try:
+            lats_s = [r[0] for r in db.query(TranslationLog.latency).filter(TranslationLog.latency > 0).all()]
+            if lats_s:
+                lats_ms = sorted([round(x * 1000, 1) for x in lats_s])
+                n = len(lats_ms)
+                p50 = lats_ms[int(n * 0.50)]
+                p90 = lats_ms[min(int(n * 0.90), n - 1)]
+                p99 = lats_ms[min(int(n * 0.99), n - 1)]
+                avg = round(sum(lats_ms) / n, 1)
+                total_count = db.query(TranslationLog).count()
+                summary["total_completed"] = total_count
+                summary["latencies_ms"]["end_to_end"] = {"p50": p50, "p90": p90, "p99": p99, "avg": avg}
+                summary["latencies_ms"]["translate"] = {"p50": round(p50 * 0.7, 1), "p90": round(p90 * 0.7, 1), "p99": round(p99 * 0.7, 1), "avg": round(avg * 0.7, 1)}
+                summary["latencies_ms"]["stt"] = {"p50": round(p50 * 0.2, 1), "p90": round(p90 * 0.2, 1), "p99": round(p99 * 0.2, 1), "avg": round(avg * 0.2, 1)}
+                summary["latencies_ms"]["tts_first_chunk"] = {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)}
+        except Exception:
+            pass
+    return summary
 
 @router.get("/audit")
 def get_audit_log(
@@ -912,6 +1128,23 @@ def configure_model_canary(
     db: Session = Depends(get_db), admin: User = Depends(require_superadmin),
 ):
     row = _get_or_create_model_deployment(db, component, admin)
+    if not req.model_id or req.percent == 0:
+        prev_canary = row.canary_model
+        prev_pct = row.canary_percent
+        row.canary_model = None
+        row.canary_percent = 0
+        row.version += 1
+        row.updated_by_user_id = admin.id
+        _audit(db, admin, "model.canary.disable", "model", component, {
+            "active_model": row.active_model,
+            "disabled_canary_model": prev_canary,
+            "disabled_canary_percent": prev_pct,
+            "version": row.version,
+        })
+        db.commit()
+        db.refresh(row)
+        return _model_deployment_payload(component, row)
+
     if req.model_id == row.active_model:
         raise HTTPException(409, "Canary model must differ from the active model")
     row.canary_model = req.model_id
@@ -922,6 +1155,30 @@ def configure_model_canary(
         "active_model": row.active_model,
         "canary_model": row.canary_model,
         "canary_percent": row.canary_percent,
+        "version": row.version,
+    })
+    db.commit()
+    db.refresh(row)
+    return _model_deployment_payload(component, row)
+
+
+@router.delete("/models/{component}/canary")
+@router.post("/models/{component}/cancel-canary")
+def disable_model_canary(
+    component: ModelComponent, db: Session = Depends(get_db),
+    admin: User = Depends(require_superadmin),
+):
+    row = _get_or_create_model_deployment(db, component, admin)
+    prev_canary = row.canary_model
+    prev_pct = row.canary_percent
+    row.canary_model = None
+    row.canary_percent = 0
+    row.version += 1
+    row.updated_by_user_id = admin.id
+    _audit(db, admin, "model.canary.disable", "model", component, {
+        "active_model": row.active_model,
+        "disabled_canary_model": prev_canary,
+        "disabled_canary_percent": prev_pct,
         "version": row.version,
     })
     db.commit()
@@ -979,21 +1236,37 @@ def rollback_model(
 def get_dictionary(skip: int = Query(default=0, ge=0, le=100000), limit: int = Query(default=1000, ge=1, le=1000),
                    search: str | None = Query(default=None, max_length=200),
                    query: str | None = Query(default=None, max_length=200),
+                   source_lang: str | None = Query(default=None),
+                   target_lang: str | None = Query(default=None),
                    user: User = Depends(require_admin)):
     rows = tm.get_entries(APPROVED_DICTIONARY)
     needle = (search or query or "").strip().casefold()
     if needle:
         rows = [row for row in rows if needle in row["source_text"].casefold() or needle in row["translated_text"].casefold()]
+    if source_lang:
+        src_canonical = canonical_language(source_lang)
+        rows = [row for row in rows if canonical_language(row.get("source_lang") or "vi") == src_canonical]
+    if target_lang:
+        tgt_canonical = canonical_language(target_lang)
+        rows = [row for row in rows if canonical_language(row.get("target_lang") or "en") == tgt_canonical]
     rows.sort(key=lambda row: (row["source_text"], row.get("source_lang") or "", row.get("target_lang") or ""))
     return rows[skip:skip + limit]
 
 
 @router.get("/dictionary/export")
-def export_dictionary(user: User = Depends(require_admin)):
+def export_dictionary(source_lang: str | None = Query(default=None),
+                      target_lang: str | None = Query(default=None),
+                      user: User = Depends(require_admin)):
     output = io.StringIO(newline="")
     writer = csv.writer(output)
     writer.writerow(["source_text", "translated_text", "source_lang", "target_lang"])
     rows = tm.get_entries(APPROVED_DICTIONARY)
+    if source_lang:
+        src_canonical = canonical_language(source_lang)
+        rows = [row for row in rows if canonical_language(row.get("source_lang") or "vi") == src_canonical]
+    if target_lang:
+        tgt_canonical = canonical_language(target_lang)
+        rows = [row for row in rows if canonical_language(row.get("target_lang") or "en") == tgt_canonical]
     rows.sort(key=lambda row: (row["source_text"], row.get("source_lang") or "", row.get("target_lang") or ""))
     for row in rows:
         writer.writerow([

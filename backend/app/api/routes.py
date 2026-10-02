@@ -1,7 +1,10 @@
 """Translation endpoints authorize the server-issued owner before accessing data."""
 import logging
+import os
+import time
 import uuid
 import wave
+from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -48,14 +51,38 @@ def run_pipeline(*args, **kwargs):
 def translate_text_api(payload: TranslateTextRequest, principal: Principal = Depends(require_scope("translate")), db: Session = Depends(get_db)):
     text = validate_text(payload.text, db)
     metric_id = uuid.uuid4().hex
+    t0 = time.monotonic()
     GLOBAL_TELEMETRY.start_turn(metric_id, principal.owner_id, source_lang=payload.source_lang, target_lang=payload.target_lang)
     try:
         GLOBAL_TELEMETRY.record_stage(metric_id, "translate_start")
         result = translate_text(text, source_lang=_resolve_lang(payload.source_lang), target_lang=_resolve_lang(payload.target_lang), client_id=principal.owner_id, use_cache=_cache_enabled(db))
         if not str(result.get("translated_text") or "").strip():
             raise RuntimeError("Translation returned no text")
+        latency = round(time.monotonic() - t0, 3)
         GLOBAL_TELEMETRY.record_stage(metric_id, "translate_done")
         GLOBAL_TELEMETRY.complete_turn(metric_id)
+
+        try:
+            log = TranslationLog(
+                client_id=principal.owner_id,
+                source_text=text,
+                translated_text=result.get("translated_text", ""),
+                source_lang=payload.source_lang,
+                target_lang=payload.target_lang,
+                input_mode="text",
+                latency=result.get("latency", latency),
+                model_source=result.get("source", "nllb_model"),
+                nllb_model_id=os.getenv("NLLB_MODEL", "facebook/nllb-200-distilled-1.3B"),
+                is_flagged=False,
+                is_reviewed=False,
+                created_at=datetime.utcnow(),
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            logger.warning("Failed to persist translation log: %s", e)
+            db.rollback()
+
         return {"source_text": text, "translated_text": result.get("translated_text", "")}
     except Exception as error:
         GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(error).__name__)
@@ -95,6 +122,29 @@ async def translate_audio(file: UploadFile = File(...), source_lang: Language = 
         registered = True
         result["audio_url"] = f"/audio/{file_name}"
         result["audio_expires_at"] = asset.expires_at.isoformat() + "Z"
+
+        try:
+            log = TranslationLog(
+                client_id=principal.owner_id,
+                source_text=result.get("original_text", ""),
+                translated_text=result.get("translated_text", ""),
+                source_lang=source_lang,
+                target_lang=target_lang,
+                input_mode="voice",
+                latency=result.get("metrics", {}).get("total_latency", 0.0),
+                model_source="pipeline",
+                stt_model_id=os.getenv("WHISPER_TORCH_MODEL", "openai/whisper-large-v3-turbo"),
+                nllb_model_id=os.getenv("NLLB_MODEL", "facebook/nllb-200-distilled-1.3B"),
+                is_flagged=False,
+                is_reviewed=False,
+                created_at=datetime.utcnow(),
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            logger.warning("Failed to persist audio translation log: %s", e)
+            db.rollback()
+
         return result
     except NoSpeechDetected:
         raise HTTPException(422, "No intelligible speech was detected. Please record again.") from None

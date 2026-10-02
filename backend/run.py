@@ -28,7 +28,20 @@ if __name__ == "__main__":
 
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        logging.getLogger("asyncio").setLevel(logging.ERROR)
+        logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+        try:
+            from asyncio.proactor_events import _ProactorBasePipeTransport
+            _orig_call_connection_lost = _ProactorBasePipeTransport._call_connection_lost
+
+            def _silent_call_connection_lost(self, exc):
+                try:
+                    _orig_call_connection_lost(self, exc)
+                except Exception:
+                    pass
+
+            _ProactorBasePipeTransport._call_connection_lost = _silent_call_connection_lost
+        except Exception:
+            pass
 
     uvicorn.run(
         "app.main:app",

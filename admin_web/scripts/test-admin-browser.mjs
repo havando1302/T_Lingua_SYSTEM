@@ -14,7 +14,7 @@ const profile = await mkdtemp(join(temporaryRoot, 'tlangua-admin-browser-'));
 const requests = [];
 const results = [];
 let role = 'admin';
-let failPublish = true;
+let failPublish = false;
 let failLists = false;
 let failDashboard = false;
 let forceUserValidation = false;
@@ -73,7 +73,13 @@ const server = createServer(async (request, response) => {
       respond(paginate(logs.filter(log => status === 'pending' ? !log.is_reviewed : status === 'reviewed' ? log.is_reviewed : true), url));
     } else if (/\/quality\/logs\/\d+\/resolve$/.test(url.pathname)) {
       const log = logs.find(item => item.id === Number(url.pathname.split('/').at(-2)));
-      Object.assign(log, { translated_text: data.corrected_text, is_reviewed: true, is_flagged: false });
+      Object.assign(log, {
+        translated_text: data.corrected_text, stt_corrected: data.corrected_source_text,
+        translation_status: data.translation_status, stt_status: data.stt_status,
+        consent_for_training: data.consent_for_training, pii_status: data.pii_status,
+        use_for_nllb: data.use_for_nllb, use_for_whisper: data.use_for_whisper,
+        domain: data.domain, is_reviewed: true, is_flagged: false,
+      });
       respond({ ok: true });
     } else if (url.pathname === '/admin/dictionary/delete') {
       dictionary = dictionary.filter(item => item.source_text !== data.source_text || item.source_lang !== data.source_lang || item.target_lang !== data.target_lang);
@@ -95,6 +101,12 @@ const server = createServer(async (request, response) => {
     else if (url.pathname === '/admin/audit') respond([]);
     else if (url.pathname === '/admin/models/deployments') respond(deployments);
     else if (url.pathname === '/admin/training/overview') respond(trainingOverview);
+    else if (url.pathname === '/admin/training/datasets/preview-from-qa') respond({
+      task: data.task, reviewed: 4, eligible: 1, splits: { train: 1, validation: 0, test: 0 },
+      directions: { 'vi->en': 1 }, duration_seconds: 0, ready: false,
+      blockers: { no_consent: 2, pii_not_cleared: 2, not_approved: 1, missing_audio: 0 },
+      reasons: ['Thiếu dữ liệu validation'],
+    });
     else if (url.pathname === '/admin/training/datasets') respond([]);
     else if (url.pathname === '/admin/training/jobs') respond([]);
     else if (url.pathname === '/admin/training/models') respond([]);
@@ -172,7 +184,7 @@ async function login(username) {
   await fill(label('Tên đăng nhập'), username);
   await fill(label('Mật khẩu'), 'SyntheticPassword123!');
   await click(`document.querySelector('button[type="submit"]')`);
-  await waitFor("location.pathname === '/' && document.body.innerText.includes('Khách trong mẫu gần đây')");
+  await waitFor("location.pathname === '/' && document.body.innerText.includes('Khách hàng đã phục vụ')");
 }
 async function check(name, work) { await work(); results.push(name); console.log(`PASS ${name}`); }
 
@@ -206,8 +218,8 @@ try {
   await waitFor("document.querySelectorAll('tbody tr').length === 25");
   await check('Admin cannot publish dictionary from QA', async () => {
     assert.equal(await evaluate("document.body.innerText.includes('Thêm vào từ điển')"), false);
-    await click(button('Sửa lỗi'));
-    assert.equal(await evaluate("document.body.innerText.includes('Lưu & Thêm từ điển')"), false);
+    await click(button('Kiểm tra'));
+    assert.equal(await evaluate("document.body.innerText.includes('Có quyền huấn luyện')"), true);
     await click(button('Hủy'));
   });
   await click(button('Đăng xuất')); await waitFor("location.pathname === '/login'"); await login('superadmin');
@@ -219,18 +231,26 @@ try {
     await waitFor("document.body.innerText.includes('Playground đang khóa an toàn')");
     assert.equal(await evaluate("document.body.innerText.includes('Synthetic candidate runner is not configured')"), true);
   });
+  await click(button('Datasets'));
+  await fill(label('Tên dataset'), 'synthetic-preview');
+  await check('Dataset preview explains blockers before snapshot creation', async () => {
+    await click(button('Kiểm tra dữ liệu'));
+    await waitFor("document.body.innerText.includes('Chưa thể tạo dataset train được')");
+    assert.equal(await evaluate("document.body.innerText.includes('Thiếu dữ liệu validation')"), true);
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('button')).find(button => button.textContent.trim() === 'Tạo dataset').disabled"), true);
+  });
   await navigate('/qa'); await waitFor("document.querySelectorAll('tbody tr').length === 25");
-  await check('Partial QA save and independent dictionary retry preserve language', async () => {
-    await click(button('Sửa lỗi')); await fill("document.querySelector('textarea[aria-label^=\"Bản dịch\"]')", 'Bản sửa tổng hợp');
-    await click(button('Lưu & Thêm từ điển'));
-    await waitFor("document.body.innerText.includes('Bản sửa QA đã được lưu, nhưng chưa thêm được vào từ điển.') && !document.querySelector('textarea')");
-    await click(button('Thử lại thêm từ điển cho bản sửa #1'));
-    await waitFor("document.body.innerText.includes('Đã thêm cặp dịch vào từ điển dùng chung.')");
+  await check('QA save carries training rights, PII state and model eligibility', async () => {
+    await click(button('Kiểm tra')); await fill("document.querySelector('textarea[aria-label^=\"Bản dịch\"]')", 'Bản sửa tổng hợp');
+    await click("Array.from(document.querySelectorAll('label')).find(label => label.textContent.includes('Có quyền huấn luyện')).querySelector('input')");
+    await evaluate("(() => { const element=Array.from(document.querySelectorAll('label')).find(label => label.textContent.includes('Kiểm tra PII')).querySelector('select'); element.value='clean'; element.dispatchEvent(new Event('change',{bubbles:true})); })()");
+    await evaluate("(() => { const element=Array.from(document.querySelectorAll('label')).find(label => label.textContent.includes('Tập dữ liệu NLLB')).querySelector('select'); element.value='validation'; element.dispatchEvent(new Event('change',{bubbles:true})); })()");
+    await click(button('Lưu'));
+    await waitFor("document.body.innerText.includes('lần tạo snapshot dataset tiếp theo') && !document.querySelector('textarea')");
     assert.equal(requests.filter(request => request.path.endsWith('/1/resolve')).length, 1);
-    const publication = requests.filter(request => request.path === '/admin/dictionary' && request.method === 'POST');
-    assert.equal(publication.length, 2);
-    assert.equal(publication[1].data.source_lang, 'en'); assert.equal(publication[1].data.target_lang, 'vi');
-    assert.equal(publication[1].data.translated_text, 'Bản sửa tổng hợp');
+    const saved = requests.find(request => request.path.endsWith('/1/resolve')).data;
+    assert.equal(saved.consent_for_training, true); assert.equal(saved.pii_status, 'clean');
+    assert.equal(saved.use_for_nllb, true); assert.equal(saved.nllb_split, 'validation'); assert.equal(saved.corrected_text, 'Bản sửa tổng hợp');
   });
   await check('QA filters apply server-side across pages', async () => {
     await click(button('Đã chỉnh sửa')); await waitFor("document.querySelectorAll('tbody tr').length === 1");
@@ -287,10 +307,10 @@ try {
     assert.equal(await evaluate("document.querySelector('input[type=file]').accept"), '.csv,.xlsx');
   });
   await check('Manual dictionary addition includes the selected language direction', async () => {
-    await fill(label('Văn bản gốc (Source)'), 'xin chào tổng hợp');
-    await fill(label('Bản dịch chuẩn (Target)'), 'synthetic hello');
+    await fill(label('Văn bản gốc (Tiếng Việt)'), 'xin chào tổng hợp');
+    await fill(label('Bản dịch chuẩn (Tiếng Anh)'), 'synthetic hello');
     await click(button('Thêm vào bộ nhớ'));
-    await waitFor("document.body.innerText.includes('Đã lưu cặp dịch vào từ điển.')");
+    await waitFor("document.body.innerText.includes('Đã lưu cặp dịch (Tiếng Việt → Tiếng Anh) vào từ điển.')");
     const entry = requests.filter(request => request.path === '/admin/dictionary' && request.method === 'POST').at(-1).data;
     assert.equal(entry.source_lang, 'vi'); assert.equal(entry.target_lang, 'en');
   });
@@ -325,31 +345,33 @@ try {
     const update = requests.find(request => request.path === '/admin/users/1' && request.method === 'PATCH');
     assert.equal(update.data.role, 'admin'); assert.equal(update.data.password, 'ReplacementPassword123!');
   });
-  await navigate('/settings'); await waitFor("document.body.innerText.includes('Triển khai model')");
+  await navigate('/settings'); await waitFor("document.body.innerText.includes('Triển khai & Quản lý Model AI')");
   await check('Settings use canonical saved value and success feedback', async () => {
-    await fill(label('Số ký tự tối đa mỗi yêu cầu'), '00042'); await click(button('Lưu lại'));
-    await waitFor("document.body.innerText.includes('Đã lưu thành công.')");
-    assert.equal(await evaluate(`${label('Số ký tự tối đa mỗi yêu cầu')}.value`), '42');
+    const maxCharacters = `document.querySelector('input[type="number"]')`;
+    await fill(maxCharacters, '00042'); await click(button('Lưu thiết lập'));
+    await waitFor("document.body.innerText.includes('Đã lưu')");
+    assert.equal(await evaluate(`${maxCharacters}.value`), '42');
   });
   await check('Model canary configuration is sent with an explicit traffic percentage', async () => {
-    await fill(label('Model canary nllb'), 'synthetic/nllb-v2');
-    await click("Array.from(document.querySelectorAll('button')).find(element => element.textContent.includes('Lưu canary') && element.closest('.rounded')?.innerText.includes('NLLB'))");
-    await waitFor(`${label('Model canary nllb')}.value === 'synthetic/nllb-v2'`);
+    const nllbCanary = `Array.from(document.querySelectorAll('label')).filter(element => element.textContent.trim() === 'Mã model Canary (hoặc chọn từ danh sách trên)')[1]?.control`;
+    await fill(nllbCanary, 'synthetic/nllb-v2');
+    await click("Array.from(document.querySelectorAll('button')).filter(element => element.textContent.includes('Lưu Canary'))[1]");
+    await waitFor(`${nllbCanary}.value === 'synthetic/nllb-v2'`);
     const canary = requests.find(request => request.path === '/admin/models/nllb/canary');
     assert.equal(canary.data.percent, 10);
   });
   await check('First dashboard failure does not display fabricated zero metrics', async () => {
     failDashboard = true; await navigate('/');
     await waitFor("document.body.innerText.includes('Synthetic metric failure')");
-    assert.equal(await evaluate("document.body.innerText.includes('Khách trong mẫu gần đây')"), false);
+    assert.equal(await evaluate("document.body.innerText.includes('Khách hàng đã phục vụ')"), false);
     failDashboard = false; await click(button('Thử lại'));
-    await waitFor("document.body.innerText.includes('Khách trong mẫu gần đây')");
+    await waitFor("document.body.innerText.includes('Khách hàng đã phục vụ')");
     assert.equal(await evaluate("document.body.innerText.includes('Đang dùng CPU dự phòng')"), true);
   });
   await navigate('/analytics'); await waitFor("document.body.innerText.includes('Độ trễ toàn trình (P50 / P90 / P99)')");
-  await check('Analytics percentile labels and process-reset scope are clear', async () => {
+  await check('Analytics percentile labels and persisted time filters are clear', async () => {
     assert.equal(await evaluate("document.body.innerText.includes('P95')"), false);
-    assert.equal(await evaluate("document.body.innerText.includes('được đặt lại khi khởi động lại')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Tất cả')"), true);
   });
   assert.deepEqual(browserErrors, []);
   console.log(JSON.stringify({ passed: results.length, failed: 0, browserErrors, results }, null, 2));

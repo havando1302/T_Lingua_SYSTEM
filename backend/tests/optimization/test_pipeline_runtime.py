@@ -450,7 +450,7 @@ def isolated_suite(legacy=False):
             self.assertEqual(list((self.temp / "uploads").glob("*")), [])
             self.assertEqual(list((self.temp / "outputs").glob("*")), [])
 
-        async def test_direct_text_metrics_count_success_and_error_without_retaining_content(self):
+        async def test_direct_text_metrics_are_content_free_while_success_is_logged_for_qa(self):
             payload = {"text": "private input transcript", "source_lang": "en", "target_lang": "vi"}
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url="http://testserver") as client:
                 with patch.object(api, "translate_text", return_value={"translated_text": "private output translation"}):
@@ -465,7 +465,11 @@ def isolated_suite(legacy=False):
             self.assertEqual(summary["total_errors"], 1)
             self.assertEqual(summary["active_turns"], 0)
             self.assertNotIn("private", json.dumps(self.tracker.get_activity_summary()))
-            self.assertEqual(self.db.query(TranslationLog).count(), 0)
+            qa_log = self.db.query(TranslationLog).one()
+            self.assertEqual(qa_log.source_text, payload["text"])
+            self.assertEqual(qa_log.translated_text, "private output translation")
+            self.assertFalse(qa_log.is_flagged)
+            self.assertFalse(qa_log.is_reviewed)
 
         async def test_readiness_rejects_missing_empty_dead_or_incomplete_worker_pool(self):
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url="http://testserver") as client:

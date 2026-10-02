@@ -163,7 +163,7 @@ const Users = () => {
                   <TableCell className="font-medium">{u.username}{u.is_active === false && <span className="ml-2 text-xs text-text-muted">Đã vô hiệu hóa</span>}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      u.role === 'superadmin' ? 'bg-primary text-surface border-primary' : 
+                      u.role === 'superadmin' ? 'bg-primary text-white border-primary shadow-sm' : 
                       u.role === 'admin' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
                       'bg-border/50 text-text border-border'
                     }`}>

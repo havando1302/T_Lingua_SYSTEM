@@ -41,7 +41,7 @@ const Dashboard = () => {
         const [metricsRes, sysRes, tsRes] = await Promise.all([
           api.get('/metrics/dashboard', { signal: controller.signal }),
           api.get('/system/status', { signal: controller.signal }),
-          api.get('/metrics/timeseries', { signal: controller.signal })
+          api.get('/metrics/timeseries?time_range=all', { signal: controller.signal })
         ]);
         if (controller.signal.aborted) return;
         setError('');
@@ -69,8 +69,8 @@ const Dashboard = () => {
 
   const statCards = [
     { title: 'Tổng lượt dịch', value: metrics.total_translations, icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { title: 'Khách trong mẫu gần đây', value: metrics.unique_clients, icon: Users, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { title: 'Độ trễ TB mẫu gần đây (s)', value: metrics.avg_latency.toFixed(3), icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { title: 'Khách hàng đã phục vụ', value: metrics.unique_clients, icon: Users, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { title: 'Độ trễ phản hồi TB (s)', value: metrics.avg_latency.toFixed(3), icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
     { title: 'Bản dịch đang bị báo lỗi', value: metrics.flagged_translations, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
   ];
 
@@ -110,8 +110,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Lưu lượng dịch (7 ngày qua)</CardTitle>
-            <CardDescription>Số lượng yêu cầu dịch thuật được xử lý bởi AI mỗi ngày.</CardDescription>
+            <CardTitle>Lưu lượng dịch thực tế</CardTitle>
+            <CardDescription>Số lượng yêu cầu dịch thuật được xử lý bởi AI theo ngày.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full mt-4">

@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import unicodedata
 import wave
 import zipfile
 
@@ -29,6 +30,37 @@ MAX_ARCHIVE_UNCOMPRESSED_BYTES = 8 * 1024 * 1024 * 1024
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{1,119}$")
 _SPLITS = {"train", "validation", "test"}
 _LANGS = {"vi", "en", "vie_Latn", "eng_Latn"}
+_CANONICAL_LANGS = {
+    "vi": "vi", "vie_Latn": "vi",
+    "en": "en", "eng_Latn": "en",
+}
+
+
+def canonical_language(value: str | None) -> str:
+    """Keep persisted/exported training data on one stable language-code scheme."""
+    return _CANONICAL_LANGS.get((value or "").strip(), (value or "").strip())
+
+
+def has_training_clearance(review: QualityReview) -> bool:
+    return bool(review.consent_for_training and review.pii_status in {"clean", "redacted"})
+
+
+def eligible_for_nllb(review: QualityReview) -> bool:
+    return bool(
+        has_training_clearance(review)
+        and review.use_for_nllb
+        and review.translation_status in {"correct", "corrected"}
+    )
+
+
+def eligible_for_whisper(review: QualityReview, asset: TrainingAudioAsset | None) -> bool:
+    return bool(
+        asset is not None
+        and has_training_clearance(review)
+        and review.use_for_whisper
+        and review.stt_status in {"correct", "corrected"}
+        and (review.corrected_source_text or "").strip()
+    )
 
 
 def validate_dataset_name(value: str) -> str:
@@ -112,13 +144,76 @@ def _qa_rows(db: Session, domain: str | None, language: str | None,
     )
     if domain:
         query = query.filter(QualityReview.domain == domain)
-    if language in {"vi", "en"}:
-        query = query.filter(TranslationLog.source_lang == language)
+    if language == "vi":
+        query = query.filter(TranslationLog.source_lang.in_(("vi", "vie_Latn")))
+    elif language == "en":
+        query = query.filter(TranslationLog.source_lang.in_(("en", "eng_Latn")))
     if created_from:
         query = query.filter(TranslationLog.created_at >= datetime.combine(created_from, time.min))
     if created_to:
         query = query.filter(TranslationLog.created_at < datetime.combine(created_to + timedelta(days=1), time.min))
     return query.order_by(QualityReview.id.asc()).all()
+
+
+def preview_qa_snapshot(db: Session, task: str, *, domain: str | None = None,
+                        language: str | None = None, created_from: date | None = None,
+                        created_to: date | None = None) -> dict:
+    """Return a read-only readiness report using the exact snapshot eligibility rules."""
+    rows = _qa_rows(db, domain, language, created_from, created_to)
+    assets = {row.translation_log_id: row for row in db.query(TrainingAudioAsset).all()}
+    selected: list[tuple[QualityReview, TranslationLog, TrainingAudioAsset | None]] = []
+    blockers = {"no_consent": 0, "pii_not_cleared": 0, "not_approved": 0, "missing_audio": 0}
+
+    for review, log in rows:
+        asset = assets.get(log.id)
+        if not review.consent_for_training:
+            blockers["no_consent"] += 1
+        if review.pii_status not in {"clean", "redacted"}:
+            blockers["pii_not_cleared"] += 1
+        if task == "nllb":
+            if not review.use_for_nllb or review.translation_status not in {"correct", "corrected"}:
+                blockers["not_approved"] += 1
+            if eligible_for_nllb(review):
+                selected.append((review, log, asset))
+        else:
+            if asset is None:
+                blockers["missing_audio"] += 1
+            if not review.use_for_whisper or review.stt_status not in {"correct", "corrected"}:
+                blockers["not_approved"] += 1
+            if eligible_for_whisper(review, asset):
+                selected.append((review, log, asset))
+
+    split_field = "nllb_split" if task == "nllb" else "whisper_split"
+    splits = {name: 0 for name in _SPLITS}
+    directions: dict[str, int] = {}
+    duration_seconds = 0.0
+    for review, log, asset in selected:
+        if task == "nllb":
+            source = (review.corrected_source_text or log.source_text or "").strip()
+            split = getattr(review, split_field) or stable_split(
+                f"{canonical_language(log.source_lang)}|{canonical_language(log.target_lang)}|{source.casefold()}"
+            )
+            direction = f"{canonical_language(log.source_lang)}->{canonical_language(log.target_lang)}"
+            directions[direction] = directions.get(direction, 0) + 1
+        else:
+            split = getattr(review, split_field) or stable_split(asset.sha256 if asset else None)
+            duration_seconds += (asset.duration_ms if asset else 0) / 1000
+        splits[split] += 1
+
+    ready = bool(splits["train"] and splits["validation"])
+    reasons = []
+    if not selected:
+        reasons.append("Không có mẫu đủ điều kiện sử dụng để huấn luyện")
+    if not splits["train"]:
+        reasons.append("Thiếu dữ liệu train")
+    if not splits["validation"]:
+        reasons.append("Thiếu dữ liệu validation")
+    return {
+        "task": task, "reviewed": len(rows), "eligible": len(selected),
+        "splits": splits, "directions": directions,
+        "duration_seconds": round(duration_seconds, 3),
+        "blockers": blockers, "ready": ready, "reasons": reasons,
+    }
 
 
 def create_qa_snapshot(db: Session, dataset: TrainingDataset, *, domain: str | None = None,
@@ -130,18 +225,18 @@ def create_qa_snapshot(db: Session, dataset: TrainingDataset, *, domain: str | N
         path = destination / "nllb-training.jsonl"
         with path.open("x", encoding="utf-8", newline="\n") as output:
             for review, log in rows:
-                if review.translation_status not in {"correct", "corrected"}:
+                if not eligible_for_nllb(review):
                     continue
                 source = (review.corrected_source_text or log.source_text or "").strip()
                 target = (review.corrected_text or "").strip()
                 if not source or not target:
                     continue
                 output.write(json.dumps({
-                    "id": f"qa-{log.id}", "source_lang": log.source_lang,
-                    "target_lang": log.target_lang, "source": source, "target": target,
+                    "id": f"qa-{log.id}", "source_lang": canonical_language(log.source_lang),
+                    "target_lang": canonical_language(log.target_lang), "source": source, "target": target,
                     "domain": review.domain or "general",
                     "split": review.nllb_split or stable_split(
-                        f"{log.source_lang}|{log.target_lang}|{source.casefold()}"
+                        f"{canonical_language(log.source_lang)}|{canonical_language(log.target_lang)}|{source.casefold()}"
                     ),
                 }, ensure_ascii=False) + "\n")
         return path
@@ -154,16 +249,13 @@ def create_qa_snapshot(db: Session, dataset: TrainingDataset, *, domain: str | N
     with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_STORED) as archive:
         for review, log in rows:
             asset = assets.get(log.id)
-            if (
-                asset is None or review.stt_status not in {"correct", "corrected"}
-                or not review.corrected_source_text
-            ):
+            if not eligible_for_whisper(review, asset):
                 continue
             archive_name = f"audio/{asset.file_name}"
             archive.write(training_audio_path(asset.file_name), archive_name)
             manifest.append(json.dumps({
                 "id": f"qa-{log.id}", "audio": archive_name,
-                "text": review.corrected_source_text.strip(), "language": log.source_lang,
+                "text": review.corrected_source_text.strip(), "language": canonical_language(log.source_lang),
                 "split": review.whisper_split or stable_split(asset.sha256),
                 "duration_ms": asset.duration_ms, "sha256": asset.sha256,
             }, ensure_ascii=False))
@@ -197,10 +289,10 @@ async def store_uploaded_dataset(dataset: TrainingDataset, upload: UploadFile) -
 
 
 def _normalise_nllb_row(row: dict, number: int) -> dict:
-    source = str(row.get("source", "")).strip()
-    target = str(row.get("target", "")).strip()
-    source_lang = str(row.get("source_lang", "")).strip()
-    target_lang = str(row.get("target_lang", "")).strip()
+    source = unicodedata.normalize("NFC", str(row.get("source", "")).strip())
+    target = unicodedata.normalize("NFC", str(row.get("target", "")).strip())
+    source_lang = canonical_language(str(row.get("source_lang", "")).strip())
+    target_lang = canonical_language(str(row.get("target_lang", "")).strip())
     split = str(row.get("split", "")).strip()
     if not source or not target:
         raise ValueError(f"Row {number}: source and target are required")
@@ -240,22 +332,27 @@ def validate_nllb(path: Path) -> tuple[dict, Path]:
     except (OSError, UnicodeError, csv.Error, json.JSONDecodeError) as exc:
         errors.append(f"Cannot read dataset: {type(exc).__name__}")
 
-    keys: dict[tuple[str, str, str], str] = {}
+    keys: dict[tuple[str, str, str], dict] = {}
     duplicates = 0
     leakage = 0
+    conflicts = 0
     for row in rows:
         key = (row["source_lang"], row["target_lang"], row["source"].casefold())
         previous = keys.get(key)
         if previous is not None:
             duplicates += 1
-            if previous != row["split"]:
+            if previous["split"] != row["split"]:
                 leakage += 1
+            if previous["target"].casefold() != row["target"].casefold():
+                conflicts += 1
         else:
-            keys[key] = row["split"]
+            keys[key] = row
     if leakage:
         errors.append(f"{leakage} source groups appear in multiple splits")
     if duplicates:
         warnings.append(f"{duplicates} duplicate source rows")
+    if conflicts:
+        errors.append(f"{conflicts} source groups have conflicting target translations")
     if rows and duplicates / len(rows) > 0.10:
         errors.append("Duplicate source ratio exceeds the 10% validation threshold")
     counts = {split: sum(row["split"] == split for row in rows) for split in _SPLITS}
@@ -277,7 +374,7 @@ def validate_nllb(path: Path) -> tuple[dict, Path]:
         "validation_count": counts["validation"], "test_count": counts["test"],
         "duration_seconds": 0.0, "directions": directions,
         "languages": sorted({row["source_lang"] for row in rows} | {row["target_lang"] for row in rows}),
-        "duplicate_count": duplicates,
+        "duplicate_count": duplicates, "conflict_count": conflicts,
     }
     return report, canonical if not errors else path
 
@@ -384,5 +481,3 @@ def validate_whisper(path: Path) -> tuple[dict, Path]:
 def validate_dataset_file(dataset: TrainingDataset) -> tuple[dict, Path]:
     path = resolve_storage_uri(dataset.storage_uri)
     return validate_nllb(path) if dataset.task == "nllb" else validate_whisper(path)
-
-

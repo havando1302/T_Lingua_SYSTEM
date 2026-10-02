@@ -54,7 +54,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center text-surface font-bold text-3xl mb-6 shadow-xl shadow-primary/20">
+        <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center text-white font-bold text-3xl mb-6 shadow-xl shadow-primary/20">
           T
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-text">Translator AI</h1>

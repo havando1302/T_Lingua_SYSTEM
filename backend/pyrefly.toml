@@ -1,0 +1,11 @@
+# Pyrefly configuration for T-Langua backend
+search-path = ["."]
+infer-with-first-use = false
+
+[errors]
+# SQLAlchemy ORM InstrumentedAttribute descriptor assignments & narrowing
+bad-argument-type = false
+bad-assignment = false
+missing-attribute = false
+no-matching-overload = false
+unsupported-operation = false
