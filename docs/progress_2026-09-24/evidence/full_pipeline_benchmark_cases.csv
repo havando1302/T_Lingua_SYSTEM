@@ -1,11 +1,11 @@
 ﻿case_id,source_lang,target_lang,transcript,translation,tts_samples,stt_ms,translation_ms,tts_ms,end_to_end_ms
-V2_VI_EN_001,vi,en,Đơn hàng ị sẽ được trao đến Đà Nẵng vào thứ tư.,Your order will be delivered to Da Nang on Wednesday.,59904,369.46890000035637,343.09469999971043,413.933799998631,1126.4973999986978
-V2_VI_EN_002,vi,en,Cộng học thỹ thuật bắt đầu lúc tải phong.,Technical training begins at the loading dock.,48384,315.60300000091956,549.4681000000128,129.78189999921597,994.8530000001483
-V2_VI_EN_003,vi,en,Vui lòng sau lưu máy chủ trước khi cập nhật hệ thống.,Please back up the server before updating the system.,56832,408.03430000050867,382.98779999968247,131.8301999999676,922.8523000001587
-V2_VI_EN_004,vi,en,Ai khoảng minh bị khoa sau lần đăng nhập sai?,Who's about to get sick after a bad login?,47616,309.144799999558,389.40309999998135,137.0931000001292,835.6409999996686
-V2_VI_EN_005,vi,en,"Chuyến bay đến hải phòng Khởi Hành, lúc vào thứ Ba.","Flight to the launch site, Tuesday.",41472,390.9597000001668,320.53109999833396,189.21660000160045,900.7074000001012
-V2_EN_VI_001,en,vi,"I kid you, pub food will arrive in an anthed.","Tôi đùa anh, đồ ăn quán rượu sẽ đến trong một con kiến.",74496,304.2808000009245,721.2478999990708,190.00970000161033,1215.5384000016056
-V2_EN_VI_002,en,vi,the technical meeting starts at Vafahit in Roomed Broad.,cuộc họp kỹ thuật bắt đầu tại Vafahit ở Roomed Broad.,67072,348.70890000092913,501.6120000000228,137.56389999980456,987.8848000007565
-V2_EN_VI_003,en,vi,Please restart the server after installing the update.,Vui lòng khởi động lại máy chủ sau khi cài đặt bản cập nhật.,76032,224.4688999999198,513.9490000001388,130.65450000067358,869.0724000007322
-V2_EN_VI_004,en,vi,Thus a mind must change the password within days.,"Vì vậy, một tâm trí phải thay đổi mật khẩu trong vài ngày.",69888,218.73439999944821,449.33880000098725,125.11949999861827,793.1926999990537
-V2_EN_VI_005,en,vi,The train to Haifan leaves at Tharbzons Bay.,Tàu đến Haifan khởi hành tại vịnh Tharbzons.,45056,368.2507000012265,504.9937999992835,131.96679999964545,1005.2113000001555
+V2_VI_EN_001,vi,en,Đơn hàng ị sẽ được trao đến Đà Nẵng vào thứ tư.,Your order will be delivered to Da Nang on Wednesday.,54784,381.82140000026266,371.3828999998441,401.45209999991494,1154.6564000000217
+V2_VI_EN_002,vi,en,Cộng học thỹ thuật bắt đầu lúc tải phong.,Technical training begins at the loading dock.,51456,348.0815999992046,336.86650000072405,125.53399999978865,810.4820999997173
+V2_VI_EN_003,vi,en,Vui lòng sau lưu máy chủ trước khi cập nhật hệ thống.,Please back up the server before updating the system.,57856,391.94009999937407,358.10680000031425,129.36679999984335,879.4136999995317
+V2_VI_EN_004,vi,en,Ai khoảng minh bị khoa sau lần đăng nhập sai?,Who's about to get sick after a bad login?,44800,297.858200000519,382.8500999998141,131.7932000001747,812.5015000005078
+V2_VI_EN_005,vi,en,"Chuyến bay đến hải phòng Khởi Hành, lúc vào thứ Ba.","Flight to the launch site, Tuesday.",39168,362.52629999944475,292.4173999999766,143.06410000062897,798.0078000000503
+V2_EN_VI_001,en,vi,"I kid you, pub food will arrive in an anthed.","Tôi đùa anh, đồ ăn quán rượu sẽ đến trong một con kiến.",72960,261.2448999998378,533.0847000004724,143.25379999991128,937.5834000002214
+V2_EN_VI_002,en,vi,the technical meeting starts at Vafahit in Roomed Broad.,cuộc họp kỹ thuật bắt đầu tại Vafahit ở Roomed Broad.,68608,284.12029999981314,459.93929999985994,126.13520000013523,870.1947999998083
+V2_EN_VI_003,en,vi,Please restart the server after installing the update.,Vui lòng khởi động lại máy chủ sau khi cài đặt bản cập nhật.,75520,205.91830000012123,484.8119999996925,132.50179999977263,823.2320999995864
+V2_EN_VI_004,en,vi,Thus a mind must change the password within days.,"Vì vậy, một tâm trí phải thay đổi mật khẩu trong vài ngày.",75776,249.8465999997279,504.0820000003805,133.3191000003353,887.2477000004437
+V2_EN_VI_005,en,vi,The train to Haifan leaves at Tharbzons Bay.,Tàu đến Haifan khởi hành tại vịnh Tharbzons.,48640,310.2158000001509,503.43080000038753,158.36789999957546,972.0145000001139

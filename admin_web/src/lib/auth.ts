@@ -7,6 +7,8 @@ export interface AuthUser {
   role: Role;
   public_id?: string;
   is_active?: boolean;
+  created_at?: string | null;
+  mfa_enabled?: boolean;
 }
 export interface LoginResponse {
   access_token: string;
@@ -88,6 +90,12 @@ export function useAuthUser() {
   return useSyncExternalStore(subscribe, () => currentUser, () => null);
 }
 
-export function homeFor(user: AuthUser) {
-  return user.role === 'employee' ? '/account' : '/';
+export function homeFor(_user: AuthUser) {
+  return '/';
 }
+
+export const roleLabels: Record<Role, string> = {
+  employee: 'Nhân viên nghiệp vụ',
+  admin: 'Quản trị viên',
+  superadmin: 'Quản trị cấp cao',
+};

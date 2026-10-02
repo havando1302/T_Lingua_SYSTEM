@@ -14,6 +14,7 @@ const ApiKeys = lazy(() => import('./pages/ApiKeys'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Users = lazy(() => import('./pages/Users'));
 const TrainingCenter = lazy(() => import('./pages/TrainingCenter'));
+const Account = lazy(() => import('./pages/Account'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode; roles?: Role[] }) => {
@@ -52,15 +53,6 @@ const ProtectedRoute = ({ children, roles }: { children: React.ReactNode; roles?
 const adminRoles: Role[] = ['admin', 'superadmin'];
 const superadminRoles: Role[] = ['superadmin'];
 
-function Account() {
-  const user = useAuthUser();
-  return <div className="space-y-4">
-    <h1 className="text-3xl font-bold">Tài khoản của bạn</h1>
-    <p>{user?.username} · {user?.role}</p>
-    <p className="text-text-muted">Tài khoản nhân viên sử dụng ứng dụng dịch thuật. Các trang quản trị chỉ dành cho người được cấp quyền.</p>
-  </div>;
-}
-
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="admin-ui-theme">
@@ -69,11 +61,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           
           <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-          <Route path="/" element={<ProtectedRoute roles={adminRoles}><Dashboard /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute roles={adminRoles}><Analytics /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute roles={adminRoles}><History /></ProtectedRoute>} />
-          <Route path="/dictionary" element={<ProtectedRoute roles={adminRoles}><Dictionary /></ProtectedRoute>} />
-          <Route path="/qa" element={<ProtectedRoute roles={adminRoles}><QA /></ProtectedRoute>} />
+          <Route path="/dictionary" element={<ProtectedRoute><Dictionary /></ProtectedRoute>} />
+          <Route path="/qa" element={<ProtectedRoute><QA /></ProtectedRoute>} />
           <Route path="/training-center" element={<ProtectedRoute roles={adminRoles}><TrainingCenter /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute roles={superadminRoles}><Users /></ProtectedRoute>} />
           <Route path="/apikeys" element={<ProtectedRoute roles={superadminRoles}><ApiKeys /></ProtectedRoute>} />

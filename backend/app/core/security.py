@@ -218,6 +218,27 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
+def require_reporting_user(current_user: User = Depends(get_current_user)) -> User:
+    """Allow staff to read aggregate operational reports, never administration data."""
+    if current_user.role not in {"employee", "admin", "superadmin"}:
+        raise HTTPException(status_code=403, detail="Reporting permission is required")
+    return current_user
+
+
+def require_dictionary_reader(current_user: User = Depends(get_current_user)) -> User:
+    """Allow staff to read the approved shared terminology database."""
+    if current_user.role not in {"employee", "admin", "superadmin"}:
+        raise HTTPException(status_code=403, detail="Dictionary read permission is required")
+    return current_user
+
+
+def require_qa_reviewer(current_user: User = Depends(get_current_user)) -> User:
+    """Allow staff assigned to the QA workflow; export and training remain admin-only."""
+    if current_user.role not in {"employee", "admin", "superadmin"}:
+        raise HTTPException(status_code=403, detail="QA review permission is required")
+    return current_user
+
+
 def require_superadmin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadministrator permission is required")

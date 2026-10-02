@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, LogOut, Settings, Key, BarChart3, History, Menu, X, AlertCircle, BrainCircuit } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, BookOpen, LogOut, Settings, Key, BarChart3, History, Menu, X, AlertCircle, BrainCircuit } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { useEffect, useRef, useState } from 'react';
 import { logout } from '../lib/api';
@@ -42,20 +42,23 @@ const Sidebar = () => {
     }
   };
 
-  const navItems = user?.role === 'employee' ? [
-    { icon: Users, label: 'Tài khoản', path: '/account' },
-  ] : [
+  const navItems = [
     { icon: LayoutDashboard, label: 'Bảng điều khiển', path: '/' },
     { icon: BarChart3, label: 'Thống kê', path: '/analytics' },
-    { icon: History, label: 'Lịch sử', path: '/history' },
+    ...(user?.role !== 'employee' ? [
+      { icon: History, label: 'Lịch sử', path: '/history' },
+    ] : []),
     { icon: BookOpen, label: 'Từ điển', path: '/dictionary' },
     { icon: AlertCircle, label: 'Cải thiện QA', path: '/qa' },
-    { icon: BrainCircuit, label: 'Huấn luyện AI', path: '/training-center' },
+    ...(user?.role !== 'employee' ? [
+      { icon: BrainCircuit, label: 'Huấn luyện AI', path: '/training-center' },
+    ] : []),
     ...(user?.role === 'superadmin' ? [
       { icon: Users, label: 'Nhân sự', path: '/users' },
       { icon: Key, label: 'Mã kết nối (API)', path: '/apikeys' },
       { icon: Settings, label: 'Cài đặt', path: '/settings' },
     ] : []),
+    { icon: UserCircle, label: 'Hồ sơ cá nhân', path: '/account' },
   ];
 
   return (

@@ -4,8 +4,11 @@ import { Button } from '../components/ui/Button';
 import { Activity, Users, Zap, AlertCircle, HardDrive, Cpu, MemoryStick } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
+import { useAuthUser } from '../lib/auth';
 
 const Dashboard = () => {
+  const user = useAuthUser();
+  const canViewSystemStatus = user?.role !== 'employee';
   const [metrics, setMetrics] = useState({
     total_translations: 0,
     flagged_translations: 0,
@@ -38,16 +41,18 @@ const Dashboard = () => {
       if (pending) return;
       pending = true;
       try {
-        const [metricsRes, sysRes, tsRes] = await Promise.all([
+        const [metricsRes, tsRes] = await Promise.all([
           api.get('/metrics/dashboard', { signal: controller.signal }),
-          api.get('/system/status', { signal: controller.signal }),
           api.get('/metrics/timeseries?time_range=all', { signal: controller.signal })
         ]);
+        const sysRes = canViewSystemStatus
+          ? await api.get('/system/status', { signal: controller.signal })
+          : null;
         if (controller.signal.aborted) return;
         setError('');
         setUpdatedAt(new Date());
         setMetrics(metricsRes.data);
-        setSysStatus(sysRes.data);
+        if (sysRes) setSysStatus(sysRes.data);
         setTimeSeries(tsRes.data);
       } catch (err) {
         if (!controller.signal.aborted) setError(apiErrorMessage(err));
@@ -59,7 +64,7 @@ const Dashboard = () => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => { controller.abort(); clearInterval(interval); };
-  }, [reload]);
+  }, [reload, canViewSystemStatus]);
 
   if (!updatedAt) return <div className="space-y-4">
     <h1 className="text-3xl font-bold">Bảng điều khiển</h1>
@@ -107,8 +112,8 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className={`grid grid-cols-1 gap-6 ${canViewSystemStatus ? 'lg:grid-cols-3' : ''}`}>
+        <Card className={canViewSystemStatus ? 'lg:col-span-2' : ''}>
           <CardHeader>
             <CardTitle>Lưu lượng dịch thực tế</CardTitle>
             <CardDescription>Số lượng yêu cầu dịch thuật được xử lý bởi AI theo ngày.</CardDescription>
@@ -137,7 +142,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        {canViewSystemStatus && <Card>
           <CardHeader>
             <CardTitle>Tài nguyên hệ thống</CardTitle>
             <CardDescription>Tình trạng phần cứng máy chủ realtime</CardDescription>
@@ -159,7 +164,7 @@ const Dashboard = () => {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card>}
       </div>
     </div>
   );

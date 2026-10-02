@@ -58,7 +58,7 @@ const Login = () => {
           T
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-text">Translator AI</h1>
-        <p className="text-text-muted mt-2">Đăng nhập vào bảng điều khiển quản trị</p>
+        <p className="text-text-muted mt-2">Đăng nhập vào cổng vận hành Translator AI</p>
       </div>
 
       <Card className="w-full max-w-md shadow-2xl">

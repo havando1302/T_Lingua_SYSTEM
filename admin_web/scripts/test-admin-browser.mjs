@@ -63,8 +63,8 @@ const server = createServer(async (request, response) => {
     const data = contentType.includes('application/json') && body ? JSON.parse(body) : null;
     requests.push({ method: request.method, path: url.pathname, params: Object.fromEntries(url.searchParams), data, multipart: url.pathname.endsWith('/upload') ? body : undefined });
     const respond = (value, status = 200) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(value)); };
-    const user = () => ({ id: 999, username: role, role, public_id: 'synthetic-admin', is_active: true });
-    if (url.pathname === '/admin/login') { role = new URLSearchParams(body).get('username') === 'superadmin' ? 'superadmin' : 'admin'; respond({ access_token: 'synthetic-session', token_type: 'bearer', expires_in: 3600, user: user() }); }
+    const user = () => ({ id: 999, username: role, role, public_id: `synthetic-${role}`, is_active: true, created_at: '2026-09-01T00:00:00Z', mfa_enabled: role !== 'employee' });
+    if (url.pathname === '/admin/login') { const username = new URLSearchParams(body).get('username'); role = username === 'superadmin' ? 'superadmin' : username === 'employee' ? 'employee' : 'admin'; respond({ access_token: 'synthetic-session', token_type: 'bearer', expires_in: 3600, user: user() }); }
     else if (url.pathname === '/admin/me') respond(user());
     else if (url.pathname === '/api/session/logout') respond({ ok: true });
     else if (url.pathname === '/admin/quality/logs') {
@@ -101,6 +101,7 @@ const server = createServer(async (request, response) => {
     else if (url.pathname === '/admin/audit') respond([]);
     else if (url.pathname === '/admin/models/deployments') respond(deployments);
     else if (url.pathname === '/admin/training/overview') respond(trainingOverview);
+    else if (url.pathname === '/admin/quality/overview') respond({ qa: trainingOverview.qa || { reviewed: 0, pending: 123, eligible_nllb: 0, eligible_whisper: 0, blocked_consent: 0, blocked_pii: 0 }, nllb: trainingOverview.nllb, whisper: trainingOverview.whisper });
     else if (url.pathname === '/admin/training/datasets/preview-from-qa') respond({
       task: data.task, reviewed: 4, eligible: 1, splits: { train: 1, validation: 0, test: 0 },
       directions: { 'vi->en': 1 }, duration_seconds: 0, ready: false,
@@ -221,6 +222,32 @@ try {
     await click(button('Kiểm tra'));
     assert.equal(await evaluate("document.body.innerText.includes('Có quyền huấn luyện')"), true);
     await click(button('Hủy'));
+  });
+  const systemStatusBeforeEmployee = requests.filter(request => request.path === '/admin/system/status').length;
+  await click(button('Đăng xuất')); await waitFor("location.pathname === '/login'"); await login('employee');
+  await check('Employee sees operational tools but no privileged administration', async () => {
+    const body = await evaluate('document.body.innerText');
+    for (const label of ['Bảng điều khiển', 'Thống kê', 'Từ điển', 'Cải thiện QA', 'Hồ sơ cá nhân']) assert.equal(body.includes(label), true, label);
+    for (const label of ['Lịch sử', 'Huấn luyện AI', 'Nhân sự', 'Mã kết nối (API)', 'Cài đặt']) assert.equal(body.includes(label), false, label);
+    assert.equal(requests.filter(request => request.path === '/admin/system/status').length, systemStatusBeforeEmployee);
+  });
+  await navigate('/dictionary'); await waitFor("document.querySelectorAll('tbody tr').length === 25");
+  await check('Employee dictionary is read-only', async () => {
+    assert.equal(await evaluate("document.body.innerText.includes('Thêm cặp dịch')"), false);
+    assert.equal(await evaluate("document.querySelector('input[type=file]') === null"), true);
+  });
+  await navigate('/qa'); await waitFor("document.body.innerText.includes('QA dữ liệu huấn luyện') && document.querySelectorAll('tbody tr').length === 25");
+  await check('Employee can review QA but cannot export training data', async () => {
+    assert.equal(await evaluate("document.body.innerText.includes('Kiểm tra')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Dataset NLLB')"), false);
+    assert.equal(await evaluate("document.body.innerText.includes('Dataset Whisper')"), false);
+  });
+  await navigate('/account'); await waitFor("document.body.innerText.includes('Quyền được cấp')");
+  await check('Employee profile explains identity and granted permissions', async () => {
+    const body = await evaluate('document.body.innerText');
+    assert.equal(body.includes('Nhân viên nghiệp vụ'), true);
+    assert.equal(body.includes('synthetic-employee'), true);
+    assert.equal(body.includes('Duyệt, hiệu chỉnh và phân loại dữ liệu QA'), true);
   });
   await click(button('Đăng xuất')); await waitFor("location.pathname === '/login'"); await login('superadmin');
   await navigate('/training-center'); await waitFor("document.body.innerText.includes('Trung tâm huấn luyện AI')");

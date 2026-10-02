@@ -55,6 +55,8 @@ class AdminExtensionTests(unittest.TestCase):
         self.db.commit()
         token = issue_user_session(self.superadmin, self.db)["access_token"]
         self.headers = {"Authorization": f"Bearer {token}"}
+        employee_token = issue_user_session(self.employee, self.db)["access_token"]
+        self.employee_headers = {"Authorization": f"Bearer {employee_token}"}
 
         def override_db():
             session = self.Session()
@@ -184,6 +186,71 @@ class AdminExtensionTests(unittest.TestCase):
         content = response.content.decode("utf-8-sig")
         self.assertIn("source_text,translated_text,source_lang,target_lang", content)
         self.assertIn("xin chào,hello,vi,en", content)
+
+    def test_employee_portal_permissions_are_useful_but_limited(self):
+        qa_log = TranslationLog(
+            client_id="qa-client", source_text="Cần kiểm tra", translated_text="Needs review",
+            source_lang="vi", target_lang="en", is_flagged=True,
+        )
+        private_history = TranslationLog(
+            client_id="history-client", source_text="Không thuộc QA", translated_text="Not QA",
+            source_lang="vi", target_lang="en", is_flagged=False,
+        )
+        self.db.add_all([qa_log, private_history])
+        self.db.commit()
+
+        for path in (
+            "/admin/metrics/dashboard",
+            "/admin/metrics/timeseries",
+            "/admin/metrics/languages",
+            "/admin/metrics/pipeline",
+            "/admin/metrics/pipeline?time_range=7d",
+            "/admin/metrics/pipeline?time_range=all",
+            "/admin/metrics/pipeline?start_date=2026-01-01&end_date=2026-01-02",
+            "/admin/dictionary",
+            "/admin/quality/overview",
+        ):
+            response = self.client.get(path, headers=self.employee_headers)
+            self.assertEqual(response.status_code, 200, f"{path}: {response.text}")
+            if "pipeline" in path:
+                data = response.json()
+                self.assertIn("latencies_ms", data)
+                self.assertIn("total_completed", data)
+
+        qa_response = self.client.get("/admin/quality/logs", headers=self.employee_headers)
+        self.assertEqual(qa_response.status_code, 200, qa_response.text)
+        self.assertEqual([row["id"] for row in qa_response.json()], [qa_log.id])
+
+        reviewed = self.client.post(
+            f"/admin/quality/logs/{qa_log.id}/resolve",
+            headers=self.employee_headers,
+            json={"corrected_text": "Needs a review", "translation_status": "corrected"},
+        )
+        self.assertEqual(reviewed.status_code, 200, reviewed.text)
+
+        out_of_scope_review = self.client.post(
+            f"/admin/quality/logs/{private_history.id}/resolve",
+            headers=self.employee_headers,
+            json={"corrected_text": "Must stay private", "translation_status": "corrected"},
+        )
+        self.assertEqual(out_of_scope_review.status_code, 404, out_of_scope_review.text)
+
+        for path in (
+            "/admin/system/status",
+            "/admin/users",
+            "/admin/apikeys",
+            "/admin/training/overview",
+            "/admin/quality/reviews/export",
+        ):
+            response = self.client.get(path, headers=self.employee_headers)
+            self.assertEqual(response.status_code, 403, f"{path}: {response.text}")
+
+        write_dictionary = self.client.post(
+            "/admin/dictionary",
+            headers=self.employee_headers,
+            json={"source_text": "xin chào", "translated_text": "hello", "source_lang": "vi", "target_lang": "en"},
+        )
+        self.assertEqual(write_dictionary.status_code, 403, write_dictionary.text)
 
     def test_model_canary_promote_rollback_and_filtered_audit(self):
         initial = self.client.get("/admin/models/deployments", headers=self.headers)

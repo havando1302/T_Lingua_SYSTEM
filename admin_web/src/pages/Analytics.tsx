@@ -69,7 +69,7 @@ const Analytics = () => {
         const [tsRes, langRes, pipeRes] = await Promise.all([
           api.get(`/metrics/timeseries${queryString}`, { signal: controller.signal }),
           api.get(`/metrics/languages${queryString}`, { signal: controller.signal }),
-          api.get('/metrics/pipeline', { signal: controller.signal })
+          api.get(`/metrics/pipeline${queryString}`, { signal: controller.signal })
         ]);
         if (controller.signal.aborted) return;
         setError('');

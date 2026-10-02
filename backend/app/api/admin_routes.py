@@ -41,6 +41,9 @@ from app.core.security import (
     get_password_hash,
     get_current_user,
     require_admin,
+    require_dictionary_reader,
+    require_qa_reviewer,
+    require_reporting_user,
     require_superadmin,
     issue_user_session,
     issue_api_key,
@@ -84,6 +87,8 @@ class UserResponse(BaseModel):
     role: str
     public_id: str
     is_active: bool
+    created_at: datetime | None = None
+    mfa_enabled: bool = False
     
     model_config = {"from_attributes": True}
 
@@ -351,7 +356,7 @@ def get_dashboard_metrics(
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_reporting_user),
 ):
     activity = GLOBAL_TELEMETRY.get_activity_summary()
     has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
@@ -391,15 +396,34 @@ def get_dashboard_metrics(
     }
 
 # --- LOGS / QA ---
+def _is_qa_log(log: TranslationLog) -> bool:
+    return bool(log.is_flagged or log.is_reviewed or log.model_source == "user_flagged")
+
+
+def _enforce_qa_log_access(user: User, log: TranslationLog | None) -> TranslationLog:
+    if log is None or (user.role == "employee" and not _is_qa_log(log)):
+        # Do not reveal whether an out-of-scope history record exists.
+        raise HTTPException(status_code=404, detail="QA log not found")
+    return log
+
+
 @router.get("/quality/logs")
 def get_quality_logs(search: str | None = Query(default=None, max_length=200),
                      flagged_only: bool = False,
                      qa_only: bool = False,
                      review_status: Literal["all", "pending", "reviewed"] = "all",
                      skip: int = Query(default=0, ge=0, le=100000), limit: int = Query(default=50, ge=1, le=100),
-                     db: Session = Depends(get_db), user: User = Depends(require_admin)):
+                     db: Session = Depends(get_db), user: User = Depends(require_qa_reviewer)):
     query = db.query(TranslationLog)
-    if flagged_only:
+    if user.role == "employee":
+        # Employees work only in the QA queue; the complete translation history
+        # remains an administrator-only data set.
+        query = query.filter(
+            (TranslationLog.is_flagged == True) |
+            (TranslationLog.is_reviewed == True) |
+            (TranslationLog.model_source == "user_flagged")
+        )
+    elif flagged_only:
         query = query.filter(TranslationLog.is_flagged == True)
     elif qa_only:
         query = query.filter(
@@ -467,6 +491,38 @@ def get_quality_logs(search: str | None = Query(default=None, max_length=200),
     return result
 
 
+@router.get("/quality/overview")
+def get_quality_overview(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_qa_reviewer),
+):
+    """Return QA-only readiness counts without exposing training jobs or runtime details."""
+    reviewed = db.query(QualityReview, TranslationLog).join(
+        TranslationLog, TranslationLog.id == QualityReview.translation_log_id
+    ).all()
+    assets = {row.translation_log_id: row for row in db.query(TrainingAudioAsset).all()}
+    whisper = [
+        (review, log, assets.get(log.id)) for review, log in reviewed
+        if eligible_for_whisper(review, assets.get(log.id))
+    ]
+    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review)]
+    return {
+        "qa": {
+            "reviewed": len(reviewed),
+            "pending": db.query(TranslationLog).filter(
+                TranslationLog.is_flagged == True,
+                TranslationLog.is_reviewed == False,
+            ).count(),
+            "eligible_nllb": len(nllb),
+            "eligible_whisper": len(whisper),
+            "blocked_consent": sum(not review.consent_for_training for review, _ in reviewed),
+            "blocked_pii": sum(review.pii_status not in {"clean", "redacted"} for review, _ in reviewed),
+        },
+        "nllb": {"samples": len(nllb), "ready": bool(nllb)},
+        "whisper": {"samples": len(whisper), "ready": bool(whisper)},
+    }
+
+
 def _search_pattern(value: str) -> str:
     return "%" + value.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
 
@@ -499,10 +555,9 @@ class ResolveLogRequest(BaseModel):
     model_config = {"extra": "forbid"}
 
 @router.post("/quality/logs/{log_id}/resolve")
-def resolve_log(log_id: int, req: ResolveLogRequest, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def resolve_log(log_id: int, req: ResolveLogRequest, db: Session = Depends(get_db), user: User = Depends(require_qa_reviewer)):
     log = db.query(TranslationLog).filter(TranslationLog.id == log_id).first()
-    if not log:
-        raise HTTPException(status_code=404, detail="Log not found")
+    log = _enforce_qa_log_access(user, log)
     
     corrected_source = validate_text(req.corrected_source_text or log.source_text, db)
     corrected_translation = validate_text(req.corrected_text, db)
@@ -571,11 +626,10 @@ def _stable_split(group_key: str | None) -> str:
 async def upload_quality_audio(
     log_id: int, file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_qa_reviewer),
 ):
     log = db.query(TranslationLog).filter(TranslationLog.id == log_id).first()
-    if not log:
-        raise HTTPException(404, "Log not found")
+    log = _enforce_qa_log_access(user, log)
     existing = db.query(TrainingAudioAsset).filter(TrainingAudioAsset.translation_log_id == log_id).first()
     stored = await store_training_wav(file)
     if existing:
@@ -606,7 +660,9 @@ async def upload_quality_audio(
 
 
 @router.get("/quality/logs/{log_id}/audio")
-def get_quality_audio(log_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def get_quality_audio(log_id: int, db: Session = Depends(get_db), user: User = Depends(require_qa_reviewer)):
+    log = db.query(TranslationLog).filter(TranslationLog.id == log_id).first()
+    _enforce_qa_log_access(user, log)
     asset = db.query(TrainingAudioAsset).filter(TrainingAudioAsset.translation_log_id == log_id).first()
     if not asset:
         raise HTTPException(404, "Training audio not found")
@@ -828,7 +884,7 @@ def get_metrics_timeseries(
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_reporting_user),
 ):
     """Activity timeseries with filtering support, persisted in database."""
     activity = GLOBAL_TELEMETRY.get_activity_summary()
@@ -867,7 +923,7 @@ def get_metrics_languages(
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_reporting_user),
 ):
     """Language distribution metrics, queried from real persisted logs."""
     activity = GLOBAL_TELEMETRY.get_activity_summary()
@@ -904,30 +960,70 @@ def get_metrics_languages(
 
 @router.get("/metrics/pipeline")
 def get_metrics_pipeline(
+    time_range: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_reporting_user),
 ):
-    """Số đo hiệu năng toàn pipeline (P50/P90/P99 latency, queue wait, throughput)."""
-    summary = GLOBAL_TELEMETRY.get_summary()
-    if summary["total_completed"] == 0:
-        try:
-            lats_s = [r[0] for r in db.query(TranslationLog.latency).filter(TranslationLog.latency > 0).all()]
-            if lats_s:
-                lats_ms = sorted([round(x * 1000, 1) for x in lats_s])
-                n = len(lats_ms)
-                p50 = lats_ms[int(n * 0.50)]
-                p90 = lats_ms[min(int(n * 0.90), n - 1)]
-                p99 = lats_ms[min(int(n * 0.99), n - 1)]
-                avg = round(sum(lats_ms) / n, 1)
-                total_count = db.query(TranslationLog).count()
-                summary["total_completed"] = total_count
-                summary["latencies_ms"]["end_to_end"] = {"p50": p50, "p90": p90, "p99": p99, "avg": avg}
-                summary["latencies_ms"]["translate"] = {"p50": round(p50 * 0.7, 1), "p90": round(p90 * 0.7, 1), "p99": round(p99 * 0.7, 1), "avg": round(avg * 0.7, 1)}
-                summary["latencies_ms"]["stt"] = {"p50": round(p50 * 0.2, 1), "p90": round(p90 * 0.2, 1), "p99": round(p99 * 0.2, 1), "avg": round(avg * 0.2, 1)}
-                summary["latencies_ms"]["tts_first_chunk"] = {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)}
-        except Exception:
-            pass
-    return summary
+    """Số đo hiệu năng toàn pipeline (P50/P90/P99 latency, queue wait, throughput) hỗ trợ bộ lọc thời gian."""
+    has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
+    if not has_filter:
+        summary = GLOBAL_TELEMETRY.get_summary()
+        if summary["total_completed"] > 0:
+            return summary
+
+    effective_range = time_range if has_filter else "all"
+    empty_result = {
+        "active_turns": 0,
+        "total_completed": 0,
+        "total_errors": 0,
+        "throughput_turns_per_sec": 0.0,
+        "latencies_ms": {
+            "queue_wait": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+            "stt": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+            "translate": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+            "tts_first_chunk": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+            "tts_total": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+            "end_to_end": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+        },
+    }
+
+    try:
+        q_lat = db.query(TranslationLog.latency).filter(TranslationLog.latency > 0)
+        q_lat = _apply_metrics_time_filter(q_lat, effective_range, start_date, end_date)
+        lats_s = [r[0] for r in q_lat.all()]
+
+        q_total = db.query(func.count(TranslationLog.id))
+        q_total = _apply_metrics_time_filter(q_total, effective_range, start_date, end_date)
+        total_count = q_total.scalar() or 0
+
+        if lats_s:
+            lats_ms = sorted([round(x * 1000, 1) for x in lats_s])
+            n = len(lats_ms)
+            p50 = lats_ms[int(n * 0.50)]
+            p90 = lats_ms[min(int(n * 0.90), n - 1)]
+            p99 = lats_ms[min(int(n * 0.99), n - 1)]
+            avg = round(sum(lats_ms) / n, 1)
+            return {
+                "active_turns": 0,
+                "total_completed": total_count,
+                "total_errors": 0,
+                "throughput_turns_per_sec": 0.0,
+                "latencies_ms": {
+                    "queue_wait": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+                    "end_to_end": {"p50": p50, "p90": p90, "p99": p99, "avg": avg},
+                    "translate": {"p50": round(p50 * 0.7, 1), "p90": round(p90 * 0.7, 1), "p99": round(p99 * 0.7, 1), "avg": round(avg * 0.7, 1)},
+                    "stt": {"p50": round(p50 * 0.2, 1), "p90": round(p90 * 0.2, 1), "p99": round(p99 * 0.2, 1), "avg": round(avg * 0.2, 1)},
+                    "tts_first_chunk": {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)},
+                    "tts_total": {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)},
+                },
+            }
+        else:
+            empty_result["total_completed"] = total_count
+            return empty_result
+    except Exception:
+        return GLOBAL_TELEMETRY.get_summary()
 
 @router.get("/audit")
 def get_audit_log(
@@ -1238,7 +1334,7 @@ def get_dictionary(skip: int = Query(default=0, ge=0, le=100000), limit: int = Q
                    query: str | None = Query(default=None, max_length=200),
                    source_lang: str | None = Query(default=None),
                    target_lang: str | None = Query(default=None),
-                   user: User = Depends(require_admin)):
+                   user: User = Depends(require_dictionary_reader)):
     rows = tm.get_entries(APPROVED_DICTIONARY)
     needle = (search or query or "").strip().casefold()
     if needle:
@@ -1256,7 +1352,7 @@ def get_dictionary(skip: int = Query(default=0, ge=0, le=100000), limit: int = Q
 @router.get("/dictionary/export")
 def export_dictionary(source_lang: str | None = Query(default=None),
                       target_lang: str | None = Query(default=None),
-                      user: User = Depends(require_admin)):
+                      user: User = Depends(require_dictionary_reader)):
     output = io.StringIO(newline="")
     writer = csv.writer(output)
     writer.writerow(["source_text", "translated_text", "source_lang", "target_lang"])

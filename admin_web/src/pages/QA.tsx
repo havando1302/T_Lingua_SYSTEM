@@ -7,6 +7,7 @@ import { AlertCircle, Check, Database, Download, Edit2, Mic2, ShieldCheck, Spark
 
 import { usePaginatedList } from '../lib/usePaginatedList';
 import { ListSearch, ListStatus, ListPagination } from '../components/ListControls';
+import { useAuthUser } from '../lib/auth';
 
 type FilterStatus = 'all' | 'pending' | 'reviewed';
 type ReviewStatus = 'pending' | 'correct' | 'corrected' | 'unusable';
@@ -29,6 +30,7 @@ interface TrainingOverview {
 }
 
 const QA = () => {
+  const user = useAuthUser();
   const [filter, setFilter] = useState<FilterStatus>('all');
   const list = usePaginatedList<QualityLog>('/quality/logs', `qa_only=true&review_status=${filter}`);
   const logs = list.items;
@@ -57,7 +59,7 @@ const QA = () => {
   const dirty = editingId !== null && currentSnapshot !== originalSnapshot;
 
   const loadOverview = async () => {
-    try { setOverview((await api.get<TrainingOverview>('/training/overview')).data); }
+    try { setOverview((await api.get<TrainingOverview>('/quality/overview')).data); }
     catch { setOverview(null); }
   };
 
@@ -182,7 +184,7 @@ const QA = () => {
     <Card><CardHeader>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center gap-2 text-primary"><Sparkles size={22}/><CardTitle>Whisper → NLLB → Dataset</CardTitle></div>
-        <div className="flex flex-wrap gap-2">
+        {user?.role !== 'employee' && <div className="flex flex-wrap gap-2">
           <Button variant="secondary" disabled={downloadingName !== null} onClick={() => download('/quality/reviews/export', 'quality-reviews.csv')}>
             <Download size={15} className={`mr-1 ${downloadingName === 'quality-reviews.csv' ? 'animate-spin' : ''}`}/>
             {downloadingName === 'quality-reviews.csv' ? 'Đang xuất QA...' : 'Xuất QA'}
@@ -195,7 +197,7 @@ const QA = () => {
             <Download size={15} className={`mr-1 ${downloadingName === 'whisper-training.zip' ? 'animate-spin' : ''}`}/>
             {downloadingName === 'whisper-training.zip' ? 'Đang nén Whisper...' : 'Dataset Whisper'}
           </Button>
-        </div>
+        </div>}
         <fieldset disabled={editingId !== null || loading || fetching} className="w-full xl:w-80"><ListSearch list={list}/></fieldset>
       </div>
       <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/50">

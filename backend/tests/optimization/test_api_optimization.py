@@ -345,9 +345,12 @@ def isolated_suite():
         def test_auth_and_pagination_validation_remain_enforced(self):
             for path in ("/admin/dictionary", "/admin/users", "/admin/apikeys", "/admin/quality/logs"):
                 self.assertEqual(self.client.get(path).status_code, 401)
-                self.assertEqual(self.request("GET", path, role="employee").status_code, 403)
                 self.assertEqual(self.request("GET", path, params={"skip": -1}).status_code, 422)
                 self.assertEqual(self.request("GET", path, params={"limit": 0}).status_code, 422)
+            for path in ("/admin/dictionary", "/admin/quality/logs"):
+                self.assertEqual(self.request("GET", path, role="employee").status_code, 200)
+            for path in ("/admin/users", "/admin/apikeys"):
+                self.assertEqual(self.request("GET", path, role="employee").status_code, 403)
             self.assertEqual(self.request("GET", "/admin/quality/logs", params={"review_status": "unknown"}).status_code, 422)
             self.assertNotIn("app.main", sys.modules)
             self.assertNotIn("app.core.config", sys.modules)
