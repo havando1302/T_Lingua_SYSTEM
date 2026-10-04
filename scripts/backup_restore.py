@@ -13,6 +13,11 @@ import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
+class SecurityError(Exception):
+    """Custom exception raised when archive contains unsafe paths."""
+    pass
+
+
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "backend" / "data"
 DEFAULT_BACKUP_DIR = Path(__file__).resolve().parent.parent / "backups"
 
@@ -32,7 +37,7 @@ def create_backup(data_dir: Path = DEFAULT_DATA_DIR, output_dir: Path = DEFAULT_
     output_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    archive_name = f"backup_tlangua_{timestamp}.tar.gz"
+    archive_name = f"backup_tlingua_{timestamp}.tar.gz"
     archive_path = output_dir / archive_name
 
     files_to_backup = []
@@ -127,7 +132,7 @@ def restore_backup(archive_path: Path, target_dir: Path = DEFAULT_DATA_DIR) -> b
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="T-Langua Backup and Recovery Utility")
+    parser = argparse.ArgumentParser(description="T-Lingua Backup and Recovery Utility")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     backup_parser = subparsers.add_parser("backup", help="Create a full system backup")

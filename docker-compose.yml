@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: translator_ai_backend
+    container_name: tlingua_backend
     ports:
       - "127.0.0.1:8000:8000"
     env_file:
@@ -31,7 +31,7 @@ services:
     build:
       context: ./admin_web
       dockerfile: Dockerfile
-    container_name: translator_admin_web
+    container_name: tlingua_admin_web
     ports:
       - "127.0.0.1:8080:80"
     depends_on:

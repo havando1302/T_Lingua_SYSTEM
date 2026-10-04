@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import { Link } from 'react-router-dom';
 import api, { apiErrorMessage } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
@@ -103,7 +104,7 @@ const Settings = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
   const [messages, setMessages] = useState<Record<string, string>>({});
 
   const fetchSettings = async () => {

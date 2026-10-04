@@ -50,7 +50,7 @@ def _enroll_mfa(user, db, provisioning_file):
         destination = Path(provisioning_file).expanduser().resolve()
         descriptor = os.open(str(destination), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as output:
-            output.write(pyotp.TOTP(seed).provisioning_uri(name=user.username, issuer_name="T-Langua"))
+            output.write(pyotp.TOTP(seed).provisioning_uri(name=user.username, issuer_name="T-Lingua"))
             output.write("\n")
         print(f"Provisioning file created: {destination}")
         print("Import it locally into your authenticator, then securely remove the file.")

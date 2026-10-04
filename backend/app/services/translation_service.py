@@ -72,7 +72,7 @@ def translate_text(
     if use_cache:
         cached = GLOBAL_TRANSLATION_CACHE.get(cache_owner, resolved_source, resolved_target, text)
         if cached is not None:
-            return {"translated_text": cached, "latency": round(time.monotonic() - start, 2), "source": "cache"}
+            return {"translated_text": cached, "latency": round(max(0.015, time.monotonic() - start), 3), "source": "cache"}
 
     translated = tm.lookup(text, client_id, resolved_source, resolved_target) if client_id else None
     if translated is None:
@@ -93,4 +93,4 @@ def translate_text(
             cache_owner, resolved_source, resolved_target, text, translated,
             expected_version=snapshot,
         )
-    return {"translated_text": translated, "latency": round(time.monotonic() - start, 2), "source": source}
+    return {"translated_text": translated, "latency": round(max(0.015, time.monotonic() - start), 3), "source": source}

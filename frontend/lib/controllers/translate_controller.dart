@@ -38,8 +38,24 @@ class TranslationLogic extends ChangeNotifier {
   bool _starting = false;
   bool _disposed = false;
   int _recordingGeneration = 0;
-  String? errorMessage;
+  String? _errorMessage;
+  Timer? _errorTimer;
   String? activeTurnId;
+
+  String? get errorMessage => _errorMessage;
+  set errorMessage(String? value) {
+    _errorTimer?.cancel();
+    _errorTimer = null;
+    _errorMessage = value;
+    if (value != null && !_disposed) {
+      _errorTimer = Timer(const Duration(seconds: 4), () {
+        if (!_disposed && _errorMessage == value) {
+          _errorMessage = null;
+          notifyListeners();
+        }
+      });
+    }
+  }
 
   // Language Config
   String currentSourceLang = 'vi';
@@ -411,6 +427,7 @@ class TranslationLogic extends ChangeNotifier {
         messages[existingIdx] = originalMsg.copyWith(
           translation: translated,
           isDraft: false,
+          qaAudioToken: data['data']?['qa_audio_token'] as String?,
         );
 
         unawaited(_autoSaveToHistory(messages[existingIdx]));
@@ -490,6 +507,7 @@ class TranslationLogic extends ChangeNotifier {
         sourceLang: msg.sourceLang ?? currentSourceLang,
         targetLang: msg.targetLang ?? currentTargetLang,
         inputMode: 'voice',
+        qaAudioToken: msg.qaAudioToken,
       );
     } catch (e) {
       debugPrint('Flag request failed.');
@@ -530,6 +548,7 @@ class TranslationLogic extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _errorTimer?.cancel();
     _recordingGeneration++;
     if (_microphoneOwner == this) _microphoneOwner = null;
     mic.removeListener(_onMicChanged);
@@ -554,7 +573,23 @@ class TextTranslateController extends ChangeNotifier {
 
   bool isLoading = false;
   String translatedText = '';
-  String? errorMessage;
+  String? _errorMessage;
+  Timer? _errorTimer;
+
+  String? get errorMessage => _errorMessage;
+  set errorMessage(String? value) {
+    _errorTimer?.cancel();
+    _errorTimer = null;
+    _errorMessage = value;
+    if (value != null) {
+      _errorTimer = Timer(const Duration(seconds: 4), () {
+        if (_errorMessage == value) {
+          _errorMessage = null;
+          notifyListeners();
+        }
+      });
+    }
+  }
 
   Future<void> translateText({
     required String text,
@@ -597,5 +632,11 @@ class TextTranslateController extends ChangeNotifier {
       debugPrint('Flag request failed.');
       rethrow;
     }
+  }
+
+  @override
+  void dispose() {
+    _errorTimer?.cancel();
+    super.dispose();
   }
 }

@@ -53,9 +53,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _showError() {
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('update_failed'))));
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(tr('update_failed')),
+            duration: const Duration(seconds: 4),
+          ),
+        );
     }
   }
 

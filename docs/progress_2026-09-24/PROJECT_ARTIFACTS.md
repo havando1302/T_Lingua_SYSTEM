@@ -4,7 +4,7 @@ Tài liệu này gom các đầu ra quản lý dự án còn thiếu trong giai 
 
 ## 1. Project charter và biên bản kick-off
 
-- Tên dự án: Hệ thống AI dịch thuật T-Langua.
+- Tên dự án: Hệ thống AI dịch thuật T-Lingua.
 - Thời gian toàn dự án: 25/08/2026–30/10/2026.
 - Phạm vi báo cáo này: 25/08/2026–24/09/2026.
 - Mục tiêu: hoàn thiện nền Flutter, FastAPI/WebSocket và React Admin đã có; nâng chất lượng/tốc độ dịch; bảo đảm xác thực, phân quyền, quan sát và khả năng vận hành.

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -21,7 +22,7 @@ interface ApiKeyMetadata {
 
 function NewKeyDialog({ secret, onClose }: { secret: string; onClose: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [copyStatus, setCopyStatus] = useState('');
+  const [copyStatus, setCopyStatus] = useTimedMessage('');
   useEffect(() => { dialogRef.current?.showModal(); }, []);
   const copySecret = async () => {
     try {
@@ -55,7 +56,7 @@ const ApiKeys = () => {
   const [expiresInDays, setExpiresInDays] = useState(30);
   const [scopes, setScopes] = useState<string[]>(['translate', 'audio']);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,16 +11,22 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.access_policy import get_policy_settings, owner_namespace, require_scope, validate_text
 from app.core.security import Principal
 from app.db.database import get_db
-from app.db.models import TranslationLog, SystemSetting
+from app.db.models import TrainingAudioAsset, TranslationLog, SystemSetting
+from app.db.audio_model import AudioAsset
 from app.core.inference_errors import NoSpeechDetected
 from app.core.telemetry import GLOBAL_TELEMETRY
 from app.services import translation_memory as tm
-from app.services.audio_storage import SECURE_TEMP_DIR, audio_path, owned_audio, register_audio, secure_directory
+from app.services.audio_storage import (
+    SECURE_TEMP_DIR, audio_path, owned_audio, register_audio, secure_directory,
+    stage_source_pcm,
+)
+from app.services.training_audio_storage import delete_training_audio, store_training_pcm
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -110,7 +116,8 @@ async def translate_audio(file: UploadFile = File(...), source_lang: Language = 
             with wave.open(str(temp_path), "rb") as audio:
                 if audio.getframerate() != 16000 or audio.getnchannels() != 1 or audio.getsampwidth() != 2 or audio.getcomptype() != "NONE" or not 0 < audio.getnframes() <= 16000 * 30:
                     raise HTTPException(422, "Audio must be PCM WAV, mono, 16 kHz, 16-bit, at most 30 seconds")
-                if len(audio.readframes(audio.getnframes())) != audio.getnframes() * 2:
+                source_pcm = audio.readframes(audio.getnframes())
+                if len(source_pcm) != audio.getnframes() * 2:
                     raise HTTPException(422, "Truncated audio")
         except (wave.Error, EOFError):
             raise HTTPException(422, "Invalid PCM WAV audio") from None
@@ -124,25 +131,11 @@ async def translate_audio(file: UploadFile = File(...), source_lang: Language = 
         result["audio_expires_at"] = asset.expires_at.isoformat() + "Z"
 
         try:
-            log = TranslationLog(
-                client_id=principal.owner_id,
-                source_text=result.get("original_text", ""),
-                translated_text=result.get("translated_text", ""),
-                source_lang=source_lang,
-                target_lang=target_lang,
-                input_mode="voice",
-                latency=result.get("metrics", {}).get("total_latency", 0.0),
-                model_source="pipeline",
-                stt_model_id=os.getenv("WHISPER_TORCH_MODEL", "openai/whisper-large-v3-turbo"),
-                nllb_model_id=os.getenv("NLLB_MODEL", "facebook/nllb-200-distilled-1.3B"),
-                is_flagged=False,
-                is_reviewed=False,
-                created_at=datetime.utcnow(),
-            )
-            db.add(log)
-            db.commit()
+            staged = stage_source_pcm(db, source_pcm, principal.owner_id)
+            result["qa_audio_token"] = staged.file_name
+            result["qa_audio_expires_at"] = staged.expires_at.isoformat() + "Z"
         except Exception as e:
-            logger.warning("Failed to persist audio translation log: %s", e)
+            logger.warning("Failed to stage source audio for reporting: %s", type(e).__name__)
             db.rollback()
 
         return result
@@ -228,21 +221,77 @@ class FlagTranslationRequest(BaseModel):
     source_lang: Language = "vi"
     target_lang: Language = "en"
     input_mode: Literal["voice", "text", "unknown"] = "unknown"
+    qa_audio_token: str | None = Field(default=None, pattern=r"^[0-9a-f]{32}\.wav$")
 
 
 @router.post("/api/flag-translation")
 def flag_translation_api(payload: FlagTranslationRequest, principal: Principal = Depends(require_scope("flag")), db: Session = Depends(get_db)):
     from app.core.config import settings
     owner = owner_namespace(principal, payload.client_id)
-    log = TranslationLog(client_id=owner, source_text=validate_text(payload.source_text, db), translated_text=validate_text(payload.translated_text, db),
-                         source_lang=tm.normalize_lang_code(payload.source_lang), target_lang=tm.normalize_lang_code(payload.target_lang),
-                         input_mode=payload.input_mode,
-                         stt_model_id=settings.WHISPER_TORCH_MODEL if payload.input_mode == "voice" else None,
-                         nllb_model_id=settings.NLLB_MODEL,
-                         is_flagged=True, latency=0.0, model_source="user_flagged")
-    db.add(log)
-    db.commit()
-    return {"ok": True}
+    clean_src = validate_text(payload.source_text, db)
+    clean_tgt = validate_text(payload.translated_text, db)
+    staged_path = None
+    staged_asset = None
+    stored_training_audio = None
+    if payload.qa_audio_token is not None:
+        staged_path = owned_audio(db, payload.qa_audio_token, owner)
+        staged_asset = db.query(AudioAsset).filter(
+            AudioAsset.file_name == payload.qa_audio_token,
+            AudioAsset.owner_id == owner,
+        ).first()
+        try:
+            with wave.open(str(staged_path), "rb") as audio:
+                stored_training_audio = store_training_pcm(audio.readframes(audio.getnframes()))
+        except (wave.Error, EOFError):
+            raise HTTPException(422, "Invalid staged voice audio") from None
+    else:
+        existing = db.query(TranslationLog).filter(
+            TranslationLog.client_id == owner,
+            TranslationLog.source_text == clean_src,
+            TranslationLog.translated_text == clean_tgt,
+        ).order_by(TranslationLog.created_at.desc()).first()
+        if existing is not None:
+            existing.is_flagged = True
+            db.commit()
+            has_audio = db.query(TrainingAudioAsset).filter(
+                TrainingAudioAsset.translation_log_id == existing.id,
+            ).first() is not None
+            return {"ok": True, "log_id": existing.id, "has_audio": has_audio}
+
+    recent_lat = db.query(func.avg(TranslationLog.latency)).filter(TranslationLog.latency > 0).scalar() or 0.45
+    log = TranslationLog(
+        client_id=owner,
+        source_text=clean_src,
+        translated_text=clean_tgt,
+        source_lang=tm.normalize_lang_code(payload.source_lang),
+        target_lang=tm.normalize_lang_code(payload.target_lang),
+        input_mode=payload.input_mode,
+        stt_model_id=settings.WHISPER_TORCH_MODEL if payload.input_mode == "voice" else None,
+        nllb_model_id=settings.NLLB_MODEL,
+        is_flagged=True,
+        latency=round(float(recent_lat), 3),
+        model_source="user_flagged",
+    )
+    try:
+        db.add(log)
+        db.flush()
+        if stored_training_audio:
+            db.add(TrainingAudioAsset(
+                translation_log_id=log.id,
+                uploaded_by_user_id=principal.user_id,
+                **stored_training_audio,
+            ))
+            if staged_asset is not None:
+                db.delete(staged_asset)
+        db.commit()
+    except Exception:
+        db.rollback()
+        if stored_training_audio:
+            delete_training_audio(stored_training_audio["file_name"])
+        raise
+    if staged_path is not None:
+        staged_path.unlink(missing_ok=True)
+    return {"ok": True, "log_id": log.id, "has_audio": stored_training_audio is not None}
 
 
 def _cache_enabled(db: Session) -> bool:

@@ -1,4 +1,4 @@
-# T-Langua offline training
+# T-Lingua offline training
 
 Only QA rows with explicit training consent, a completed PII review and the
 model-specific eligibility flag are included in exports.
@@ -69,7 +69,7 @@ Colab storage is ephemeral. Set `TRAINING_CONTROL_ROOT` to a private mounted
 Drive directory before starting FastAPI or the worker, for example:
 
 ```text
-/content/drive/MyDrive/T-Langua/training_control
+/content/drive/MyDrive/T-Lingua/training_control
 ```
 
 The API and worker must use the same `DATABASE_URL` and

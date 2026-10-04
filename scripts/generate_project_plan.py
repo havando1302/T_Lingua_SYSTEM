@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
@@ -563,8 +564,8 @@ def validate_workbook(path: Path) -> None:
     assert wb.sheetnames == ["Tong_quan", "Ke_hoach_chi_tiet", "Tien_do_tuan", "Moc_ban_giao", "KPI_nghiem_thu", "Rui_ro"]
     ws = wb["Ke_hoach_chi_tiet"]
     assert ws.max_row >= len(TASKS) + 4
-    starts = [ws.cell(row, 4).value for row in range(5, 5 + len(TASKS))]
-    ends = [ws.cell(row, 9).value for row in range(5, 5 + len(TASKS))]
+    starts: list[Any] = [ws.cell(row, 4).value for row in range(5, 5 + len(TASKS))]
+    ends: list[Any] = [ws.cell(row, 9).value for row in range(5, 5 + len(TASKS))]
     assert min(starts).date() == PROJECT_START
     assert max(ends).date() == PROJECT_END
     assert all(s.date() <= e.date() for s, e in zip(starts, ends))

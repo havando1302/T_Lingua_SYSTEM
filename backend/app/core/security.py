@@ -21,8 +21,8 @@ from app.db.models import ApiKey, AuthSession, User
 
 
 RESOURCE_SCOPES = frozenset({"translate", "tm:read", "tm:write", "flag", "audio"})
-TOKEN_ISSUER = "t-langua"
-TOKEN_AUDIENCE = "t-langua-api"
+TOKEN_ISSUER = "t-lingua"
+TOKEN_AUDIENCE = "t-lingua-api"
 PRIVILEGED_ROLES = frozenset({"admin", "superadmin"})
 VALID_ROLES = frozenset({"employee", "admin", "superadmin"})
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/admin/login", auto_error=False)

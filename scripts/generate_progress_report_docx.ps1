@@ -5,7 +5,7 @@ $projectRoot = if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 } else {
     Split-Path -Parent $PSScriptRoot
 }
-$outputPath = Join-Path $projectRoot "docs\Bao_cao_tien_do_T-Langua_25-08_den_24-09-2026.docx"
+$outputPath = Join-Path $projectRoot "docs\Bao_cao_tien_do_T-Lingua_25-08_den_24-09-2026.docx"
 
 $wdCollapseEnd = 0
 $wdPageBreak = 7
@@ -217,7 +217,7 @@ try {
 
     $section = $document.Sections.Item(1)
     $header = $section.Headers.Item(1).Range
-    $header.Text = "T-LANGUA  |  BÁO CÁO TIẾN ĐỘ 25/08–24/09/2026"
+    $header.Text = "T-LINGUA  |  BÁO CÁO TIẾN ĐỘ 25/08–24/09/2026"
     $header.Font.Name = "Aptos"
     $header.Font.Size = 8
     $header.Font.Color = $darkGray
@@ -232,12 +232,12 @@ try {
     [void]$footer.Fields.Add($pageFieldRange, $wdFieldPage)
 
     # Trang bìa
-    Add-Paragraph -Text "T-LANGUA" -Alignment $wdAlignParagraphCenter -Bold -Color $teal -FontSize 16 -SpaceBefore 80 -SpaceAfter 18
+    Add-Paragraph -Text "T-LINGUA" -Alignment $wdAlignParagraphCenter -Bold -Color $teal -FontSize 16 -SpaceBefore 80 -SpaceAfter 18
     Add-Paragraph -Text "BÁO CÁO TIẾN ĐỘ DỰ ÁN`nHỆ THỐNG AI DỊCH THUẬT" -Alignment $wdAlignParagraphCenter -Bold -Color $navy -FontSize 24 -SpaceAfter 20
     Add-Paragraph -Text "Giai đoạn: 25/08/2026 – 24/09/2026" -Alignment $wdAlignParagraphCenter -Bold -Color $blue -FontSize 14 -SpaceAfter 8
     Add-Paragraph -Text "Ngày lập báo cáo: 25/09/2026" -Alignment $wdAlignParagraphCenter -Italic -Color $darkGray -FontSize 10.5 -SpaceAfter 40
     Add-Table -Headers @("Thông tin", "Nội dung") -Rows @(
-        @("Dự án", "T-Langua — hệ thống dịch văn bản và hội thoại Việt–Anh"),
+        @("Dự án", "T-Lingua — hệ thống dịch văn bản và hội thoại Việt–Anh"),
         @("Thành viên", "Hà Văn Đô; Nguyễn Quang Thọ"),
         @("Nền tảng", "Flutter frontend; FastAPI/WebSocket backend; React Admin"),
         @("Phạm vi báo cáo", "Kết quả thực hiện từ 25/08 đến hết 24/09/2026"),
@@ -360,7 +360,7 @@ try {
     Add-Callout -Text "Đánh giá chung đến mốc 24/09: phần nền tảng và MVP đạt đáng kể; quality gate, đánh giá người thật và capacity production chưa đạt. Trạng thái phù hợp nhất là 'Đạt kỹ thuật có điều kiện'." -FillColor $lightAmber
 
     Add-Heading -Text "5. MỤC ĐÍCH CỦA TRANG WEB ADMIN" -Level 1
-    Add-Paragraph -Text "Admin web là trung tâm vận hành và kiểm soát hệ thống T-Langua. Đây không phải giao diện dịch dành cho người dùng cuối; nhiệm vụ của nó là giúp quản trị viên, reviewer và người vận hành nhìn thấy trạng thái hệ thống, quản lý quyền truy cập, kiểm soát chất lượng và thực hiện thay đổi có truy vết."
+    Add-Paragraph -Text "Admin web là trung tâm vận hành và kiểm soát hệ thống T-Lingua. Đây không phải giao diện dịch dành cho người dùng cuối; nhiệm vụ của nó là giúp quản trị viên, reviewer và người vận hành nhìn thấy trạng thái hệ thống, quản lý quyền truy cập, kiểm soát chất lượng và thực hiện thay đổi có truy vết."
     Add-Bullets -Items @(
         "Quản trị truy cập: đăng nhập, role, session, API key, scope, khóa/mở người dùng và thu hồi quyền.",
         "Theo dõi vận hành: Dashboard/Analytics hiển thị request, lỗi, latency, throughput, ngôn ngữ và phản hồi chất lượng.",
@@ -415,7 +415,7 @@ try {
     )
 
     Add-Heading -Text "8. KẾT LUẬN" -Level 1
-    Add-Paragraph -Text "Giai đoạn 25/08–24/09 đã tạo được nền tảng kỹ thuật và quản trị quan trọng cho T-Langua: kiến trúc rõ hơn, backend và realtime an toàn hơn, admin web bao phủ các luồng vận hành chính, Flutter có luồng dịch/hội thoại hoàn chỉnh hơn và hệ thống bắt đầu có bằng chứng định lượng. Bộ chứng thực sau mốc chốt cho thấy kiểm thử tự động đạt và pipeline local hoạt động ổn định trong phạm vi đo."
+    Add-Paragraph -Text "Giai đoạn 25/08–24/09 đã tạo được nền tảng kỹ thuật và quản trị quan trọng cho T-Lingua: kiến trúc rõ hơn, backend và realtime an toàn hơn, admin web bao phủ các luồng vận hành chính, Flutter có luồng dịch/hội thoại hoàn chỉnh hơn và hệ thống bắt đầu có bằng chứng định lượng. Bộ chứng thực sau mốc chốt cho thấy kiểm thử tự động đạt và pipeline local hoạt động ổn định trong phạm vi đo."
     Add-Paragraph -Text "Tuy vậy, dự án chưa đạt điều kiện production vì chất lượng thuật ngữ và WER còn dưới mục tiêu, đánh giá hai reviewer/TTS MOS chưa hoàn tất, chưa có tải đồng thời và soak nhiều giờ, và lịch sử Git chưa chứng minh được thời điểm/tác giả thay đổi. Giai đoạn tiếp theo cần ưu tiên Quality Gate, Performance Gate và truy vết phát hành thay vì mở rộng thêm tính năng."
 
     Add-PageBreak

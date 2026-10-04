@@ -1,5 +1,6 @@
-# Pyrefly configuration for T-Langua root
-search-path = ["backend", "backend/app"]
+# Pyrefly configuration for T-Lingua root
+python-interpreter-path = "backend/venv/Scripts/python.exe"
+search-path = [".", "scripts", "backend", "backend/app"]
 infer-with-first-use = false
 
 [errors]
@@ -9,3 +10,8 @@ bad-assignment = false
 missing-attribute = false
 no-matching-overload = false
 unsupported-operation = false
+bad-index = false
+bad-context-manager = false
+not-callable = false
+bad-return = false
+

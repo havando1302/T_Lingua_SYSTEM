@@ -151,7 +151,9 @@ class TrainingAudioAsset(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     sample_rate: Mapped[int] = mapped_column(Integer, nullable=False, default=16000)
     channels: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    uploaded_by_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    # Null means the source was captured automatically by the authenticated
+    # realtime pipeline rather than attached later by a QA reviewer.
+    uploaded_by_user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 

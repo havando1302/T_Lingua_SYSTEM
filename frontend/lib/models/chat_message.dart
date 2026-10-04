@@ -7,6 +7,7 @@ class ChatMessage {
   final String? turnId;
   final String? sourceLang;
   final String? targetLang;
+  final String? qaAudioToken;
 
   ChatMessage({
     required this.id,
@@ -17,6 +18,7 @@ class ChatMessage {
     this.turnId,
     this.sourceLang,
     this.targetLang,
+    this.qaAudioToken,
   });
 
   ChatMessage copyWith({
@@ -28,6 +30,7 @@ class ChatMessage {
     String? turnId,
     String? sourceLang,
     String? targetLang,
+    String? qaAudioToken,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class ChatMessage {
       turnId: turnId ?? this.turnId,
       sourceLang: sourceLang ?? this.sourceLang,
       targetLang: targetLang ?? this.targetLang,
+      qaAudioToken: qaAudioToken ?? this.qaAudioToken,
     );
   }
 }

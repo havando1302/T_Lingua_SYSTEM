@@ -14,7 +14,7 @@ from cryptography.fernet import Fernet
 from fastapi import HTTPException
 from jose import jwt
 import pyotp
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 
 
@@ -28,6 +28,7 @@ with patch.dict(os.environ, _TEST_ENV):
     from app.core.auth_settings import AuthSettings
     from app.core import security
     from app.db.models import ApiKey, AuthSession, User
+    from app.db.database import Base
     from app.db.security_migration import init_security_schema, security_schema_ready
 
 
@@ -212,6 +213,25 @@ class ConfigurationTests(unittest.TestCase):
 
 
 class MigrationTests(unittest.TestCase):
+    def test_realtime_audio_migration_makes_reviewer_uploader_optional(self):
+        engine = create_engine("sqlite:///:memory:")
+        try:
+            Base.metadata.create_all(engine)
+            with engine.begin() as connection:
+                connection.execute(text("DROP TABLE training_audio_assets"))
+                connection.execute(text(
+                    "CREATE TABLE training_audio_assets ("
+                    "id VARCHAR(36) NOT NULL PRIMARY KEY, translation_log_id INTEGER NOT NULL UNIQUE, "
+                    "file_name VARCHAR(40) NOT NULL UNIQUE, sha256 VARCHAR(64) NOT NULL, "
+                    "duration_ms INTEGER NOT NULL, sample_rate INTEGER NOT NULL, channels INTEGER NOT NULL, "
+                    "uploaded_by_user_id INTEGER NOT NULL, created_at DATETIME NOT NULL)"
+                ))
+            init_security_schema(engine)
+            columns = {column["name"]: column for column in inspect(engine).get_columns("training_audio_assets")}
+            self.assertTrue(columns["uploaded_by_user_id"]["nullable"])
+        finally:
+            engine.dispose()
+
     def test_legacy_data_preserved_keys_retired_default_account_disabled_and_rerun_safe(self):
         with tempfile.TemporaryDirectory() as temporary:
             engine = create_engine("sqlite:///" + (Path(temporary) / "audit.db").as_posix())

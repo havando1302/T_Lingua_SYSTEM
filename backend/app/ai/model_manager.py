@@ -64,7 +64,7 @@ class ModelManager:
             compute_type = "float16" if whisper_device == "cuda" else "int8"
 
         print("=" * 56)
-        print("  T-LANGUA MODEL MANAGER")
+        print("  T-LINGUA MODEL MANAGER")
         print("=" * 56)
         print(f"  Device : {self._device}")
         if self._device == "cuda" and torch.cuda.is_available():

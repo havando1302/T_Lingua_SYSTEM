@@ -48,8 +48,10 @@ def load_rows(root: Path) -> DatasetDict:
     return DatasetDict({name: Dataset.from_list(rows) for name, rows in groups.items() if rows})
 
 
-def evaluate_test_set(model, processor: WhisperProcessor, rows: Dataset | None) -> dict:
-    if rows is None or not len(rows):
+def evaluate_test_set(model: Any, processor: WhisperProcessor, rows: Dataset | None) -> dict[str, Any]:
+    if rows is None:
+        return {}
+    if len(rows) == 0:
         return {}
     from jiwer import cer, wer
 
@@ -59,23 +61,28 @@ def evaluate_test_set(model, processor: WhisperProcessor, rows: Dataset | None) 
     audio_seconds = 0.0
     started = time.perf_counter()
     model.eval()
+
+    device = getattr(model, "device", next(model.parameters()).device if hasattr(model, "parameters") else torch.device("cpu"))
+    is_cuda = getattr(device, "type", str(device)) == "cuda"
+    autocast_ctx = torch.autocast(device_type="cuda", dtype=torch.float16) if is_cuda else nullcontext()
+
     for row in rows:
         audio, _ = librosa.load(row["audio_path"], sr=16000, mono=True)
         audio_seconds += len(audio) / 16000
-        features = processor.feature_extractor(audio, sampling_rate=16000, return_tensors="pt").input_features
-        features = features.to(model.device)
-        autocast = torch.autocast(device_type="cuda", dtype=torch.float16) if model.device.type == "cuda" else nullcontext()
-        with torch.inference_mode(), autocast:
+        feat = processor.feature_extractor(audio, sampling_rate=16000, return_tensors="pt")
+        features = feat["input_features"].to(device)
+        with torch.inference_mode(), autocast_ctx:
             generated = model.generate(
-                features, language=row["language"], task="transcribe", max_new_tokens=448,
+                input_features=features, language=row["language"], task="transcribe", max_new_tokens=448,
             )
-        predictions.append(processor.batch_decode(generated, skip_special_tokens=True)[0].strip())
-        references.append(row["text"].strip())
-        languages.append(row["language"])
+        decoded = processor.batch_decode(generated, skip_special_tokens=True)
+        predictions.append(decoded[0].strip())
+        references.append(str(row["text"]).strip())
+        languages.append(str(row["language"]))
     elapsed = time.perf_counter() - started
-    metrics = {
-        "test_wer": round(float(wer(references, predictions)), 6),
-        "test_cer": round(float(cer(references, predictions)), 6),
+    metrics: dict[str, Any] = {
+        "test_wer": round(float(wer(reference=references, hypothesis=predictions)), 6) if references else 0.0,
+        "test_cer": round(float(cer(reference=references, hypothesis=predictions)), 6) if references else 0.0,
         "test_samples": len(predictions),
         "realtime_factor": round(elapsed / audio_seconds, 6) if audio_seconds else None,
         "languages": {},
@@ -85,8 +92,8 @@ def evaluate_test_set(model, processor: WhisperProcessor, rows: Dataset | None) 
         language_references = [references[index] for index in indexes]
         language_predictions = [predictions[index] for index in indexes]
         metrics["languages"][language] = {
-            "wer": round(float(wer(language_references, language_predictions)), 6),
-            "cer": round(float(cer(language_references, language_predictions)), 6),
+            "wer": round(float(wer(reference=language_references, hypothesis=language_predictions)), 6) if language_references else 0.0,
+            "cer": round(float(cer(reference=language_references, hypothesis=language_predictions)), 6) if language_references else 0.0,
             "samples": len(indexes),
         }
     return metrics
@@ -102,8 +109,12 @@ class WhisperCollator:
         labels = self.processor.tokenizer.pad(
             [{"input_ids": feature["labels"]} for feature in features], return_tensors="pt"
         )
-        label_ids = labels["input_ids"].masked_fill(labels.attention_mask.ne(1), -100)
-        if (label_ids[:, 0] == self.processor.tokenizer.bos_token_id).all().cpu().item():
+        label_ids = labels["input_ids"]
+        attention_mask = labels.get("attention_mask") if isinstance(labels, dict) else getattr(labels, "attention_mask", None)
+        if attention_mask is not None:
+            label_ids = label_ids.masked_fill(attention_mask.ne(1), -100)
+        bos_id = getattr(self.processor.tokenizer, "bos_token_id", None)
+        if bos_id is not None and (label_ids[:, 0] == bos_id).all().cpu().item():
             label_ids = label_ids[:, 1:]
         batch["labels"] = label_ids
         return batch
@@ -124,8 +135,10 @@ def main() -> None:
     if args.output.exists() and any(args.output.iterdir()):
         raise ValueError("Output directory must be empty")
     set_seed(args.seed)
-    with tempfile.TemporaryDirectory(prefix="tlangua-whisper-") as directory:
-        root = Path(directory); safe_extract(args.dataset, root); raw = load_rows(root)
+    with tempfile.TemporaryDirectory(prefix="tlingua-whisper-") as directory:
+        root = Path(directory)
+        safe_extract(args.dataset, root)
+        raw = load_rows(root)
         processor = WhisperProcessor.from_pretrained(args.model)
         model = WhisperForConditionalGeneration.from_pretrained(args.model)
         model.config.use_cache = False
@@ -139,9 +152,11 @@ def main() -> None:
 
         def prepare(row: dict) -> dict:
             audio, _ = librosa.load(row["audio_path"], sr=16000, mono=True)
-            features = processor.feature_extractor(audio, sampling_rate=16000).input_features[0]
+            feat = processor.feature_extractor(audio, sampling_rate=16000)
+            features = feat["input_features"][0]
             processor.tokenizer.set_prefix_tokens(language=row["language"], task="transcribe")
-            labels = processor.tokenizer(row["text"], truncation=True, max_length=448).input_ids
+            encoded = processor.tokenizer(row["text"], truncation=True, max_length=448)
+            labels = encoded["input_ids"]
             return {"input_features": features, "labels": labels}
 
         tokenized = raw.map(prepare, remove_columns=raw["train"].column_names)
@@ -160,12 +175,12 @@ def main() -> None:
         )
         trainer.train()
         if not args.full_finetune:
-            print("T_LANGUA_STAGE=merging_lora", flush=True)
+            print("T_LINGUA_STAGE=merging_lora", flush=True)
             model = model.merge_and_unload()
         model.config.use_cache = True
-        print("T_LANGUA_STAGE=evaluating", flush=True)
+        print("T_LINGUA_STAGE=evaluating", flush=True)
         test_metrics = evaluate_test_set(model, processor, raw.get("test"))
-        print("T_LANGUA_STAGE=packaging", flush=True)
+        print("T_LINGUA_STAGE=packaging", flush=True)
         args.output.mkdir(parents=True, exist_ok=True)
         model.save_pretrained(args.output, safe_serialization=True)
         processor.save_pretrained(args.output)

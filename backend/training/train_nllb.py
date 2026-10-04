@@ -139,13 +139,13 @@ def main() -> None:
     )
     trainer.train()
     if not args.full_finetune:
-        print("T_LANGUA_STAGE=merging_lora", flush=True)
+        print("T_LINGUA_STAGE=merging_lora", flush=True)
         model = model.merge_and_unload()
-    print("T_LANGUA_STAGE=evaluating", flush=True)
+    print("T_LINGUA_STAGE=evaluating", flush=True)
     test_metrics = evaluate_test_set(
         model, tokenizer, raw.get("test"), args.max_source_length, args.max_target_length,
     )
-    print("T_LANGUA_STAGE=packaging", flush=True)
+    print("T_LINGUA_STAGE=packaging", flush=True)
     args.output.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(args.output, safe_serialization=True)
     tokenizer.save_pretrained(args.output)

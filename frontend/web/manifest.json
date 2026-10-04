@@ -1,11 +1,11 @@
 {
-    "name": "mobile_app",
-    "short_name": "mobile_app",
+    "name": "T-Lingua",
+    "short_name": "T-Lingua",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "T-Lingua - Real-time Speech-to-Speech AI Translation App.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

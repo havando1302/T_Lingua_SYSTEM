@@ -2,6 +2,8 @@
 import re
 import stat
 import time
+import uuid
+import wave
 from datetime import datetime, timedelta
 from pathlib import Path
 from fastapi import HTTPException
@@ -41,6 +43,22 @@ def register_audio(db: Session, file_name: str, owner_id: str) -> AudioAsset:
     db.add(asset)
     db.commit()
     return asset
+
+
+def stage_source_pcm(db: Session, pcm: bytes, owner_id: str) -> AudioAsset:
+    """Keep source speech briefly so an explicit user report can promote it to QA."""
+    if not pcm or len(pcm) % 2 or len(pcm) > 16000 * 2 * 30:
+        raise ValueError("Source audio must be mono 16 kHz 16-bit PCM")
+    file_name = f"{uuid.uuid4().hex}.wav"
+    path = audio_path(file_name)
+    try:
+        with wave.open(str(path), "wb") as audio:
+            audio.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+            audio.writeframes(pcm)
+        return register_audio(db, file_name, owner_id)
+    except Exception:
+        path.unlink(missing_ok=True)
+        raise
 
 
 def owned_audio(db: Session, file_name: str, owner_id: str) -> Path:

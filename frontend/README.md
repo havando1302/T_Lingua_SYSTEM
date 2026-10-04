@@ -1,6 +1,6 @@
-# mobile_app
+# T-Lingua
 
-A new Flutter project.
+Real-time Speech-to-Speech AI Translation Flutter Application.
 
 ## Getting Started
 

@@ -1,4 +1,4 @@
-# T-Langua Training Center on Google Colab
+# T-Lingua Training Center on Google Colab
 
 This workflow is designed for a supervised project/demo environment. Colab is
 ephemeral: Drive stores datasets and artifacts, while inference and training
@@ -7,7 +7,7 @@ must not share a single GPU at the same time.
 ## One-time Drive layout
 
 ```text
-MyDrive/T-Langua/
+MyDrive/T-Lingua/
   training_control/
     datasets/
     artifacts/
@@ -23,7 +23,7 @@ voice recordings.
 2. Set `TRAINING_CONTROL_ROOT` before importing the application:
 
    ```text
-   /content/drive/MyDrive/T-Langua/training_control
+   /content/drive/MyDrive/T-Lingua/training_control
    ```
 
 3. Set `DATABASE_URL` to the runtime database. Restore a backup into `/content`

@@ -1,4 +1,4 @@
-"""Standalone durable worker for T-Langua training jobs.
+"""Standalone durable worker for T-Lingua training jobs.
 
 Run from the backend directory with ``python -m app.training_worker``. The API
 process never launches training itself, so a Colab operator can stop inference
@@ -224,7 +224,14 @@ def run_job(job_id: str, worker_id: str) -> None:
             if line:
                 progress, metrics = _progress_from_line(line, epochs)
                 add_event(db, job.id, line, metrics=metrics)
-                stage = line.strip().removeprefix("T_LANGUA_STAGE=") if line.strip().startswith("T_LANGUA_STAGE=") else None
+                raw_line = line.strip()
+                stage = (
+                    raw_line.removeprefix("T_LINGUA_STAGE=")
+                    if raw_line.startswith("T_LINGUA_STAGE=")
+                    else raw_line.removeprefix("T_LANGUA_STAGE=")
+                    if raw_line.startswith("T_LANGUA_STAGE=")
+                    else None
+                )
                 if stage in {"merging_lora", "evaluating", "packaging"}:
                     job.status = "converting" if stage == "packaging" else stage
                     job.progress_percent = {"merging_lora": 89.0, "evaluating": 92.0, "packaging": 96.0}[stage]

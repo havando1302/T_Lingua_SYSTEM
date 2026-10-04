@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -49,8 +50,8 @@ const Dictionary = () => {
   // New entry form state
   const [sourceLang, setSourceLang] = useState('vi');
   const [targetLang, setTargetLang] = useState('en');
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useTimedMessage('');
+  const [notice, setNotice] = useTimedMessage('');
   const [deleting, setDeleting] = useState<string | null>(null);
   const [source, setSource] = useState('');
   const [target, setTarget] = useState('');

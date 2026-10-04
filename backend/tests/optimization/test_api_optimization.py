@@ -11,7 +11,7 @@ _REPO = Path(__file__).resolve().parents[3]
 
 class ApiOptimizationProcessTests(unittest.TestCase):
     def test_api_optimization_contracts_in_isolated_process(self):
-        with tempfile.TemporaryDirectory(prefix="tlangua-api-regression-") as directory:
+        with tempfile.TemporaryDirectory(prefix="tlingua-api-regression-") as directory:
             result = subprocess.run(
                 [sys.executable, "-B", str(Path(__file__).resolve()), "--isolated"],
                 cwd=directory,
@@ -58,8 +58,8 @@ def isolated_suite():
     from app.api import admin_routes as admin, auth_routes, routes as api
     from app.core import access_policy, security
     from app.db.audio_model import AudioAsset
-    from app.db.models import ApiKey, SystemSetting, TranslationLog, User
-    from app.services import audio_storage
+    from app.db.models import ApiKey, SystemSetting, TrainingAudioAsset, TranslationLog, User
+    from app.services import audio_storage, training_audio_storage
     from app.services.translation_cache import GLOBAL_TRANSLATION_CACHE
 
     class ApiOptimizationTests(unittest.TestCase):
@@ -73,6 +73,7 @@ def isolated_suite():
             self.stack.enter_context(patch.object(tm, "_TM_FILE", str(self.tm_path)))
             self.stack.enter_context(patch.object(tm, "_DATA_DIR", str(self.temp)))
             self.stack.enter_context(patch.object(audio_storage, "SECURE_OUTPUT_DIR", self.temp / "outputs"))
+            self.stack.enter_context(patch.object(training_audio_storage, "TRAINING_AUDIO_DIR", self.temp / "training_audio"))
             self.stack.enter_context(patch.object(api, "SECURE_TEMP_DIR", self.temp / "uploads"))
             self.stack.enter_context(patch.object(audio_storage, "SECURE_TEMP_DIR", self.temp / "uploads"))
             limiter = access_policy.RateLimiter()
@@ -131,6 +132,27 @@ def isolated_suite():
             response = self.request("GET", "/admin/quality/logs", role="admin", params={"qa_only": True})
             self.assertEqual(response.status_code, 200, response.text)
             self.assert_utc(response.json()[0]["created_at"], log.created_at)
+
+        def test_only_flagged_voice_is_promoted_from_temporary_audio_to_qa(self):
+            owner = self.users["employee"].public_id
+            staged = audio_storage.stage_source_pcm(self.db, b"\x01\x00" * 1600, owner)
+            self.assertEqual(self.db.query(TranslationLog).count(), 0)
+            self.assertEqual(self.db.query(TrainingAudioAsset).count(), 0)
+            payload = {
+                "source_text": "hello", "translated_text": "xin chao",
+                "source_lang": "en", "target_lang": "vi", "input_mode": "voice",
+                "qa_audio_token": staged.file_name,
+            }
+            denied = self.request("POST", "/api/flag-translation", role="otheremployee", json=payload)
+            self.assertEqual(denied.status_code, 404, denied.text)
+            response = self.request("POST", "/api/flag-translation", role="employee", json=payload)
+            self.assertEqual(response.status_code, 200, response.text)
+            log = self.db.query(TranslationLog).one()
+            self.assertTrue(log.is_flagged)
+            self.assertEqual(self.db.query(TranslationLog).count(), 1)
+            self.assertEqual(self.db.query(TrainingAudioAsset).count(), 1)
+            self.assertEqual(self.db.query(AudioAsset).count(), 0)
+            self.assertFalse(audio_storage.audio_path(staged.file_name).exists())
 
         def test_user_pagination_and_search_treat_percent_underscore_backslash_literally(self):
             names = ["finder_%", "finderXY", "finder_", "finder%", "finder\\tail"]
@@ -317,7 +339,10 @@ def isolated_suite():
             self.assertEqual(self.request("GET", url, role="employee").status_code, 200)
             self.assertEqual(self.request("GET", url, role="otheremployee").status_code, 404)
             self.assertEqual(list((self.temp / "uploads").glob("*")), [])
-            self.assertEqual(self.db.query(AudioAsset).count(), 1)
+            self.assertEqual(self.db.query(AudioAsset).count(), 2)
+            self.assertIn("qa_audio_token", response.json())
+            self.assertEqual(self.db.query(TranslationLog).count(), 0)
+            self.assertEqual(self.db.query(TrainingAudioAsset).count(), 0)
             self.assertTrue(response.json()["audio_expires_at"].endswith("Z"))
 
         def test_guest_private_dictionary_owner_checks_and_logout(self):

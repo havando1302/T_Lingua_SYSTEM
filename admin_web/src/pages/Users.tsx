@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -11,7 +12,7 @@ import { ListSearch, ListStatus, ListPagination } from '../components/ListContro
 const Users = () => {
   const list = usePaginatedList<any>('/users');
   const users = list.items;
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
   const [deleting, setDeleting] = useState<number | null>(null);
   const [resetting, setResetting] = useState<number | null>(null);
   const [editing, setEditing] = useState<number | null>(null);

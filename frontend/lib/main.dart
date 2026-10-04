@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           // Tắt chữ DEBUG ở góc phải
           debugShowCheckedModeBanner: false,
 
-          title: 'Voice Translator App',
+          title: 'T-Lingua',
 
           // Cấu hình Theme (Màu sắc chủ đạo)
           theme: ThemeData(
@@ -102,6 +102,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               18,
               18,
             ), // Màu nền mặc định toàn app
+            snackBarTheme: const SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+            ),
           ),
 
           // Trang đầu tiên app hiện ra khi mở

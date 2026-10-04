@@ -1,6 +1,6 @@
-﻿<div align="center">
+<div align="center">
 
-# 🌐 T-Langua
+# 🌐 T-Lingua
 
 **Hệ thống dịch thuật thời gian thực hỗ trợ AI — Speech-to-Speech**
 
@@ -17,7 +17,7 @@
 
 ## 📖 Tổng quan
 
-**T-Langua** là hệ thống dịch thuật thời gian thực từ giọng nói sang giọng nói (Speech-to-Speech), được xây dựng hoàn toàn trên nền tảng AI mã nguồn mở. Hệ thống có khả năng nhận âm thanh trực tiếp từ người dùng, nhận diện giọng nói, dịch thuật, và tổng hợp lại thành giọng đọc trong vòng **vài trăm mili-giây**.
+**T-Lingua** là hệ thống dịch thuật thời gian thực từ giọng nói sang giọng nói (Speech-to-Speech), được xây dựng hoàn toàn trên nền tảng AI mã nguồn mở. Hệ thống có khả năng nhận âm thanh trực tiếp từ người dùng, nhận diện giọng nói, dịch thuật, và tổng hợp lại thành giọng đọc trong vòng **vài trăm mili-giây**.
 
 ### 🎯 Mục tiêu
 
@@ -50,7 +50,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           T-Langua System                               │
+│                           T-Lingua System                               │
 │                                                                         │
 │  ┌─────────────┐    WebSocket    ┌──────────────────────────────────┐  │
 │  │ Flutter App │◄───────────────►│         FastAPI Backend          │  │
@@ -311,7 +311,7 @@ python scripts/backup_restore.py backup --output-dir ./backups
 
 # Phục hồi từ file backup
 python scripts/backup_restore.py restore \
-  --archive ./backups/backup_tlangua_YYYYMMDD_HHMMSS.tar.gz
+  --archive ./backups/backup_tlingua_YYYYMMDD_HHMMSS.tar.gz
 ```
 
 > Backup sử dụng checksum **SHA-256** để xác minh tính toàn vẹn và thực hiện ghi đè **nguyên tử** (atomic write). Có bảo vệ chống Directory Traversal (Path Traversal attack).
@@ -387,6 +387,6 @@ Dự án này là **phần mềm độc quyền nội bộ**. Mọi quyền đư
 
 <div align="center">
 
-**T-Langua** — *Phá vỡ rào cản ngôn ngữ bằng AI thời gian thực*
+**T-Lingua** — *Phá vỡ rào cản ngôn ngữ bằng AI thời gian thực*
 
 </div>

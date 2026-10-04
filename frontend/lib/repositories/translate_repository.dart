@@ -19,6 +19,7 @@ class TranslateRepository {
     String sourceLang = 'vi',
     String targetLang = 'en',
     String inputMode = 'unknown',
+    String? qaAudioToken,
   }) {
     return ApiService.flagTranslation(
       sourceText: sourceText,
@@ -26,6 +27,7 @@ class TranslateRepository {
       sourceLang: sourceLang,
       targetLang: targetLang,
       inputMode: inputMode,
+      qaAudioToken: qaAudioToken,
     );
   }
 }

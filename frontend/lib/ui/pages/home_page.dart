@@ -67,9 +67,14 @@ class _HomePageState extends State<HomePage> {
 
   void _feedback(String key) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr(key))));
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tr(key)),
+          duration: const Duration(seconds: 4),
+        ),
+      );
   }
 
   Future<void> _saveTranslation() async {
@@ -247,19 +252,25 @@ class _HomePageState extends State<HomePage> {
                                     _homeLogic.messages.last.id,
                                   );
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(tr('flag_success')),
-                                      ),
-                                    );
+                                    ScaffoldMessenger.of(context)
+                                      ..clearSnackBars()
+                                      ..showSnackBar(
+                                        SnackBar(
+                                          content: Text(tr('flag_success')),
+                                          duration: const Duration(seconds: 4),
+                                        ),
+                                      );
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(tr('flag_failed')),
-                                      ),
-                                    );
+                                    ScaffoldMessenger.of(context)
+                                      ..clearSnackBars()
+                                      ..showSnackBar(
+                                        SnackBar(
+                                          content: Text(tr('flag_failed')),
+                                          duration: const Duration(seconds: 4),
+                                        ),
+                                      );
                                   }
                                 }
                               }

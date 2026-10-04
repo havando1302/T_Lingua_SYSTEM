@@ -201,6 +201,9 @@ async def stt_worker(worker_id: int = 0):
                         "session": session,
                         "turn": turn,
                         "text": final_text,
+                        # Preserve the exact utterance Whisper received so the
+                        # matching QA row can carry real source audio.
+                        "audio_pcm": utterance,
                         "message_id": msg_id,
                         "metric_id": metric_id,
                         "work_reserved": item.get("work_reserved", False),

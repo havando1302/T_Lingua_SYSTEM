@@ -1,5 +1,5 @@
 """
-Unified Logging Configuration for T-Langua Backend.
+Unified Logging Configuration for T-Lingua Backend.
 Outputs clean, colorized, timestamped logs to terminal for real-time monitoring.
 """
 import logging

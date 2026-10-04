@@ -10,7 +10,7 @@ import { spawn } from 'node:child_process';
 
 const adminRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temporaryRoot = resolve(tmpdir());
-const profile = await mkdtemp(join(temporaryRoot, 'tlangua-admin-browser-'));
+const profile = await mkdtemp(join(temporaryRoot, 'tlingua-admin-browser-'));
 const requests = [];
 const results = [];
 let role = 'admin';
@@ -254,15 +254,15 @@ try {
   await check('Training Center exposes five real workflow tabs and safe A/B state', async () => {
     assert.equal(await evaluate("document.querySelectorAll('[role=tab]').length"), 5);
     assert.equal(await evaluate("document.body.innerText.includes('Synthetic GPU')"), true);
-    await click(button('A/B Playground'));
+    await click(button('Thử nghiệm A/B'));
     await waitFor("document.body.innerText.includes('Playground đang khóa an toàn')");
     assert.equal(await evaluate("document.body.innerText.includes('Synthetic candidate runner is not configured')"), true);
   });
-  await click(button('Datasets'));
+  await click(button('Dữ liệu'));
   await fill(label('Tên dataset'), 'synthetic-preview');
   await check('Dataset preview explains blockers before snapshot creation', async () => {
     await click(button('Kiểm tra dữ liệu'));
-    await waitFor("document.body.innerText.includes('Chưa thể tạo dataset train được')");
+    await waitFor("document.body.innerText.includes('Chưa thể tạo dataset')");
     assert.equal(await evaluate("document.body.innerText.includes('Thiếu dữ liệu validation')"), true);
     assert.equal(await evaluate("Array.from(document.querySelectorAll('button')).find(button => button.textContent.trim() === 'Tạo dataset').disabled"), true);
   });
@@ -407,7 +407,7 @@ try {
   chrome.kill();
   await new Promise(resolve => server.close(resolve));
   // Only remove the unique test profile whose resolved path is inside the OS temp directory.
-  if (resolve(profile).startsWith(temporaryRoot + sep) && profile.includes('tlangua-admin-browser-')) {
+  if (resolve(profile).startsWith(temporaryRoot + sep) && profile.includes('tlingua-admin-browser-')) {
     await rm(profile, { recursive: true, force: true, maxRetries: 6, retryDelay: 300 });
   }
 }

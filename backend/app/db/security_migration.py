@@ -10,7 +10,7 @@ from app.db.database import Base
 from app.db import models  # Register tables before create_all.
 
 
-SECURITY_SCHEMA_VERSION = 1
+SECURITY_SCHEMA_VERSION = 2
 _ADDITIONS = {
     "users": {
         "public_id": "VARCHAR(36)",
@@ -73,6 +73,36 @@ def init_security_schema(engine) -> dict:
                     # All identifiers and definitions are internal constants.
                     connection.execute(text(f'ALTER TABLE "{table}" ADD COLUMN "{column}" {definition}'))
         Base.metadata.create_all(bind=connection)
+        # Version 2 permits realtime capture before a QA reviewer touches the
+        # sample. The authenticated owner remains on TranslationLog, while the
+        # uploader is null until an administrator manually replaces the audio.
+        audio_columns = {
+            column["name"]: column
+            for column in inspect(connection).get_columns("training_audio_assets")
+        }
+        if audio_columns and not audio_columns["uploaded_by_user_id"].get("nullable", True):
+            connection.execute(text(
+                "CREATE TABLE training_audio_assets_v2 ("
+                "id VARCHAR(36) NOT NULL PRIMARY KEY, "
+                "translation_log_id INTEGER NOT NULL UNIQUE REFERENCES translation_logs(id), "
+                "file_name VARCHAR(40) NOT NULL UNIQUE, sha256 VARCHAR(64) NOT NULL, "
+                "duration_ms INTEGER NOT NULL, sample_rate INTEGER NOT NULL, channels INTEGER NOT NULL, "
+                "uploaded_by_user_id INTEGER REFERENCES users(id), created_at DATETIME NOT NULL)"
+            ))
+            connection.execute(text(
+                "INSERT INTO training_audio_assets_v2 "
+                "SELECT id, translation_log_id, file_name, sha256, duration_ms, sample_rate, channels, "
+                "uploaded_by_user_id, created_at FROM training_audio_assets"
+            ))
+            connection.execute(text("DROP TABLE training_audio_assets"))
+            connection.execute(text("ALTER TABLE training_audio_assets_v2 RENAME TO training_audio_assets"))
+            connection.execute(text(
+                "CREATE INDEX ix_training_audio_assets_translation_log_id "
+                "ON training_audio_assets(translation_log_id)"
+            ))
+            connection.execute(text(
+                "CREATE INDEX ix_training_audio_assets_sha256 ON training_audio_assets(sha256)"
+            ))
         connection.execute(text(
             "CREATE TABLE IF NOT EXISTS security_schema_versions "
             "(version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL)"

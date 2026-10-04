@@ -25,6 +25,20 @@ _NLLB_MAP = {
 }
 
 
+def _stage_voice_audio_sync(client_id: str, audio_pcm: bytes | None) -> str | None:
+    """Stage audio with a short TTL; only an explicit report promotes it to QA."""
+    if not audio_pcm:
+        return None
+    try:
+        from app.db.database import SessionLocal
+        from app.services.audio_storage import stage_source_pcm
+        with SessionLocal() as db:
+            return stage_source_pcm(db, audio_pcm, client_id).file_name
+    except Exception as error:
+        logger.warning("Failed to stage realtime voice audio: %s", type(error).__name__, exc_info=error)
+        return None
+
+
 def _cache_enabled_sync():
     try:
         from app.db.database import SessionLocal
@@ -107,6 +121,12 @@ async def translation_worker(worker_id: int = 0):
 
             if turn and hasattr(session, "is_turn_active") and not session.is_turn_active(turn.turn_id):
                 continue
+
+            qa_audio_token = await asyncio.to_thread(
+                _stage_voice_audio_sync, session.client_id, item.get("audio_pcm"),
+            )
+            if qa_audio_token is not None:
+                result = {**result, "qa_audio_token": qa_audio_token}
 
             trans_payload = {
                 "type": "translation",

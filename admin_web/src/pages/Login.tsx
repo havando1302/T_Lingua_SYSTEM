@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import { useNavigate } from 'react-router-dom';
 import api, { apiConfigurationError, apiErrorMessage } from '../lib/api';
 import { clearSession, homeFor, setSession, updateSessionUser, type AuthUser, type LoginResponse } from '../lib/auth';
@@ -11,7 +12,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 

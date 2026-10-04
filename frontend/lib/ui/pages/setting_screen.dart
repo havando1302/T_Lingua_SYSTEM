@@ -212,15 +212,25 @@ class SettingsScreen extends StatelessWidget {
     try {
       await action();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr('update_success'))));
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(tr('update_success')),
+              duration: const Duration(seconds: 4),
+            ),
+          );
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr('update_failed'))));
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(tr('update_failed')),
+              duration: const Duration(seconds: 4),
+            ),
+          );
       }
     }
   }

@@ -29,7 +29,7 @@ def _validate_url(base_url: str) -> str:
             or parsed.query or parsed.fragment or parsed.path not in {"", "/"}):
         raise Phase1Error("Benchmark only supports loopback URLs without credentials, query or path.")
     # Replace localhost with a literal address so proxy/DNS settings cannot redirect the workload.
-    host = "127.0.0.1" if parsed.hostname == "localhost" else parsed.hostname
+    host = "127.0.0.1" if parsed.hostname == "localhost" else (parsed.hostname or "")
     if ":" in host:
         host = "[" + host + "]"
     return f"{parsed.scheme}://{host}" + (f":{port}" if port else "")

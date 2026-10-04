@@ -47,6 +47,34 @@ def training_audio_path(file_name: str, *, require_exists: bool = True) -> Path:
     return path
 
 
+def store_training_pcm(pcm: bytes) -> dict:
+    """Persist realtime mono 16 kHz signed PCM as a dataset-ready WAV file."""
+    if not pcm or len(pcm) % 2 or len(pcm) > 16000 * 2 * MAX_TRAINING_AUDIO_SECONDS:
+        raise ValueError("Realtime training audio must be mono 16 kHz 16-bit PCM")
+
+    file_name = f"{uuid.uuid4().hex}.wav"
+    destination = training_audio_path(file_name, require_exists=False)
+    try:
+        with wave.open(os.fspath(destination), "wb") as audio:
+            audio.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+            audio.writeframes(pcm)
+
+        digest = hashlib.sha256()
+        with destination.open("rb") as source:
+            while chunk := source.read(65536):
+                digest.update(chunk)
+        return {
+            "file_name": file_name,
+            "sha256": digest.hexdigest(),
+            "duration_ms": round((len(pcm) // 2) * 1000 / 16000),
+            "sample_rate": 16000,
+            "channels": 1,
+        }
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+
+
 async def store_training_wav(upload: UploadFile) -> dict:
     file_name = f"{uuid.uuid4().hex}.wav"
     destination = training_audio_path(file_name, require_exists=False)

@@ -1,5 +1,5 @@
 """
-COMPREHENSIVE END-TO-END QA & CHAOS AUTOMATION SUITE FOR T-LANGUA
+COMPREHENSIVE END-TO-END QA & CHAOS AUTOMATION SUITE FOR T-LINGUA
 Simulates:
 1. Real End-User Persona (Guest Auth, WebSocket Realtime Streaming, STT, NLLB Translate, TTS Chunking, History)
 2. Admin Dashboard Persona (Admin Login, Bearer Auth, Dictionary / Translation Memory Management, System Logs/Metrics)
@@ -370,7 +370,7 @@ async def test_chaos_and_edge_cases(user_session, admin_token):
 
 async def main():
     print("===================================================================")
-    print(" >>> T-LANGUA FULL AUTOMATED E2E QA, USER SIMULATION & CHAOS SUITE <<<")
+    print(" >>> T-LINGUA FULL AUTOMATED E2E QA, USER SIMULATION & CHAOS SUITE <<<")
     print("===================================================================")
     user_session = await test_end_user_realtime()
     if not user_session:

@@ -1395,7 +1395,7 @@ def run_group_5_data_integrity_admin():
 # =====================================================================
 async def main():
     print("=" * 70)
-    print(" >>> T-LANGUA 109 CHAOS & DEEP DOMAIN AUDIT SUITE <<<")
+    print(" >>> T-LINGUA 109 CHAOS & DEEP DOMAIN AUDIT SUITE <<<")
     print("=" * 70)
 
     # Step 1

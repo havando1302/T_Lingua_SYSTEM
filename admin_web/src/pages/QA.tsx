@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -51,8 +52,8 @@ const QA = () => {
   const [loading, setLoading] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [downloadingName, setDownloadingName] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useTimedMessage('');
+  const [notice, setNotice] = useTimedMessage('');
   const mutationRef = useRef(false);
   const fetching = list.fetching;
   const currentSnapshot = JSON.stringify({ correctedSource, correctedText, excludeWhisper, excludeNllb, consentForTraining, piiStatus, includeNllb, includeWhisper, nllbSplit, whisperSplit, domain });
@@ -222,7 +223,7 @@ const QA = () => {
             <TableCell className="align-top space-y-2">
               <div className="flex flex-wrap gap-2">
                 {log.has_audio && <Button size="sm" variant="secondary" onClick={() => playAudio(log)}><Volume2 size={14} className="mr-1"/>Nghe {log.audio_duration_ms ? `${(log.audio_duration_ms/1000).toFixed(1)}s` : ''}</Button>}
-                <label className="inline-flex cursor-pointer items-center rounded border border-border px-2 py-1 text-xs"><Upload size={13} className="mr-1"/>{uploadingId === log.id ? 'Đang tải...' : log.has_audio ? 'Thay audio' : 'Gắn audio'}
+                <label className="inline-flex cursor-pointer items-center rounded border border-border px-2 py-1 text-xs"><Upload size={13} className="mr-1"/>{uploadingId === log.id ? 'Đang tải...' : log.has_audio ? 'Thay audio' : 'Thiếu audio · Gắn lại'}
                   <input className="hidden" type="file" accept="audio/wav,.wav" disabled={uploadingId !== null} onChange={event => handleAudioUpload(log, event.target.files?.[0])}/>
                 </label>
               </div>

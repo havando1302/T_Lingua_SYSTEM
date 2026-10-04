@@ -1,4 +1,4 @@
-"""T-Langua application with authenticated ingress and private audio lifecycle."""
+"""T-Lingua application with authenticated ingress and private audio lifecycle."""
 import asyncio
 import logging
 
@@ -27,7 +27,7 @@ from app.workers.tts_worker import tts_worker
 from app.ai.model_manager import model_manager
 
 logger = logging.getLogger(__name__)
-app = FastAPI(title="T-Langua API", version="1.1.0")
+app = FastAPI(title="T-Lingua API", version="1.1.0")
 
 app.add_middleware(HTTPBoundaryMiddleware)
 app.add_middleware(

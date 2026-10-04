@@ -25,6 +25,7 @@ def retain(database: Path, *, days: int = 30, apply: bool = False, backup: Path 
     for parent in database.parents:
         if parent.is_symlink() or getattr(parent.lstat(), "st_file_attributes", 0) & 0x400:
             raise ValueError("Database path must not traverse links")
+    relative = database.relative_to(ROOT).as_posix()
     if apply:
         if backup is None:
             raise ValueError("Apply requires a verified Phase 1 backup")

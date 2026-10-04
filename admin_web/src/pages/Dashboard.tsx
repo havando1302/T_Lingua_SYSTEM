@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Activity, Users, Zap, AlertCircle, HardDrive, Cpu, MemoryStick } from 'lucide-react';
@@ -28,9 +29,10 @@ const Dashboard = () => {
   });
 
   const [timeSeries, setTimeSeries] = useState<any[]>([]);
+  const [timeRange, setTimeRange] = useState<'all' | 'today'>('all');
   const [loading, setLoading] = useState(true);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [reload, setReload] = useState(0);
 
@@ -41,9 +43,13 @@ const Dashboard = () => {
       if (pending) return;
       pending = true;
       try {
+        const today = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+        const query = timeRange === 'today'
+          ? `?start_date=${today}&end_date=${today}&time_range=today`
+          : '?time_range=all';
         const [metricsRes, tsRes] = await Promise.all([
-          api.get('/metrics/dashboard', { signal: controller.signal }),
-          api.get('/metrics/timeseries?time_range=all', { signal: controller.signal })
+          api.get(`/metrics/dashboard${query}`, { signal: controller.signal }),
+          api.get(`/metrics/timeseries${query}`, { signal: controller.signal })
         ]);
         const sysRes = canViewSystemStatus
           ? await api.get('/system/status', { signal: controller.signal })
@@ -64,7 +70,7 @@ const Dashboard = () => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => { controller.abort(); clearInterval(interval); };
-  }, [reload, canViewSystemStatus]);
+  }, [reload, canViewSystemStatus, timeRange]);
 
   if (!updatedAt) return <div className="space-y-4">
     <h1 className="text-3xl font-bold">Bảng điều khiển</h1>
@@ -87,10 +93,30 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
+          <p className="text-xs text-text-muted mt-1">
+            Cập nhật: {updatedAt.toLocaleTimeString('vi-VN')} {timeRange === 'today' ? '· Hôm nay' : '· Toàn thời gian'}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-border">
+          <button
+            type="button"
+            onClick={() => setTimeRange('all')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'all' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
+          >
+            Toàn thời gian
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeRange('today')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'today' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
+          >
+            Hôm nay
+          </button>
+        </div>
       </div>
-      <p className="text-xs text-text-muted">Cập nhật: {updatedAt.toLocaleTimeString('vi-VN')}</p>
       {error && <div role="alert" className="rounded-lg bg-amber-500/10 p-3 text-amber-700">{error} Đang hiển thị số liệu lần trước.
         <Button variant="ghost" onClick={() => setReload(value => value + 1)}>Thử lại</Button>
       </div>}
@@ -135,7 +161,17 @@ const Dashboard = () => {
                     contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)', borderRadius: '0.5rem' }} 
                     itemStyle={{ color: 'var(--text)' }}
                   />
-                  <Area type="monotone" dataKey="requests" name="Yêu cầu" stroke="var(--primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorReq)" />
+                  <Area
+                    type="monotone"
+                    dataKey="requests"
+                    name="Yêu cầu"
+                    stroke="var(--primary)"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorReq)"
+                    dot={{ r: 5, fill: 'var(--primary)', stroke: '#ffffff', strokeWidth: 2 }}
+                    activeDot={{ r: 7 }}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

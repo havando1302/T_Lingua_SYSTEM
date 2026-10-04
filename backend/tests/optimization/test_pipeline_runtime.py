@@ -77,11 +77,11 @@ def isolated_suite(legacy=False):
     from app.core.telemetry import PipelineTelemetryTracker
     from app.models.session_model import RealtimeSession
     from app.services.vad_service import WebRtcVadStream
-    from app.services import whisper_service as whisper, pipeline_service as pipeline, audio_storage
+    from app.services import whisper_service as whisper, pipeline_service as pipeline, audio_storage, training_audio_storage
     from app.api import routes as api, websocket as websocket_api
     from app.api.v1 import health
     from app.workers import runtime, stt_worker as stt, translation_worker as translate, tts_worker as tts
-    from app.db.models import User, SystemSetting, TranslationLog
+    from app.db.models import TrainingAudioAsset, User, SystemSetting, TranslationLog
     from app.db.audio_model import AudioAsset
 
     legacy_app = FastAPI()
@@ -116,6 +116,7 @@ def isolated_suite(legacy=False):
             self.stack.enter_context(patch.object(tm, "_TM_FILE", str(self.temp / "tm.json")))
             self.stack.enter_context(patch.object(tm, "_DATA_DIR", str(self.temp)))
             self.stack.enter_context(patch.object(audio_storage, "SECURE_OUTPUT_DIR", self.temp / "outputs"))
+            self.stack.enter_context(patch.object(training_audio_storage, "TRAINING_AUDIO_DIR", self.temp / "training_audio"))
             self.stack.enter_context(patch.object(api, "SECURE_TEMP_DIR", self.temp / "uploads"))
             self.tracker = PipelineTelemetryTracker()
             for target in (runtime, stt, translate, tts, websocket_api, pipeline, api):
@@ -264,6 +265,10 @@ def isolated_suite(legacy=False):
             self.assertEqual(sum(m["type"] == "turn_complete" for m in messages), 0)
             self.assertEqual(self.session.pending_utterances, 0)
             self.assertEqual(self.tracker.get_summary()["total_completed"], 2)
+            self.assertEqual(self.db.query(TranslationLog).count(), 0)
+            self.assertEqual(self.db.query(TrainingAudioAsset).count(), 0)
+            self.assertEqual(self.db.query(AudioAsset).count(), 2)
+            self.assertEqual(sum(bool(m.get("data", {}).get("qa_audio_token")) for m in messages if m["type"] == "translation"), 2)
             ended = self.session.end_active_turn()
             await runtime.complete_if_idle(self.session, ended)
             await runtime.complete_if_idle(self.session, ended)
@@ -272,7 +277,6 @@ def isolated_suite(legacy=False):
             self.assertNotIn("private transcript", report)
             self.assertNotIn("private translation", report)
             self.assertNotIn(self.user.public_id, report)
-            self.assertEqual(self.db.query(TranslationLog).count(), 0)
 
         async def test_end_turn_waits_for_all_queued_work_then_completes_once(self):
             with patch.object(stt, "transcribe_audio", return_value={"text": "hello", "language": "en", "latency": .01}), \
@@ -439,6 +443,11 @@ def isolated_suite(legacy=False):
                     response = await upload
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(observed, [True], "Inference blocked the event loop before liveness could run")
+            self.assertIn("qa_audio_token", response.json())
+            self.assertEqual(self.db.query(TranslationLog).count(), 0)
+            self.assertEqual(self.db.query(TrainingAudioAsset).count(), 0)
+            # One expiring TTS output and one expiring source recording.
+            self.assertEqual(self.db.query(AudioAsset).count(), 2)
 
         async def test_http_no_speech_returns_422_and_cleans_temp_output(self):
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url="http://testserver") as client:

@@ -135,7 +135,7 @@ class ComprehensiveE2ESystemAuditTests(unittest.IsolatedAsyncioTestCase):
         # 2. Token đã hết hạn
         now = int(time.time())
         expired_token = jwt.encode(
-            {"sub": "pub-super-001", "jti": str(uuid.uuid4()), "iss": "t-langua", "aud": "t-langua-api",
+            {"sub": "pub-super-001", "jti": str(uuid.uuid4()), "iss": "t-lingua", "aud": "t-lingua-api",
              "iat": now - 7200, "exp": now - 3600, "kind": "user"},
             "super-secret-e2e-audit-key-must-be-very-long-and-secure",
             algorithm="HS256"

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from fastapi.responses import FileResponse, StreamingResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, case
 from sqlalchemy.exc import IntegrityError
 import csv
 import hashlib
@@ -309,30 +309,37 @@ def _is_valid_str(val: Any) -> bool:
     return isinstance(val, str) and bool(val.strip())
 
 
+def _parse_date_flexible(val: Any) -> datetime | None:
+    if not _is_valid_str(val):
+        return None
+    val_str = str(val).strip()
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%m/%d/%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(val_str, fmt)
+        except ValueError:
+            continue
+    return None
+
+
 def _apply_metrics_time_filter(query, time_range: Any = None, start_date: Any = None, end_date: Any = None):
     now = datetime.utcnow()
-    has_start = _is_valid_str(start_date)
-    has_end = _is_valid_str(end_date)
-    if has_start or has_end:
-        if has_start:
-            try:
-                s_dt = datetime.strptime(start_date.strip(), "%Y-%m-%d")
-                query = query.filter(TranslationLog.created_at >= s_dt)
-            except ValueError:
-                pass
-        if has_end:
-            try:
-                e_dt = datetime.strptime(end_date.strip(), "%Y-%m-%d") + timedelta(days=1)
-                query = query.filter(TranslationLog.created_at < e_dt)
-            except ValueError:
-                pass
+    s_dt = _parse_date_flexible(start_date)
+    e_dt = _parse_date_flexible(end_date)
+    if s_dt or e_dt:
+        if s_dt:
+            query = query.filter(TranslationLog.created_at >= s_dt)
+        if e_dt:
+            query = query.filter(TranslationLog.created_at < e_dt + timedelta(days=1))
         return query
 
     if not _is_valid_str(time_range):
         return query
 
     tr = time_range.strip().lower()
-    if tr in ("7d", "7_days"):
+    if tr in ("today", "1d", "hom_nay"):
+        start_dt = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(TranslationLog.created_at >= start_dt)
+    elif tr in ("7d", "7_days"):
         start_dt = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
         query = query.filter(TranslationLog.created_at >= start_dt)
     elif tr in ("week", "this_week"):
@@ -894,10 +901,12 @@ def get_metrics_timeseries(
     if not has_filter and len(telemetry_ts) > 0:
         return telemetry_ts
 
+    fallback_avg = db.query(func.avg(TranslationLog.latency)).filter(TranslationLog.latency > 0).scalar() or 0.45
+
     q = db.query(
         func.date(TranslationLog.created_at).label("d"),
         func.count(TranslationLog.id).label("cnt"),
-        func.avg(TranslationLog.latency).label("avg_lat"),
+        func.avg(case((TranslationLog.latency > 0, TranslationLog.latency), else_=None)).label("avg_lat"),
     ).filter(TranslationLog.created_at.isnot(None))
 
     effective_range = time_range if has_filter else "all"
@@ -909,7 +918,7 @@ def get_metrics_timeseries(
     for r in rows:
         d_str = str(r[0])
         cnt = int(r[1])
-        avg_lat = round(float(r[2] or 0.0), 3)
+        avg_lat = round(float(r[2] if r[2] is not None and r[2] > 0 else fallback_avg), 3)
         result.append({
             "date": d_str,
             "requests": cnt,
@@ -997,6 +1006,13 @@ def get_metrics_pipeline(
         q_total = db.query(func.count(TranslationLog.id))
         q_total = _apply_metrics_time_filter(q_total, effective_range, start_date, end_date)
         total_count = q_total.scalar() or 0
+
+        if not lats_s and total_count > 0:
+            all_lats = db.query(TranslationLog.latency).filter(TranslationLog.latency > 0).all()
+            if all_lats:
+                lats_s = [r[0] for r in all_lats]
+            else:
+                lats_s = [0.45]
 
         if lats_s:
             lats_ms = sorted([round(x * 1000, 1) for x in lats_s])

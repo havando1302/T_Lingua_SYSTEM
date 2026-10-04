@@ -1,5 +1,5 @@
 """
-T-Langua Backend — Entry point.
+T-Lingua Backend — Entry point.
 Apply compatibility patches, then start uvicorn.
 """
 import sys

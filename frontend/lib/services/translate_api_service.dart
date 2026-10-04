@@ -36,6 +36,7 @@ class ApiService {
     String sourceLang = 'vi',
     String targetLang = 'en',
     String inputMode = 'unknown',
+    String? qaAudioToken,
   }) async {
     await AuthSessionService.instance.request(
       'POST',
@@ -54,6 +55,7 @@ class ApiService {
             ? 'en'
             : targetLang,
         'input_mode': inputMode,
+        'qa_audio_token': ?qaAudioToken,
       },
     );
   }

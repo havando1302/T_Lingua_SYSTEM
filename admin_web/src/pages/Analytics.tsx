@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
@@ -32,7 +33,15 @@ interface PipelineMetrics {
   };
 }
 
-type TimeFilterPreset = 'all' | '7d' | 'week' | '30d' | 'month' | 'custom';
+type TimeFilterPreset = 'all' | 'today' | '7d' | 'week' | '30d' | 'month' | 'custom';
+
+function getLocalTodayStr(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 const Analytics = () => {
   const [timeSeries, setTimeSeries] = useState<any[]>([]);
@@ -46,7 +55,7 @@ const Analytics = () => {
   const [endDate, setEndDate] = useState('');
   const [customApplied, setCustomApplied] = useState<{ start: string; end: string } | null>(null);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage('');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [reload, setReload] = useState(0);
 
@@ -58,7 +67,12 @@ const Analytics = () => {
       pending = true;
       try {
         const params = new URLSearchParams();
-        if (timeRange === 'custom') {
+        if (timeRange === 'today') {
+          const today = getLocalTodayStr();
+          params.append('start_date', today);
+          params.append('end_date', today);
+          params.append('time_range', 'today');
+        } else if (timeRange === 'custom') {
           if (customApplied?.start) params.append('start_date', customApplied.start);
           if (customApplied?.end) params.append('end_date', customApplied.end);
         } else {
@@ -94,22 +108,32 @@ const Analytics = () => {
   const totalLangRequests = useMemo(() => languageData.reduce((acc, cur) => acc + (cur.value || 0), 0), [languageData]);
   const avgPeriodLatency = useMemo(() => {
     const valid = timeSeries.filter(t => t.requests > 0 && t.avg_latency > 0);
-    if (valid.length === 0) return 0;
+    if (valid.length === 0) {
+      if (pipelineMetrics?.latencies_ms?.end_to_end?.avg) {
+        return pipelineMetrics.latencies_ms.end_to_end.avg / 1000;
+      }
+      return 0;
+    }
     const sum = valid.reduce((acc, cur) => acc + cur.avg_latency * cur.requests, 0);
     const total = valid.reduce((acc, cur) => acc + cur.requests, 0);
     return total > 0 ? (sum / total) : 0;
-  }, [timeSeries]);
+  }, [timeSeries, pipelineMetrics]);
 
   const rangeLabel = useMemo(() => {
     switch (timeRange) {
+      case 'today': return `Hôm nay (${getLocalTodayStr().split('-').reverse().join('/')})`;
       case '7d': return '7 ngày qua';
       case 'week': return 'Tuần này';
       case '30d': return '30 ngày qua';
       case 'month': return 'Tháng này';
       case 'custom':
-        if (customApplied?.start && customApplied?.end) return `Từ ${customApplied.start} đến ${customApplied.end}`;
-        if (customApplied?.start) return `Từ ${customApplied.start}`;
-        if (customApplied?.end) return `Đến ${customApplied.end}`;
+        if (customApplied?.start && customApplied?.end) {
+          const s = customApplied.start.split('-').reverse().join('/');
+          const e = customApplied.end.split('-').reverse().join('/');
+          return s === e ? `Ngày ${s}` : `Từ ${s} đến ${e}`;
+        }
+        if (customApplied?.start) return `Từ ${customApplied.start.split('-').reverse().join('/')}`;
+        if (customApplied?.end) return `Đến ${customApplied.end.split('-').reverse().join('/')}`;
         return 'Tùy chỉnh khoảng ngày';
       default: return 'Tất cả thời gian';
     }
@@ -164,6 +188,13 @@ const Analytics = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => { setTimeRange('today'); setCustomApplied(null); }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'today' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
+                >
+                  Hôm nay
+                </button>
+                <button
+                  type="button"
                   onClick={() => { setTimeRange('7d'); setCustomApplied(null); }}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === '7d' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
@@ -192,7 +223,15 @@ const Analytics = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTimeRange('custom')}
+                  onClick={() => {
+                    const today = getLocalTodayStr();
+                    const s = startDate || today;
+                    const e = endDate || today;
+                    setStartDate(s);
+                    setEndDate(e);
+                    setCustomApplied({ start: s, end: e });
+                    setTimeRange('custom');
+                  }}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'custom' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Tùy chỉnh ngày
@@ -219,7 +258,16 @@ const Analytics = () => {
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setStartDate(val);
+                    if (val && endDate) {
+                      setCustomApplied({ start: val, end: endDate });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setCustomApplied({ start: startDate, end: endDate });
+                  }}
                   className="h-8 rounded-md border border-border bg-background px-2.5 text-xs text-text focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -228,7 +276,16 @@ const Analytics = () => {
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEndDate(val);
+                    if (startDate && val) {
+                      setCustomApplied({ start: startDate, end: val });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setCustomApplied({ start: startDate, end: endDate });
+                  }}
                   className="h-8 rounded-md border border-border bg-background px-2.5 text-xs text-text focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -240,6 +297,19 @@ const Analytics = () => {
               >
                 <Filter className="w-3.5 h-3.5 mr-1" />
                 Áp dụng bộ lọc
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-8 text-xs px-2.5"
+                onClick={() => {
+                  const today = getLocalTodayStr();
+                  setStartDate(today);
+                  setEndDate(today);
+                  setCustomApplied({ start: today, end: today });
+                }}
+              >
+                Hôm nay ({getLocalTodayStr().split('-').reverse().join('/')})
               </Button>
               {customApplied && (
                 <Button
@@ -349,6 +419,16 @@ const Analytics = () => {
             <CardDescription>Số lượng yêu cầu dịch thuật được xử lý theo ngày</CardDescription>
           </CardHeader>
           <CardContent>
+            {timeSeries.length === 1 && (
+              <div className="mb-3 px-3 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs flex items-center justify-between">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                  Ngày {timeSeries[0].date.split('-').reverse().join('/')}: {timeSeries[0].requests} bản dịch
+                </span>
+                <span className="text-text-muted">
+                  Độ trễ TB: {timeSeries[0].avg_latency}s
+                </span>
+              </div>
+            )}
             {timeSeries.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center text-text-muted text-sm text-center px-4">
                 {loading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu bản dịch trong khoảng thời gian này. Vui lòng chọn 'Tất cả' hoặc đổi khoảng ngày."}
@@ -369,7 +449,17 @@ const Analytics = () => {
                     <Tooltip 
                       contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)', borderRadius: '0.5rem' }} 
                     />
-                    <Area type="monotone" dataKey="requests" name="Yêu cầu" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVolume)" />
+                    <Area
+                      type="monotone"
+                      dataKey="requests"
+                      name="Yêu cầu"
+                      stroke="#3b82f6"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#colorVolume)"
+                      dot={{ r: 5, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 2 }}
+                      activeDot={{ r: 7 }}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -383,6 +473,16 @@ const Analytics = () => {
             <CardDescription>Thời gian phản hồi trung bình của máy chủ theo ngày</CardDescription>
           </CardHeader>
           <CardContent>
+            {timeSeries.length === 1 && (
+              <div className="mb-3 px-3 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-xs flex items-center justify-between">
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Ngày {timeSeries[0].date.split('-').reverse().join('/')}: {timeSeries[0].avg_latency}s
+                </span>
+                <span className="text-text-muted">
+                  Số yêu cầu: {timeSeries[0].requests}
+                </span>
+              </div>
+            )}
             {timeSeries.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center text-text-muted text-sm text-center px-4">
                 {loading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu độ trễ trong khoảng thời gian này."}
@@ -390,7 +490,7 @@ const Analytics = () => {
             ) : (
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={timeSeries}>
+                  <BarChart data={timeSeries} barSize={timeSeries.length === 1 ? 60 : undefined}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
