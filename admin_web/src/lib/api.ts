@@ -1,5 +1,22 @@
 import axios from 'axios';
-import { clearSession, getAccessToken } from './auth';
+import {
+  clearSession,
+  configureSessionRefresh,
+  getAccessToken,
+  sessionNeedsRefresh,
+  setSession,
+  type LoginResponse,
+} from './auth';
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    suppressGlobalError?: boolean;
+  }
+}
+
+// Requests whose page already renders an inline error should not also create
+// the global alert banner.
+export const locallyHandledRequest = { suppressGlobalError: true } as const;
 
 function resolveBackendOrigin(): string {
   const configured = import.meta.env.VITE_API_BASE_URL?.trim();
@@ -32,15 +49,22 @@ export function apiErrorMessage(error: unknown, fallback = 'Không thể hoàn t
   if (axios.isAxiosError(error)) {
     if (error.response?.status === 401) {
       const detail = error.response?.data?.detail;
+      if (detail === 'Invalid or expired credentials') {
+        return 'Thông tin đăng nhập hoặc mã xác thực không hợp lệ.';
+      }
       return typeof detail === 'string' && detail ? detail : 'Phiên đăng nhập đã hết hạn hoặc thông tin đăng nhập không đúng.';
     }
-    if (error.response?.status === 403) return 'Tài khoản của bạn không có quyền thực hiện thao tác này.';
+    if (error.response?.status === 403) {
+      const detail = error.response?.data?.detail;
+      return typeof detail === 'string' && detail ? detail : 'Tài khoản của bạn không có quyền thực hiện thao tác này.';
+    }
     if (error.response?.status === 429) return 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.';
     const detail = error.response?.data?.detail;
     if (typeof detail === 'string') return detail;
     if (Array.isArray(detail)) {
       const fieldNames: Record<string, string> = {
         username: 'Tên đăng nhập', password: 'Mật khẩu', name: 'Tên mã API',
+        role: 'Chức vụ', is_active: 'Trạng thái tài khoản', body: 'Dữ liệu',
         search: 'Tìm kiếm', corrected_text: 'Bản dịch đã sửa', source_text: 'Văn bản gốc',
         translated_text: 'Bản dịch', expires_in_days: 'Thời hạn', scopes: 'Quyền truy cập', value: 'Giá trị',
       };
@@ -53,6 +77,9 @@ export function apiErrorMessage(error: unknown, fallback = 'Không thể hoàn t
         if (issue.type === 'greater_than_equal') message = `Giá trị tối thiểu là ${issue.ctx?.ge}`;
         if (issue.type === 'less_than_equal') message = `Giá trị tối đa là ${issue.ctx?.le}`;
         if (issue.type === 'int_parsing' || issue.type === 'int_from_float') message = 'Vui lòng nhập số nguyên';
+        if (issue.type === 'literal_error') message = 'Giá trị không thuộc lựa chọn cho phép';
+        if (issue.type === 'bool_parsing') message = 'Giá trị trạng thái không hợp lệ';
+        if (issue.type === 'extra_forbidden') message = 'Trường dữ liệu không được hỗ trợ';
         if (message.includes('72 UTF-8 bytes')) message = 'Tối đa 72 byte UTF-8; ký tự có dấu có thể chiếm nhiều byte';
         if (message.includes('Username must')) message = 'Ít nhất 3 ký tự, không chứa khoảng trắng';
         return `${fieldNames[field] ?? field}: ${message}`;
@@ -66,11 +93,12 @@ export function apiErrorMessage(error: unknown, fallback = 'Không thể hoàn t
 }
 
 function createClient(path: string) {
-  const client = axios.create({ baseURL: `${backendOrigin}${path}`, timeout: 15000 });
-  client.interceptors.request.use((config) => {
+  const client = axios.create({ baseURL: `${backendOrigin}${path}`, timeout: 15000, withCredentials: true });
+  client.interceptors.request.use(async (config) => {
     if (apiConfigurationError) throw new Error(apiConfigurationError);
     const target = new URL(client.getUri(config), window.location.origin);
     if (target.origin !== backendOrigin) throw new Error('Không được gửi yêu cầu tới máy chủ khác.');
+    if (!target.pathname.endsWith('/login') && sessionNeedsRefresh()) await refreshSession();
     const token = getAccessToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     else delete config.headers.Authorization;
@@ -84,7 +112,7 @@ function createClient(path: string) {
       const sentAuthorization = error.config?.headers?.Authorization;
       const token = getAccessToken();
       if (error.response?.status === 401 && token && sentAuthorization === `Bearer ${token}`) clearSession();
-      if (!error.config?.url?.endsWith('/login')) {
+      if (!error.config?.url?.endsWith('/login') && !error.config?.suppressGlobalError) {
         const message = apiErrorMessage(error);
         if (message) {
           window.dispatchEvent(new CustomEvent('admin:api-error', { detail: message }));
@@ -99,9 +127,33 @@ function createClient(path: string) {
 const api = createClient('/admin');
 const sessionApi = createClient('/api/session');
 
+let pendingRefresh: Promise<boolean> | null = null;
+
+export function refreshSession(): Promise<boolean> {
+  if (pendingRefresh) return pendingRefresh;
+  pendingRefresh = axios.post<LoginResponse>(
+    `${backendOrigin}/api/session/refresh`,
+    undefined,
+    { timeout: 15000, withCredentials: true },
+  ).then((response) => {
+    setSession(response.data);
+    return true;
+  }).catch((error: unknown) => {
+    const transientFailure = axios.isAxiosError(error)
+      && (!error.response || error.response.status >= 500);
+    if (!transientFailure) clearSession();
+    return transientFailure;
+  }).finally(() => {
+    pendingRefresh = null;
+  });
+  return pendingRefresh;
+}
+
+configureSessionRefresh(refreshSession);
+
 export async function logout() {
   try {
-    if (getAccessToken()) await sessionApi.post('/logout');
+    await sessionApi.post('/logout');
   } finally {
     clearSession();
   }

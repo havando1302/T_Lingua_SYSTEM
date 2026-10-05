@@ -6,6 +6,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+import pyotp
+from cryptography.fernet import Fernet
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -15,7 +18,8 @@ TEST_ENV = {
     "APP_ENV": "local",
     "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": "admin-extension-test-secret-that-is-long-enough",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
+    "CORS_ORIGINS": "http://localhost:5173", "TRUSTED_HOSTS": "testserver",
 }
 
 
@@ -23,7 +27,9 @@ with patch.dict(os.environ, TEST_ENV):
     from fastapi.testclient import TestClient
     from app.main import app
     from app.db.database import get_db
-    from app.db.models import ApiKey, AuditLog, Base, ModelDeployment, QualityReview, TrainingDataset, TrainingJob, TranslationLog, User
+    from app.db.models import ApiKey, AuditLog, AuthSession, Base, ModelDeployment, QualityReview, SystemSetting, TrainingDataset, TrainingJob, TranslationLog, User
+    from app.core.auth_settings import AuthSettings
+    from app.core import security
     from app.core.security import get_password_hash, issue_api_key, issue_user_session
     from app.services import training_control
 
@@ -89,6 +95,135 @@ class AdminExtensionTests(unittest.TestCase):
         audit = self.client.get("/admin/audit", headers=self.headers).json()
         self.assertTrue(any(row["action"] == "user.update" for row in audit))
         self.assertTrue(any(row["action"] == "user.sessions_revoke" for row in audit))
+
+    def test_user_management_errors_are_specific_and_consistent(self):
+        duplicate = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": self.employee.username, "password": "AnotherPassword@123", "role": "employee"},
+        )
+        self.assertEqual(duplicate.status_code, 409, duplicate.text)
+        self.assertEqual(duplicate.json()["detail"], "Tên đăng nhập đã tồn tại")
+
+        invalid_password = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "new-employee", "password": "short", "role": "employee"},
+        )
+        self.assertEqual(invalid_password.status_code, 422, invalid_password.text)
+        issue = invalid_password.json()["detail"][0]
+        self.assertEqual(issue["loc"][-1], "password")
+        self.assertEqual(issue["type"], "string_too_short")
+
+        missing = self.client.patch(
+            "/admin/users/999999", headers=self.headers,
+            json={"role": "employee"},
+        )
+        self.assertEqual(missing.status_code, 404, missing.text)
+        self.assertEqual(missing.json()["detail"], "Không tìm thấy tài khoản")
+
+        current_account = self.client.patch(
+            f"/admin/users/{self.superadmin.id}", headers=self.headers,
+            json={"role": "admin"},
+        )
+        self.assertEqual(current_account.status_code, 403, current_account.text)
+        self.assertEqual(
+            current_account.json()["detail"],
+            "Không thể vô hiệu hóa hoặc đổi quyền của tài khoản đang đăng nhập",
+        )
+
+        protected_account = self.client.delete(
+            f"/admin/users/{self.superadmin.id}", headers=self.headers,
+        )
+        self.assertEqual(protected_account.status_code, 403, protected_account.text)
+        self.assertEqual(
+            protected_account.json()["detail"],
+            "Không thể vô hiệu hóa tài khoản quản trị cấp cao",
+        )
+
+        missing_reset = self.client.post(
+            "/admin/users/999999/reset-sessions", headers=self.headers,
+        )
+        self.assertEqual(missing_reset.status_code, 404, missing_reset.text)
+        self.assertEqual(missing_reset.json()["detail"], "Không tìm thấy tài khoản")
+
+    def test_user_update_patch_is_allowed_by_cors_preflight(self):
+        response = self.client.options(
+            f"/admin/users/{self.employee.id}",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": "PATCH",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertIn("PATCH", response.headers.get("access-control-allow-methods", ""))
+        self.assertEqual(
+            response.headers.get("access-control-allow-origin"),
+            "http://localhost:5173",
+        )
+
+    def test_login_requires_mfa_setup_then_verification_before_session(self):
+        settings = AuthSettings(
+            _env_file=None,
+            APP_ENV="local",
+            JWT_SECRET_KEY="mfa-login-test-secret-that-is-long-and-random-enough",
+            AUTH_REQUIRE_MFA=True,
+            MFA_ENCRYPTION_KEY=Fernet.generate_key().decode(),
+        )
+        with patch.object(security, "get_auth_settings", return_value=settings):
+            first = self.client.post(
+                "/admin/login",
+                data={"username": "extension-user", "password": "ExtensionUser@123"},
+            )
+            self.assertEqual(first.status_code, 200, first.text)
+            challenge = first.json()
+            self.assertEqual(challenge["status"], "mfa_setup_required")
+            self.assertTrue(challenge["enrollment_required"])
+            self.assertEqual(self.db.query(AuthSession).filter(AuthSession.user_id == self.employee.id).count(), 1)
+            # setUp created this account's old non-MFA session; policy makes it unusable
+            # and enrollment confirmation revokes it before issuing the new session.
+
+            otp = pyotp.TOTP(challenge["secret"]).now()
+            completed = self.client.post(
+                "/admin/login",
+                data={"username": "extension-user", "password": "ExtensionUser@123", "otp": otp},
+            )
+            self.assertEqual(completed.status_code, 200, completed.text)
+            self.assertIn("access_token", completed.json())
+            self.assertTrue(completed.json()["user"]["mfa_enabled"])
+            self.db.expire_all()
+            self.assertTrue(self.db.get(User, self.employee.id).mfa_enabled)
+
+            prompt = self.client.post(
+                "/admin/login",
+                data={"username": "extension-user", "password": "ExtensionUser@123"},
+            )
+            self.assertEqual(prompt.status_code, 200, prompt.text)
+            self.assertEqual(prompt.json()["status"], "mfa_required")
+            self.assertFalse(prompt.json()["enrollment_required"])
+            self.assertNotIn("access_token", prompt.json())
+
+    def test_login_cookie_refresh_and_cookie_only_logout(self):
+        self.client.cookies.clear()
+        login = self.client.post(
+            "/admin/login",
+            data={"username": "extension-user", "password": "ExtensionUser@123"},
+        )
+        self.assertEqual(login.status_code, 200, login.text)
+        cookie_header = login.headers.get("set-cookie", "").lower()
+        self.assertIn("tlingua_refresh=", cookie_header)
+        self.assertIn("httponly", cookie_header)
+        self.assertIn("samesite=strict", cookie_header)
+        self.assertIn("path=/api/session", cookie_header)
+
+        refreshed = self.client.post("/api/session/refresh")
+        self.assertEqual(refreshed.status_code, 200, refreshed.text)
+        self.assertNotEqual(refreshed.json()["access_token"], login.json()["access_token"])
+        self.assertEqual(refreshed.json()["user"]["id"], self.employee.id)
+
+        logged_out = self.client.post("/api/session/logout")
+        self.assertEqual(logged_out.status_code, 204, logged_out.text)
+        self.assertEqual(self.client.post("/api/session/refresh").status_code, 401)
+        self.client.cookies.clear()
 
     def test_api_key_rotation_returns_secret_once_and_revokes_old(self):
         old, _ = issue_api_key(
@@ -274,6 +409,47 @@ class AdminExtensionTests(unittest.TestCase):
         )
         self.assertEqual(audit.status_code, 200, audit.text)
         self.assertEqual(len(audit.json()), 3)
+
+    def test_settings_and_model_validation_errors_are_specific(self):
+        self.db.add_all([
+            SystemSetting(key="enable_cache", value="true", description="Bộ nhớ đệm"),
+            SystemSetting(key="rate_limit_rpm", value="30", description="Giới hạn yêu cầu"),
+            SystemSetting(key="max_chars_per_request", value="1000", description="Giới hạn ký tự"),
+        ])
+        self.db.commit()
+
+        listed = self.client.get("/admin/settings", headers=self.headers)
+        self.assertEqual(listed.status_code, 200, listed.text)
+        self.assertEqual(
+            [item["key"] for item in listed.json()],
+            ["max_chars_per_request", "rate_limit_rpm", "enable_cache"],
+        )
+
+        invalid_setting = self.client.put(
+            "/admin/settings/rate_limit_rpm", headers=self.headers, json={"value": "10.5"},
+        )
+        self.assertEqual(invalid_setting.status_code, 422, invalid_setting.text)
+        self.assertIn("số nguyên", invalid_setting.json()["detail"])
+
+        initial = self.client.get("/admin/models/deployments", headers=self.headers).json()
+        nllb = next(item for item in initial if item["component"] == "nllb")
+        same_as_active = self.client.put(
+            "/admin/models/nllb/canary", headers=self.headers,
+            json={"model_id": nllb["active_model"], "percent": 10},
+        )
+        self.assertEqual(same_as_active.status_code, 409, same_as_active.text)
+        self.assertIn("phải khác model Active", same_as_active.json()["detail"])
+
+        missing_percent = self.client.put(
+            "/admin/models/nllb/canary", headers=self.headers,
+            json={"model_id": "example/nllb-v2", "percent": 0},
+        )
+        self.assertEqual(missing_percent.status_code, 422, missing_percent.text)
+        self.assertIn("từ 1% đến 50%", missing_percent.json()["detail"])
+
+        no_canary = self.client.delete("/admin/models/nllb/canary", headers=self.headers)
+        self.assertEqual(no_canary.status_code, 409, no_canary.text)
+        self.assertEqual(no_canary.json()["detail"], "Chưa có model Canary để hủy")
 
     def test_training_dataset_validate_freeze_and_queue(self):
         payload = (

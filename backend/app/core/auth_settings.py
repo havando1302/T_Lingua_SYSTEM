@@ -19,9 +19,14 @@ class AuthSettings(BaseSettings):
     JWT_SECRET_KEY: str = Field(default="", repr=False)
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=15, ge=1, le=60)
+    AUTH_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, ge=1, le=30)
     AUTH_GUEST_TOKEN_EXPIRE_MINUTES: int = Field(default=15, ge=1, le=60)
     AUTH_GUEST_ENABLED: bool = True
     AUTH_MAX_ACTIVE_GUEST_SESSIONS: int = Field(default=500, ge=1, le=10000)
+    # New deployments require MFA for every interactive account.  The older
+    # privileged-only flag remains as a compatibility fallback for existing
+    # environment files and test deployments.
+    AUTH_REQUIRE_MFA: bool | None = None
     AUTH_REQUIRE_PRIVILEGED_MFA: bool = True
     MFA_ENCRYPTION_KEY: str = Field(default="", repr=False)
 
@@ -46,8 +51,8 @@ class AuthSettings(BaseSettings):
             raise ValueError("JWT_SECRET_KEY must be a strong, randomly generated secret")
         if self.JWT_ALGORITHM != "HS256":
             raise ValueError("Only HS256 is supported for application session tokens")
-        if production and not self.AUTH_REQUIRE_PRIVILEGED_MFA:
-            raise ValueError("Privileged MFA cannot be disabled outside local development")
+        if production and not self.mfa_required:
+            raise ValueError("MFA cannot be disabled outside local development")
         if self.MFA_ENCRYPTION_KEY:
             try:
                 Fernet(self.MFA_ENCRYPTION_KEY.encode("ascii"))
@@ -58,6 +63,12 @@ class AuthSettings(BaseSettings):
         elif production:
             raise ValueError("MFA_ENCRYPTION_KEY is required outside local development")
         return self
+
+    @property
+    def mfa_required(self) -> bool:
+        if self.AUTH_REQUIRE_MFA is not None:
+            return self.AUTH_REQUIRE_MFA
+        return self.AUTH_REQUIRE_PRIVILEGED_MFA
 
 
 @lru_cache(maxsize=1)

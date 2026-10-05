@@ -1,4 +1,4 @@
-"""Revocable sessions, scoped API keys, password hashing and privileged MFA."""
+"""Revocable sessions, scoped API keys, password hashing and mandatory MFA."""
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -97,15 +97,24 @@ def _parse_scopes(raw: str) -> frozenset[str]:
         raise _unauthorized()
 
 
-def _issue_session(db: Session, *, owner_id: str, user: User | None, mfa_verified: bool = False) -> dict:
+def _issue_session(
+    db: Session,
+    *,
+    owner_id: str,
+    user: User | None,
+    mfa_verified: bool = False,
+    token_kind: str | None = None,
+    lifetime: timedelta | None = None,
+) -> dict:
     settings = get_auth_settings()
     minutes = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES if user else settings.AUTH_GUEST_TOKEN_EXPIRE_MINUTES
     now = _utcnow().replace(microsecond=0)
-    expires_at = now + timedelta(minutes=minutes)
+    expires_at = now + (lifetime or timedelta(minutes=minutes))
     session_id = str(uuid.uuid4())
+    kind = token_kind or ("user" if user else "guest")
     token = jwt.encode(
         {"sub": owner_id, "jti": session_id, "iss": TOKEN_ISSUER, "aud": TOKEN_AUDIENCE,
-         "iat": now, "exp": expires_at, "kind": "user" if user else "guest"},
+         "iat": now, "exp": expires_at, "kind": kind},
         settings.JWT_SECRET_KEY, algorithm="HS256",
     )
     session = AuthSession(
@@ -127,7 +136,8 @@ def _issue_session(db: Session, *, owner_id: str, user: User | None, mfa_verifie
     db.add(session)
     db.commit()
     return {
-        "access_token": token, "token_type": "bearer", "expires_in": minutes * 60,
+        "access_token": token, "token_type": "bearer",
+        "expires_in": max(1, int((expires_at - now).total_seconds())),
         "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(), "owner_id": owner_id,
         "role": user.role if user else "guest",
     }
@@ -136,9 +146,23 @@ def _issue_session(db: Session, *, owner_id: str, user: User | None, mfa_verifie
 def issue_user_session(user: User, db: Session, *, mfa_verified: bool = False) -> dict:
     if not user.is_active or not user.public_id or user.role not in VALID_ROLES:
         raise _unauthorized()
-    if user.role in PRIVILEGED_ROLES and get_auth_settings().AUTH_REQUIRE_PRIVILEGED_MFA and not mfa_verified:
-        raise HTTPException(status_code=403, detail="Privileged MFA verification is required")
+    if (user.mfa_enabled or user_requires_mfa(user)) and not mfa_verified:
+        raise HTTPException(status_code=403, detail="MFA verification is required")
     return _issue_session(db, owner_id=user.public_id, user=user, mfa_verified=mfa_verified)
+
+
+def issue_user_session_pair(user: User, db: Session, *, mfa_verified: bool = False) -> tuple[dict, str]:
+    """Issue a short bearer token plus a longer opaque-to-JS refresh credential."""
+    access = issue_user_session(user, db, mfa_verified=mfa_verified)
+    refresh = _issue_session(
+        db,
+        owner_id=user.public_id,
+        user=user,
+        mfa_verified=mfa_verified,
+        token_kind="refresh",
+        lifetime=timedelta(days=get_auth_settings().AUTH_REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    return access, refresh["access_token"]
 
 
 def issue_guest_session(db: Session) -> dict:
@@ -192,11 +216,62 @@ def authenticate_token(token: str | None, db: Session) -> Principal:
             or user.token_version != stored.token_version or user.role not in VALID_ROLES
         ):
             raise _unauthorized()
-        if user.role in PRIVILEGED_ROLES and get_auth_settings().AUTH_REQUIRE_PRIVILEGED_MFA and not stored.mfa_verified:
+        if (user.mfa_enabled or user_requires_mfa(user)) and not stored.mfa_verified:
             raise _unauthorized()
         role = user.role
     return Principal(owner_id, stored.user_id, role, _parse_scopes(stored.scopes),
                      stored.expires_at.replace(tzinfo=timezone.utc), stored.id, stored.mfa_verified)
+
+
+def _authenticate_refresh_token(token: str | None, db: Session) -> tuple[AuthSession, User]:
+    if not isinstance(token, str) or not token or len(token) > 4096:
+        raise _unauthorized()
+    try:
+        payload = decode_token(token)
+        owner_id, session_id = payload["sub"], payload["jti"]
+        uuid.UUID(owner_id)
+        uuid.UUID(session_id)
+        if payload.get("kind") != "refresh":
+            raise ValueError("Invalid refresh token kind")
+    except (JWTError, KeyError, ValueError, TypeError, AttributeError):
+        raise _unauthorized()
+    stored = db.get(AuthSession, session_id, populate_existing=True)
+    if (
+        stored is None or stored.user_id is None or stored.revoked_at is not None
+        or _as_utc_naive(stored.expires_at) <= _utcnow()
+        or stored.owner_id != owner_id
+        or not hmac.compare_digest(stored.token_hash, hash_api_key(token))
+    ):
+        raise _unauthorized()
+    user = db.get(User, stored.user_id, populate_existing=True)
+    if (
+        user is None or not user.is_active or user.public_id != owner_id
+        or user.token_version != stored.token_version or user.role not in VALID_ROLES
+        or ((user.mfa_enabled or user_requires_mfa(user)) and not stored.mfa_verified)
+    ):
+        raise _unauthorized()
+    return stored, user
+
+
+def refresh_user_session(refresh_token: str | None, db: Session) -> tuple[dict, User]:
+    """Issue a new short bearer token from a valid browser refresh session."""
+    stored, user = _authenticate_refresh_token(refresh_token, db)
+    access = issue_user_session(user, db, mfa_verified=stored.mfa_verified)
+    return access, user
+
+
+def revoke_refresh_session(refresh_token: str | None, db: Session) -> bool:
+    """Best-effort refresh-token revocation used by explicit logout."""
+    try:
+        stored, _ = _authenticate_refresh_token(refresh_token, db)
+    except HTTPException:
+        return False
+    updated = db.query(AuthSession).filter(
+        AuthSession.id == stored.id,
+        AuthSession.revoked_at.is_(None),
+    ).update({AuthSession.revoked_at: _utcnow()}, synchronize_session=False)
+    db.commit()
+    return updated == 1
 
 
 def get_current_principal(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Principal:
@@ -241,7 +316,7 @@ def require_qa_reviewer(current_user: User = Depends(get_current_user)) -> User:
 
 def require_superadmin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "superadmin":
-        raise HTTPException(status_code=403, detail="Superadministrator permission is required")
+        raise HTTPException(status_code=403, detail="Chỉ tài khoản quản trị cấp cao mới được thực hiện thao tác này")
     return current_user
 
 
@@ -303,29 +378,94 @@ def encrypt_mfa_secret(secret: str) -> str:
     return _mfa_cipher().encrypt(secret.encode("ascii")).decode("ascii")
 
 
-def verify_user_mfa(user: User, otp: str | None, db: Session) -> bool:
-    import pyotp
+def user_requires_mfa(user: User) -> bool:
+    """Return the effective interactive-login policy for a valid user."""
+    return user.role in VALID_ROLES and get_auth_settings().mfa_required
 
-    required = user.role in PRIVILEGED_ROLES and get_auth_settings().AUTH_REQUIRE_PRIVILEGED_MFA
-    if not user.mfa_enabled:
-        if required:
-            raise HTTPException(status_code=403, detail="MFA enrollment is required; contact the operator")
-        return False
-    if not isinstance(otp, str) or len(otp) != 6 or not otp.isascii() or not otp.isdigit():
-        raise _unauthorized()
+
+def _decrypt_mfa_secret(user: User) -> str:
     encrypted_secret = user.mfa_secret_encrypted
     if not encrypted_secret:
         raise HTTPException(status_code=503, detail="MFA configuration is unavailable")
     try:
-        secret = _mfa_cipher().decrypt(encrypted_secret.encode("ascii")).decode("ascii")
+        return _mfa_cipher().decrypt(encrypted_secret.encode("ascii")).decode("ascii")
     except (InvalidToken, ValueError, AttributeError, UnicodeError):
         raise HTTPException(status_code=503, detail="MFA configuration is unavailable")
+
+
+def _matching_totp_counter(secret: str, otp: str | None) -> int:
+    import pyotp
+
+    if not isinstance(otp, str) or len(otp) != 6 or not otp.isascii() or not otp.isdigit():
+        raise _unauthorized()
     totp = pyotp.TOTP(secret)
     current_counter = int(datetime.now(timezone.utc).timestamp()) // totp.interval
     matched = next((counter for counter in (current_counter, current_counter - 1, current_counter + 1)
                     if hmac.compare_digest(totp.at(counter * totp.interval), otp)), None)
     if matched is None:
         raise _unauthorized()
+    return matched
+
+
+def begin_user_mfa_enrollment(user: User, db: Session) -> dict:
+    """Create or resume an unverified TOTP enrollment after password verification."""
+    import pyotp
+
+    if user.mfa_enabled:
+        raise HTTPException(status_code=409, detail="MFA is already enabled")
+    if user.mfa_secret_encrypted:
+        secret = _decrypt_mfa_secret(user)
+    else:
+        secret = pyotp.random_base32()
+        user.mfa_secret_encrypted = encrypt_mfa_secret(secret)
+        user.mfa_last_counter = -1
+        db.commit()
+        db.refresh(user)
+    issuer = "T-Lingua"
+    return {
+        "status": "mfa_setup_required",
+        "mfa_required": True,
+        "enrollment_required": True,
+        "issuer": issuer,
+        "account_name": user.username,
+        "secret": secret,
+        "provisioning_uri": pyotp.TOTP(secret).provisioning_uri(
+            name=user.username, issuer_name=issuer,
+        ),
+    }
+
+
+def complete_user_mfa_enrollment(user: User, otp: str | None, db: Session) -> bool:
+    """Confirm a pending seed atomically; no application session exists yet."""
+    if user.mfa_enabled:
+        return verify_user_mfa(user, otp, db)
+    encrypted_secret = user.mfa_secret_encrypted
+    secret = _decrypt_mfa_secret(user)
+    matched = _matching_totp_counter(secret, otp)
+    updated = db.query(User).filter(
+        User.id == user.id,
+        User.mfa_enabled.is_(False),
+        User.mfa_secret_encrypted == encrypted_secret,
+        User.mfa_last_counter < matched,
+    ).update({User.mfa_enabled: True, User.mfa_last_counter: matched}, synchronize_session=False)
+    if updated != 1:
+        db.rollback()
+        raise _unauthorized()
+    db.commit()
+    db.refresh(user)
+    # Retire any sessions or API keys created before the account acquired MFA.
+    revoke_user_sessions(user, db)
+    db.refresh(user)
+    return True
+
+
+def verify_user_mfa(user: User, otp: str | None, db: Session) -> bool:
+    required = user_requires_mfa(user)
+    if not user.mfa_enabled:
+        if required:
+            raise HTTPException(status_code=403, detail="MFA enrollment is required")
+        return False
+    matched = _matching_totp_counter(_decrypt_mfa_secret(user), otp)
     # Compare-and-set prevents two concurrent logins from consuming the same code.
     updated = db.query(User).filter(User.id == user.id, User.mfa_last_counter < matched).update(
         {User.mfa_last_counter: matched}, synchronize_session=False

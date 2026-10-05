@@ -39,7 +39,12 @@ def prepare_local(backup_name="pre-phase2.env"):
     if values.get("APP_ENV", "local") != "local":
         raise ValueError("This tool is for local setup; provision non-local secrets through the deployment secret store")
     # Signing material is deliberately rotated; the separate MFA key is preserved.
-    updates = {"JWT_SECRET_KEY": secrets.token_urlsafe(48), "JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15", "AUTH_REQUIRE_PRIVILEGED_MFA": "true"}
+    updates = {
+        "JWT_SECRET_KEY": secrets.token_urlsafe(48),
+        "JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15",
+        "AUTH_REQUIRE_MFA": "true",
+        "AUTH_REQUIRE_PRIVILEGED_MFA": "true",
+    }
     if not values.get("MFA_ENCRYPTION_KEY"):
         updates["MFA_ENCRYPTION_KEY"] = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii")
     if not values.get("CORS_ORIGINS") or values.get("CORS_ORIGINS") == "*":

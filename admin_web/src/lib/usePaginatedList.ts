@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import api, { apiErrorMessage } from './api';
+import api, { apiErrorMessage, locallyHandledRequest } from './api';
 
 const PAGE_SIZE = 25;
 
@@ -26,7 +26,7 @@ export function usePaginatedList<T>(endpoint: string, fixedParams = '') {
       params.set('skip', String(targetPage * PAGE_SIZE));
       params.set('limit', String(PAGE_SIZE + 1));
       if (query.trim()) params.set('search', query.trim());
-      const response = await api.get<T[]>(endpoint, { params, signal: controller.signal });
+      const response = await api.get<T[]>(endpoint, { ...locallyHandledRequest, params, signal: controller.signal });
       if (controller.signal.aborted) return;
       if (!Array.isArray(response.data)) throw new Error('Danh sách trả về không hợp lệ.');
       setItems(response.data.slice(0, PAGE_SIZE));

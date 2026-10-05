@@ -16,7 +16,7 @@ class RuntimeProcessTests(unittest.TestCase):
                 [sys.executable, "-B", str(Path(__file__).resolve()), "--isolated"],
                 cwd=directory, env={**os.environ, "APP_ENV": "local", "DATABASE_URL": "sqlite:///:memory:",
                                    "JWT_SECRET_KEY": "runtime-test-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                                   "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "USE_SILERO_VAD": "0",
+                                   "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "USE_SILERO_VAD": "0",
                                    "PYTHONDONTWRITEBYTECODE": "1"},
                 capture_output=True, text=True, timeout=90,
             )

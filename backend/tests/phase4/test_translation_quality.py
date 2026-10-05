@@ -7,7 +7,7 @@ _TEST_ENV = {
     "APP_ENV": "local",
     "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": "test-secret-key-phase4-tests-must-be-long-enough",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
 }
 
 with patch.dict(os.environ, _TEST_ENV):

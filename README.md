@@ -261,7 +261,8 @@ flutter run
 | `TRANSLATION_WORKER_POOL_SIZE` | `2` | Số worker dịch thuật song song |
 | `TTS_WORKER_POOL_SIZE` | `1` | Số worker TTS song song |
 | `JWT_SECRET_KEY` | *(bắt buộc)* | Khóa bí mật JWT |
-| `AUTH_REQUIRE_PRIVILEGED_MFA` | `true` | Yêu cầu TOTP cho admin |
+| `AUTH_REQUIRE_MFA` | `true` | Yêu cầu TOTP cho mọi tài khoản đăng nhập |
+| `AUTH_REQUIRE_PRIVILEGED_MFA` | `true` | Tương thích cấu hình cũ khi chưa đặt `AUTH_REQUIRE_MFA` |
 | `MAX_WS_CONNECTIONS` | `8` | Số kết nối WebSocket đồng thời tối đa |
 | `RATE_LIMIT_RPM` | `60` | Giới hạn request/phút |
 
@@ -269,14 +270,21 @@ flutter run
 
 ## 🔐 Bảo mật
 
-- **JWT Authentication** với access token ngắn hạn (15 phút mặc định)
+- **JWT Authentication** với access token ngắn hạn (15 phút mặc định) và refresh token 7 ngày trong cookie `HttpOnly`; trang quản trị tự khôi phục phiên sau khi tải lại và tự gia hạn trước khi access token hết hạn
 - **Guest sessions** — giới hạn 500 phiên khách đồng thời
-- **TOTP MFA** bắt buộc cho tài khoản có đặc quyền (RFC 6238)
+- **TOTP MFA** bắt buộc cho mọi tài khoản; tài khoản chưa liên kết phải thiết lập trước khi được cấp phiên (RFC 6238)
 - **Fernet encryption** bảo vệ khóa MFA lưu trữ
 - **CORS** kiểm soát nghiêm ngặt theo danh sách trắng
 - **TrustedHost middleware** chặn request từ host không hợp lệ
 - **Rate limiting**: 60 req/phút, tối đa 8 WebSocket đồng thời
 - **Payload limits**: audio 1 MB, text 5.000 ký tự, message 16 KB
+
+Luồng đăng nhập MFA:
+
+1. Máy chủ xác minh tên đăng nhập và mật khẩu nhưng chưa cấp access token.
+2. Tài khoản chưa liên kết nhận trạng thái `mfa_setup_required`, thêm khóa vào ứng dụng TOTP và gửi mã 6 chữ số để xác nhận.
+3. Tài khoản đã liên kết nhận trạng thái `mfa_required` và gửi mã 6 chữ số hiện tại.
+4. Access token chỉ được cấp sau khi mã MFA hợp lệ; một mã TOTP không thể dùng lại.
 
 ---
 

@@ -21,7 +21,7 @@ OUT = ROOT / "docs" / "progress_2026-09-24" / "evidence"
 os.environ.update({
     "APP_ENV": "local", "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": "api-benchmark-secret-key-that-is-long-enough",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
 })
 
 from fastapi.testclient import TestClient

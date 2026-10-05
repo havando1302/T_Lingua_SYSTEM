@@ -87,7 +87,7 @@ export default function Account() {
             <ProfileRow icon={ShieldCheck} label="Vai trò" value={roleLabels[user.role]} />
             <ProfileRow icon={IdCard} label="Mã tài khoản" value={user.public_id || `#${user.id}`} mono />
             <ProfileRow icon={CalendarDays} label="Ngày tạo" value={createdAt} />
-            <ProfileRow icon={KeyRound} label="Xác thực MFA" value={user.mfa_enabled ? 'Đã bật' : user.role === 'employee' ? 'Không bắt buộc' : 'Chưa bật'} />
+            <ProfileRow icon={KeyRound} label="Xác thực MFA" value={user.mfa_enabled ? 'Đã bật' : 'Chưa liên kết'} />
           </CardContent>
         </Card>
 

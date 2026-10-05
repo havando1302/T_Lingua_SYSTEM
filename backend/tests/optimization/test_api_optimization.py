@@ -18,7 +18,7 @@ class ApiOptimizationProcessTests(unittest.TestCase):
                 env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "APP_ENV": "local",
                      "DATABASE_URL": "sqlite:///:memory:",
                      "JWT_SECRET_KEY": "regression-only-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                     "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "AUTH_GUEST_ENABLED": "true",
+                     "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "AUTH_GUEST_ENABLED": "true",
                      "RATE_LIMIT_RPM": "600"},
                 capture_output=True, text=True, timeout=90,
             )

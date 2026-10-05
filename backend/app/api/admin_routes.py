@@ -45,12 +45,16 @@ from app.core.security import (
     require_qa_reviewer,
     require_reporting_user,
     require_superadmin,
-    issue_user_session,
+    issue_user_session_pair,
     issue_api_key,
     revoke_user_sessions,
     verify_user_mfa,
+    begin_user_mfa_enrollment,
+    complete_user_mfa_enrollment,
+    user_requires_mfa,
     RESOURCE_SCOPES,
 )
+from app.core.session_cookie import clear_refresh_cookie, set_refresh_cookie
 from app.core.access_policy import enforce_rate, get_policy_settings, rate_limiter, validate_text
 from app.core.telemetry import GLOBAL_TELEMETRY
 
@@ -111,6 +115,16 @@ class Token(BaseModel):
     token_type: str
     expires_in: int
     user: UserResponse
+
+
+class MfaChallenge(BaseModel):
+    status: Literal["mfa_required", "mfa_setup_required"]
+    mfa_required: Literal[True] = True
+    enrollment_required: bool
+    issuer: str | None = None
+    account_name: str | None = None
+    secret: str | None = None
+    provisioning_uri: str | None = None
 
 class ApiKeyCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
@@ -173,7 +187,7 @@ class ModelCanaryUpdate(BaseModel):
         if value is None or not value.strip():
             return None
         if ".." in value or "\\" in value:
-            raise ValueError("Unsafe model identifier")
+            raise ValueError("Mã model không được chứa '..' hoặc dấu gạch chéo ngược")
         return value.strip()
 
 class DictionaryItem(BaseModel):
@@ -198,8 +212,8 @@ def _audit(db: Session, actor: User, action: str, resource_type: str,
 
 
 # --- AUTH ---
-@router.post("/login", response_model=Token)
-def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(),
+@router.post("/login", response_model=Token | MfaChallenge)
+def login_for_access_token(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(),
                            otp: str | None = Form(default=None, max_length=6), db: Session = Depends(get_db)):
     enforce_rate(request, bucket="login")
     username = form_data.username.strip()
@@ -212,8 +226,24 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
             detail="Sai tài khoản hoặc mật khẩu",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    mfa_verified = verify_user_mfa(user, otp, db)
-    session = issue_user_session(user, db, mfa_verified=mfa_verified)
+    if not user.mfa_enabled and user_requires_mfa(user):
+        challenge = begin_user_mfa_enrollment(user, db)
+        if not otp:
+            clear_refresh_cookie(response)
+            return challenge
+        mfa_verified = complete_user_mfa_enrollment(user, otp, db)
+        _audit(db, user, "mfa.enroll", "user", user.id)
+    elif user.mfa_enabled and not otp:
+        clear_refresh_cookie(response)
+        return {
+            "status": "mfa_required",
+            "mfa_required": True,
+            "enrollment_required": False,
+        }
+    else:
+        mfa_verified = verify_user_mfa(user, otp, db)
+    session, refresh_token = issue_user_session_pair(user, db, mfa_verified=mfa_verified)
+    set_refresh_cookie(response, refresh_token)
     return {**session, "user": UserResponse.model_validate(user)}
 
 @router.get("/me", response_model=UserResponse)
@@ -235,7 +265,7 @@ def get_users(skip: int = Query(default=0, ge=0, le=100000), limit: int = Query(
 def create_user(user: UserCreate, db: Session = Depends(get_db), admin: User = Depends(require_superadmin)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Username đã tồn tại")
+        raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại")
     hashed_password = get_password_hash(user.password)
     db_user = User(username=user.username, password_hash=hashed_password, role=user.role)
     db.add(db_user)
@@ -245,7 +275,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db), admin: User = D
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Username đã tồn tại")
+        raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại")
     db.refresh(db_user)
     return db_user
 
@@ -253,9 +283,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_db), admin: User = D
 def delete_user(user_id: int, db: Session = Depends(get_db), admin: User = Depends(require_superadmin)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
     if user.role == "superadmin":
-        raise HTTPException(status_code=403, detail="Không thể xóa superadmin")
+        raise HTTPException(status_code=403, detail="Không thể vô hiệu hóa tài khoản quản trị cấp cao")
     user.is_active = False
     revoke_user_sessions(user, db)
     _audit(db, admin, "user.disable", "user", user.id, {"role": user.role})
@@ -268,15 +298,15 @@ def update_user(user_id: int, req: UserUpdate, db: Session = Depends(get_db),
                 admin: User = Depends(require_superadmin)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
     if user.role == "superadmin" and user.id != admin.id:
-        raise HTTPException(status_code=403, detail="Another superadministrator cannot be modified")
+        raise HTTPException(status_code=403, detail="Không thể chỉnh sửa tài khoản quản trị cấp cao khác")
     if user.id == admin.id and (req.is_active is False or req.role is not None):
-        raise HTTPException(status_code=403, detail="Cannot disable or change the role of the current account")
+        raise HTTPException(status_code=403, detail="Không thể vô hiệu hóa hoặc đổi quyền của tài khoản đang đăng nhập")
     changed = {}
     if req.role is not None and req.role != user.role:
         if user.role == "superadmin":
-            raise HTTPException(status_code=403, detail="Superadministrator role cannot be downgraded here")
+            raise HTTPException(status_code=403, detail="Không thể hạ quyền quản trị cấp cao tại đây")
         changed["role"] = {"from": user.role, "to": req.role}
         user.role = req.role
     if req.is_active is not None and req.is_active != user.is_active:
@@ -299,7 +329,7 @@ def reset_user_sessions(user_id: int, db: Session = Depends(get_db),
                         admin: User = Depends(require_superadmin)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
     revoke_user_sessions(user, db)
     _audit(db, admin, "user.sessions_revoke", "user", user.id)
     db.commit()
@@ -1153,9 +1183,10 @@ def rotate_api_key(key_id: int, db: Session = Depends(get_db), admin: User = Dep
 # --- SETTINGS ---
 @router.get("/settings", response_model=List[SettingResponse])
 def get_settings(db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    return db.query(SystemSetting).filter(SystemSetting.key.in_(
-        ["max_chars_per_request", "rate_limit_rpm", "enable_cache"]
-    )).all()
+    keys = ["max_chars_per_request", "rate_limit_rpm", "enable_cache"]
+    rows = db.query(SystemSetting).filter(SystemSetting.key.in_(keys)).all()
+    order = {key: index for index, key in enumerate(keys)}
+    return sorted(rows, key=lambda row: order[row.key])
 
 @router.put("/settings/{setting_key}", response_model=SettingResponse)
 def update_setting(setting_key: str, req: SettingUpdate, db: Session = Depends(get_db), admin: User = Depends(require_superadmin)):
@@ -1163,17 +1194,17 @@ def update_setting(setting_key: str, req: SettingUpdate, db: Session = Depends(g
     policy = get_policy_settings()
     if setting_key == "enable_cache":
         if value not in {"true", "false"}:
-            raise HTTPException(422, "enable_cache must be true or false")
+            raise HTTPException(422, "Trạng thái bộ đệm phải là true hoặc false")
     elif setting_key in {"max_chars_per_request", "rate_limit_rpm"}:
         maximum = min(5000, policy.MAX_TEXT_CHARS) if setting_key == "max_chars_per_request" else min(60, policy.RATE_LIMIT_RPM)
         if not value.isascii() or not value.isdecimal() or not 1 <= int(value) <= maximum:
-            raise HTTPException(422, f"{setting_key} must be an integer between 1 and {maximum}")
+            raise HTTPException(422, f"Giá trị {setting_key} phải là số nguyên từ 1 đến {maximum}")
         value = str(int(value))
     else:
-        raise HTTPException(422, "This setting cannot be changed through the admin API")
+        raise HTTPException(422, "Thiết lập này không được phép thay đổi qua trang quản trị")
     setting = db.query(SystemSetting).filter(SystemSetting.key == setting_key).first()
     if not setting:
-        raise HTTPException(status_code=404, detail="Setting not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy thiết lập hệ thống")
     previous = setting.value
     setting.value = value
     _audit(db, admin, "setting.update", "setting", setting_key, {
@@ -1240,7 +1271,7 @@ def configure_model_canary(
     db: Session = Depends(get_db), admin: User = Depends(require_superadmin),
 ):
     row = _get_or_create_model_deployment(db, component, admin)
-    if not req.model_id or req.percent == 0:
+    if not req.model_id and req.percent == 0:
         prev_canary = row.canary_model
         prev_pct = row.canary_percent
         row.canary_model = None
@@ -1257,8 +1288,13 @@ def configure_model_canary(
         db.refresh(row)
         return _model_deployment_payload(component, row)
 
+    if not req.model_id:
+        raise HTTPException(422, "Vui lòng nhập mã model Canary")
+    if req.percent == 0:
+        raise HTTPException(422, "Tỷ lệ Canary phải từ 1% đến 50%; dùng thao tác hủy để dừng Canary")
+
     if req.model_id == row.active_model:
-        raise HTTPException(409, "Canary model must differ from the active model")
+        raise HTTPException(409, "Model Canary phải khác model Active hiện tại")
     row.canary_model = req.model_id
     row.canary_percent = req.percent
     row.version += 1
@@ -1281,6 +1317,8 @@ def disable_model_canary(
     admin: User = Depends(require_superadmin),
 ):
     row = _get_or_create_model_deployment(db, component, admin)
+    if not row.canary_model:
+        raise HTTPException(409, "Chưa có model Canary để hủy")
     prev_canary = row.canary_model
     prev_pct = row.canary_percent
     row.canary_model = None
@@ -1305,7 +1343,7 @@ def promote_model_canary(
 ):
     row = _get_or_create_model_deployment(db, component, admin)
     if not row.canary_model:
-        raise HTTPException(409, "No canary model is configured")
+        raise HTTPException(409, "Chưa có model Canary để đưa thành Active")
     previous, promoted = row.active_model, row.canary_model
     row.previous_active_model = previous
     row.active_model = promoted
@@ -1328,7 +1366,7 @@ def rollback_model(
 ):
     row = _get_or_create_model_deployment(db, component, admin)
     if not row.previous_active_model:
-        raise HTTPException(409, "No previous active model is available")
+        raise HTTPException(409, "Không có model Active trước đó để khôi phục")
     current, restored = row.active_model, row.previous_active_model
     row.active_model = restored
     row.previous_active_model = current

@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { homeFor, useAuthUser, type Role } from './lib/auth';
+import { refreshSession } from './lib/api';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Dictionary = lazy(() => import('./pages/Dictionary'));
@@ -54,6 +55,19 @@ const adminRoles: Role[] = ['admin', 'superadmin'];
 const superadminRoles: Role[] = ['superadmin'];
 
 function App() {
+  const [sessionReady, setSessionReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void refreshSession().finally(() => {
+      if (active) setSessionReady(true);
+    });
+    return () => { active = false; };
+  }, []);
+
+  if (!sessionReady) {
+    return <div className="flex min-h-screen items-center justify-center bg-background text-text" role="status">Đang khôi phục phiên đăng nhập…</div>;
+  }
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="admin-ui-theme">
       <Router>

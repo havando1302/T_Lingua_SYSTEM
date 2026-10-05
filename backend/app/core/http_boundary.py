@@ -41,7 +41,7 @@ class HTTPBoundaryMiddleware:
         if scope.get("method") not in {"POST", "PUT", "PATCH"}:
             return await self.app(scope, receive, secured_send)
         path = scope.get("path", "")
-        if path not in {"/admin/login", "/api/session/guest"} and not headers.get(b"authorization", b"").startswith(b"Bearer "):
+        if path not in {"/admin/login", "/api/session/guest", "/api/session/refresh", "/api/session/logout"} and not headers.get(b"authorization", b"").startswith(b"Bearer "):
             return await JSONResponse({"detail": "Authentication required"}, 401, headers={"WWW-Authenticate": "Bearer"})(scope, receive, secured_send)
         limit = 65536
         if path == "/translate":

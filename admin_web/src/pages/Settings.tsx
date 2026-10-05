@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTimedMessage } from '../lib/useTimedMessage';
 import { Link } from 'react-router-dom';
-import api, { apiErrorMessage } from '../lib/api';
+import api, { apiErrorMessage, locallyHandledRequest } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -31,7 +31,7 @@ interface Setting {
   id: number;
   key: string;
   value: string;
-  description: string;
+  description: string | null;
 }
 
 interface AuditEntry {
@@ -88,6 +88,30 @@ const SETTING_METADATA: Record<
   },
 };
 
+const COMPONENT_METADATA: Record<string, { name: string; purpose: string }> = {
+  whisper: { name: 'Whisper', purpose: 'Nhận diện giọng nói (STT)' },
+  nllb: { name: 'NLLB-200', purpose: 'Dịch văn bản' },
+  tts_eng: { name: 'MMS TTS English', purpose: 'Tổng hợp giọng nói tiếng Anh' },
+  tts_vie: { name: 'MMS TTS Vietnamese', purpose: 'Tổng hợp giọng nói tiếng Việt' },
+};
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  'setting.update': 'Cập nhật thiết lập',
+  'model.canary.configure': 'Cấu hình Canary',
+  'model.canary.disable': 'Dừng Canary',
+  'model.canary.promote': 'Đưa Canary thành Active',
+  'model.rollback': 'Khôi phục model trước',
+  'user.create': 'Tạo tài khoản',
+  'user.update': 'Cập nhật tài khoản',
+  'user.disable': 'Vô hiệu hóa tài khoản',
+  'user.sessions_revoke': 'Thu hồi phiên tài khoản',
+  'mfa.enroll': 'Liên kết MFA',
+};
+
+const EMPTY_AUDIT_FILTERS = {
+  actor: '', action: '', resource_type: '', created_from: '', created_to: '',
+};
+
 const Settings = () => {
   const [settings, setSettings] = useState<Setting[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
@@ -95,81 +119,133 @@ const Settings = () => {
   const [artifacts, setArtifacts] = useState<ModelArtifact[]>([]);
   const [modelDrafts, setModelDrafts] = useState<Record<string, { model_id: string; percent: string }>>({});
   const [modelSaving, setModelSaving] = useState<string | null>(null);
-  const [auditFilters, setAuditFilters] = useState({
-    actor: '',
-    action: '',
-    resource_type: '',
-    created_from: '',
-    created_to: '',
-  });
+  const [auditFilters, setAuditFilters] = useState(EMPTY_AUDIT_FILTERS);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [savedValues, setSavedValues] = useState<Record<string, string>>({});
   const [error, setError] = useTimedMessage('');
+  const [notice, setNotice] = useTimedMessage('', 5000);
   const [messages, setMessages] = useState<Record<string, string>>({});
 
-  const fetchSettings = async () => {
+  const dirtySettings = settings.filter((setting) => savedValues[setting.key] !== setting.value);
+  const hasUnsaved = dirtySettings.length > 0;
+
+  const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError('');
-    try {
-      const settingsResponse = await api.get('/settings');
-      setSettings(settingsResponse.data);
-      const [auditResponse, modelResponse, artifactsResponse] = await Promise.all([
-        api.get('/audit?limit=25'),
-        api.get('/models/deployments'),
-        api.get('/training/models').catch(() => ({ data: [] })),
-      ]);
-      setAudit(auditResponse.data);
-      setModels(modelResponse.data);
-      setArtifacts(artifactsResponse.data ?? []);
+    const [settingsResult, auditResult, modelResult, artifactsResult] = await Promise.allSettled([
+      api.get<Setting[]>('/settings', locallyHandledRequest),
+      api.get<AuditEntry[]>('/audit?limit=25', locallyHandledRequest),
+      api.get<ModelDeployment[]>('/models/deployments', locallyHandledRequest),
+      api.get<ModelArtifact[]>('/training/models', locallyHandledRequest),
+    ]);
+    const failedSections: string[] = [];
+
+    if (settingsResult.status === 'fulfilled') {
+      setSettings(settingsResult.value.data);
+      setSavedValues(Object.fromEntries(settingsResult.value.data.map((setting) => [setting.key, setting.value])));
+      setMessages({});
+    } else {
+      failedSections.push('tham số hệ thống');
+    }
+    if (auditResult.status === 'fulfilled') {
+      setAudit(auditResult.value.data);
+    } else {
+      failedSections.push('nhật ký quản trị');
+    }
+    if (modelResult.status === 'fulfilled') {
+      const deployments = modelResult.value.data;
+      setModels(deployments);
       setModelDrafts(
         Object.fromEntries(
-          modelResponse.data.map((model: ModelDeployment) => [
+          deployments.map((model) => [
             model.component,
             { model_id: model.canary_model ?? '', percent: String(model.canary_percent || 10) },
           ])
         )
       );
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
+    } else {
+      failedSections.push('triển khai model');
     }
-  };
+    if (artifactsResult.status === 'fulfilled') {
+      setArtifacts(artifactsResult.value.data ?? []);
+    } else {
+      setArtifacts([]);
+      failedSections.push('kho model huấn luyện');
+    }
+
+    if (failedSections.length) {
+      setError(`Không tải được ${failedSections.join(', ')}. Các phần còn lại vẫn có thể sử dụng.`);
+    }
+    setLoading(false);
+  }, [setError]);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    void fetchSettings();
+  }, [fetchSettings]);
+
+  useEffect(() => {
+    if (!hasUnsaved) return undefined;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [hasUnsaved]);
+
+  const handleRefresh = () => {
+    if (hasUnsaved && !window.confirm('Làm mới sẽ bỏ các thay đổi chưa lưu. Bạn có muốn tiếp tục?')) return;
+    void fetchSettings();
+  };
+
+  const validateSetting = (key: string, value: string) => {
+    const meta = SETTING_METADATA[key];
+    if (key === 'enable_cache') {
+      return value === 'true' || value === 'false' ? '' : 'Trạng thái bộ đệm không hợp lệ.';
+    }
+    const maximum = meta?.max ?? 5000;
+    if (!/^\d+$/.test(value.trim()) || Number(value) < 1 || Number(value) > maximum) {
+      return `${meta?.label ?? key}: Vui lòng nhập số nguyên từ 1 đến ${maximum}.`;
+    }
+    return '';
+  };
+
+  const markSettingSaved = (key: string) => {
+    setMessages((previous) => ({ ...previous, [key]: 'Đã lưu thành công' }));
+    window.setTimeout(() => {
+      setMessages((previous) => {
+        if (previous[key] !== 'Đã lưu thành công') return previous;
+        const next = { ...previous };
+        delete next[key];
+        return next;
+      });
+    }, 3500);
+  };
 
   const handleChange = (key: string, value: string) => {
     setSettings((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
-    setMessages((previous) => ({ ...previous, [key]: 'Có thay đổi chưa lưu' }));
+    setMessages((previous) => {
+      if (!previous[key]) return previous;
+      const next = { ...previous };
+      delete next[key];
+      return next;
+    });
   };
 
   const handleSave = async (key: string, value: string) => {
     if (saving) return;
-    const meta = SETTING_METADATA[key];
-    const maximum = meta?.max ?? (key === 'max_chars_per_request' ? 5000 : 60);
-
-    if (key !== 'enable_cache' && (!/^\d+$/.test(value.trim()) || Number(value) < 1 || Number(value) > maximum)) {
-      setError(`${meta?.label ?? key}: Vui lòng nhập số nguyên từ 1 đến ${maximum}.`);
-      return;
-    }
+    const validationError = validateSetting(key, value);
+    if (validationError) return setError(validationError);
     setError('');
     setSaving(key);
     try {
-      const response = await api.put<Setting>(`/settings/${key}`, { value });
+      const response = await api.put<Setting>(`/settings/${key}`, { value }, locallyHandledRequest);
       setSettings((previous) => previous.map((setting) => (setting.key === key ? response.data : setting)));
-      setMessages((previous) => ({ ...previous, [key]: 'Đã lưu thành công' }));
-      setTimeout(() => {
-        setMessages((previous) => {
-          if (previous[key] === 'Đã lưu thành công') {
-            const next = { ...previous };
-            delete next[key];
-            return next;
-          }
-          return previous;
-        });
-      }, 3500);
+      setSavedValues((previous) => ({ ...previous, [key]: response.data.value }));
+      markSettingSaved(key);
+      setNotice(`Đã lưu “${SETTING_METADATA[key]?.label ?? key}”.`);
     } catch (err) {
       setError(apiErrorMessage(err, 'Có lỗi khi lưu cài đặt'));
     } finally {
@@ -178,50 +254,100 @@ const Settings = () => {
   };
 
   const handleSaveAll = async () => {
-    const unsavedKeys = Object.entries(messages)
-      .filter(([, msg]) => msg === 'Có thay đổi chưa lưu')
-      .map(([k]) => k);
-    for (const key of unsavedKeys) {
-      const setting = settings.find((s) => s.key === key);
-      if (setting) {
-        await handleSave(setting.key, setting.value);
+    if (saving || dirtySettings.length === 0) return;
+    const invalid = dirtySettings.map((setting) => validateSetting(setting.key, setting.value)).find(Boolean);
+    if (invalid) return setError(invalid);
+
+    setSaving('__all__');
+    setError('');
+    let savedCount = 0;
+    const failed: string[] = [];
+    for (const setting of dirtySettings) {
+      try {
+        const response = await api.put<Setting>(
+          `/settings/${setting.key}`,
+          { value: setting.value },
+          locallyHandledRequest
+        );
+        setSettings((previous) => previous.map((item) => (item.key === setting.key ? response.data : item)));
+        setSavedValues((previous) => ({ ...previous, [setting.key]: response.data.value }));
+        markSettingSaved(setting.key);
+        savedCount += 1;
+      } catch (err) {
+        failed.push(`${SETTING_METADATA[setting.key]?.label ?? setting.key}: ${apiErrorMessage(err)}`);
       }
     }
+    setSaving(null);
+    if (savedCount) setNotice(`Đã lưu ${savedCount}/${dirtySettings.length} thiết lập.`);
+    if (failed.length) setError(`Một số thiết lập chưa lưu được. ${failed.join(' ')}`);
   };
 
   const loadAudit = async () => {
+    if (auditLoading) return;
+    if (auditFilters.created_from && auditFilters.created_to
+        && new Date(auditFilters.created_from) > new Date(auditFilters.created_to)) {
+      setError('Thời điểm bắt đầu phải trước thời điểm kết thúc.');
+      return;
+    }
     setError('');
+    setAuditLoading(true);
     try {
-      const params = Object.fromEntries(Object.entries(auditFilters).filter(([, value]) => value));
-      const response = await api.get('/audit', { params: { ...params, limit: 100 } });
+      const params = Object.fromEntries(
+        Object.entries(auditFilters)
+          .filter(([, value]) => value)
+          .map(([key, value]) => [
+            key,
+            key === 'created_from' || key === 'created_to' ? new Date(value).toISOString() : value.trim(),
+          ])
+      );
+      const response = await api.get<AuditEntry[]>('/audit', {
+        ...locallyHandledRequest,
+        params: { ...params, limit: 100 },
+      });
       setAudit(response.data);
     } catch (err) {
       setError(apiErrorMessage(err, 'Không thể lọc nhật ký.'));
+    } finally {
+      setAuditLoading(false);
     }
   };
 
-  const resetAuditFilters = () => {
-    setAuditFilters({ actor: '', action: '', resource_type: '', created_from: '', created_to: '' });
-    api.get('/audit?limit=25').then((res) => setAudit(res.data)).catch(() => {});
+  const resetAuditFilters = async () => {
+    if (auditLoading) return;
+    setAuditFilters(EMPTY_AUDIT_FILTERS);
+    setAuditLoading(true);
+    setError('');
+    try {
+      const response = await api.get<AuditEntry[]>('/audit?limit=25', locallyHandledRequest);
+      setAudit(response.data);
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Không thể tải lại nhật ký.'));
+    } finally {
+      setAuditLoading(false);
+    }
   };
 
   const updateModel = async (component: string, operation: 'canary' | 'promote' | 'rollback' | 'disable') => {
     if (modelSaving) return;
-    let op = operation;
     const draft = modelDrafts[component] ?? { model_id: '', percent: '10' };
-    if (op === 'canary' && (!draft.model_id.trim() || Number(draft.percent) === 0)) {
-      op = 'disable';
-    } else if (op === 'canary' && (Number(draft.percent) < 1 || Number(draft.percent) > 50)) {
-      setError('Model canary phải có mã định danh hợp lệ và tỷ lệ lưu lượng từ 1% đến 50%.');
+    const deployment = models.find((model) => model.component === component);
+    if (operation === 'canary') {
+      const modelId = draft.model_id.trim();
+      if (!modelId) return setError('Vui lòng nhập mã model Canary. Dùng nút “Hủy chia Canary” để dừng thử nghiệm.');
+      if (modelId.includes('..') || modelId.includes('\\')) return setError('Mã model Canary không được chứa “..” hoặc dấu gạch chéo ngược.');
+      if (!/^\d+$/.test(draft.percent) || Number(draft.percent) < 1 || Number(draft.percent) > 50) {
+        return setError('Tỷ lệ Canary phải là số nguyên từ 1% đến 50%.');
+      }
+      if (modelId === deployment?.active_model) return setError('Model Canary phải khác model Active hiện tại.');
+      if (!window.confirm(`Áp dụng model Canary “${modelId}” cho ${component.toUpperCase()} với ${draft.percent}% lưu lượng? Sau khi lưu cần reload runtime và kiểm tra health check.`)) return;
+    }
+    if (operation === 'disable' && !window.confirm(`Bạn có chắc muốn hủy chia Canary của ${component.toUpperCase()} và chuyển 100% lưu lượng về model Active?`)) {
       return;
     }
-    if (op === 'disable' && !confirm(`Bạn có chắc muốn hủy bỏ chia lưu lượng Canary của ${component.toUpperCase()} và chuyển 100% lưu lượng về model Active?`)) {
+    if (operation === 'promote' && !window.confirm(`Bạn có chắc muốn đưa model Canary của ${component.toUpperCase()} lên làm bản chính thức (Active)? Sau thao tác cần reload runtime và kiểm tra health check.`)) {
       return;
     }
-    if (op === 'promote' && !confirm(`Bạn có chắc muốn quảng bá model canary của ${component.toUpperCase()} lên làm bản chính thức (Active)?`)) {
-      return;
-    }
-    if (op === 'rollback' && !confirm(`Bạn có chắc muốn rollback ${component.toUpperCase()} về phiên bản trước?`)) {
+    if (operation === 'rollback' && !window.confirm(`Bạn có chắc muốn khôi phục ${component.toUpperCase()} về phiên bản trước? Sau thao tác cần reload runtime và kiểm tra health check.`)) {
       return;
     }
 
@@ -229,11 +355,11 @@ const Settings = () => {
     setError('');
     try {
       const response =
-        op === 'canary'
-          ? await api.put(`/models/${component}/canary`, { model_id: draft.model_id.trim(), percent: Number(draft.percent) })
-          : op === 'disable'
-          ? await api.delete(`/models/${component}/canary`)
-          : await api.post(`/models/${component}/${op}`);
+        operation === 'canary'
+          ? await api.put(`/models/${component}/canary`, { model_id: draft.model_id.trim(), percent: Number(draft.percent) }, locallyHandledRequest)
+          : operation === 'disable'
+          ? await api.delete(`/models/${component}/canary`, locallyHandledRequest)
+          : await api.post(`/models/${component}/${operation}`, undefined, locallyHandledRequest);
 
       setModels((previous) => previous.map((model) => (model.component === component ? response.data : model)));
       setModelDrafts((previous) => ({
@@ -243,6 +369,13 @@ const Settings = () => {
           percent: String(response.data.canary_percent || 10),
         },
       }));
+      const operationLabels = {
+        canary: 'Đã lưu cấu hình Canary',
+        disable: 'Đã dừng chia Canary',
+        promote: 'Đã đưa Canary thành model Active',
+        rollback: 'Đã khôi phục model trước',
+      };
+      setNotice(`${operationLabels[operation]}. Cần reload runtime và kiểm tra health check để áp dụng an toàn.`);
       await loadAudit();
     } catch (err) {
       setError(apiErrorMessage(err, 'Không thể cập nhật cấu hình model.'));
@@ -250,8 +383,6 @@ const Settings = () => {
       setModelSaving(null);
     }
   };
-
-  const hasUnsaved = Object.values(messages).some((msg) => msg === 'Có thay đổi chưa lưu');
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -270,12 +401,17 @@ const Settings = () => {
 
         <div className="flex items-center gap-2">
           {hasUnsaved && (
-            <Button onClick={handleSaveAll} className="shadow-md shadow-primary/20">
+            <Button
+              onClick={handleSaveAll}
+              isLoading={saving === '__all__'}
+              disabled={saving !== null}
+              className="shadow-md shadow-primary/20"
+            >
               <Save size={16} className="mr-2" />
-              Lưu tất cả thay đổi
+              Lưu tất cả ({dirtySettings.length})
             </Button>
           )}
-          <Button variant="secondary" onClick={fetchSettings} disabled={loading}>
+          <Button variant="secondary" onClick={handleRefresh} disabled={loading || saving !== null || modelSaving !== null}>
             <RefreshCw size={15} className={`mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </Button>
@@ -294,6 +430,13 @@ const Settings = () => {
         </div>
       )}
 
+      {notice && (
+        <div role="status" className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-700 dark:text-emerald-400 flex items-center gap-2 text-sm">
+          <CheckCircle2 size={18} className="shrink-0" />
+          <span>{notice}</span>
+        </div>
+      )}
+
       {/* ── SECTION 1: CẤU HÌNH THAM SỐ HỆ THỐNG ──────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-4 text-text font-semibold text-lg">
@@ -306,6 +449,10 @@ const Settings = () => {
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="h-44 rounded-xl border border-border bg-surface animate-pulse" />
             ))
+          ) : settings.length === 0 ? (
+            <div className="md:col-span-3 rounded-xl border border-dashed border-border p-8 text-center text-sm text-text-muted">
+              Chưa có tham số hệ thống nào được cấu hình.
+            </div>
           ) : (
             settings.map((setting) => {
               const meta = SETTING_METADATA[setting.key] || {
@@ -317,7 +464,7 @@ const Settings = () => {
               const Icon = meta.icon;
               const isCache = setting.key === 'enable_cache';
               const statusMsg = messages[setting.key];
-              const isModified = statusMsg === 'Có thay đổi chưa lưu';
+              const isModified = savedValues[setting.key] !== setting.value;
               const isSaved = statusMsg === 'Đã lưu thành công';
 
               return (
@@ -414,7 +561,7 @@ const Settings = () => {
                         variant={isModified ? 'primary' : 'secondary'}
                         onClick={() => handleSave(setting.key, setting.value)}
                         isLoading={saving === setting.key}
-                        disabled={saving !== null || (!isModified && !isSaved)}
+                        disabled={saving !== null || !isModified}
                         className="w-full sm:w-auto"
                       >
                         <Save size={14} className="mr-1.5" />
@@ -439,7 +586,7 @@ const Settings = () => {
                 <CardTitle>Triển khai & Quản lý Model AI</CardTitle>
               </div>
               <CardDescription className="mt-1">
-                Quản lý các mô hình Active (Chính thức) và Canary (Thử nghiệm lưu lượng nhỏ). Cần quy trình reload runtime có kiểm soát.
+                Quản lý model Active và Canary ở control-plane. Mỗi thay đổi cần reload inference runtime và kiểm tra health check trước khi phục vụ người dùng.
               </CardDescription>
             </div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-surface-muted border border-border text-text-muted">
@@ -449,12 +596,43 @@ const Settings = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {models.map((model) => {
+          {loading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="h-72 rounded-xl border border-border bg-surface animate-pulse" />
+            ))
+          ) : models.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-text-muted">
+              Không tải được hoặc chưa có cấu hình triển khai model.
+            </div>
+          ) : models.map((model) => {
             const draft = modelDrafts[model.component] ?? { model_id: '', percent: '10' };
-            const isNllb = model.component.toLowerCase() === 'nllb';
-            const componentName = isNllb ? 'NLLB-200 (Dịch văn bản)' : 'Whisper (Nhận diện giọng nói STT)';
+            const componentMeta = COMPONENT_METADATA[model.component.toLowerCase()] ?? {
+              name: model.component.toUpperCase(),
+              purpose: 'Model hệ thống',
+            };
+            const componentName = `${componentMeta.name} (${componentMeta.purpose})`;
             const canaryPct = Math.min(50, Math.max(1, Number(draft.percent) || 10));
             const activePct = 100 - (model.canary_model ? model.canary_percent : 0);
+            const candidateModelId = draft.model_id.trim();
+            const canaryPercentIsValid = /^\d+$/.test(draft.percent)
+              && Number(draft.percent) >= 1
+              && Number(draft.percent) <= 50;
+            const canaryModelIdIsValid = Boolean(candidateModelId)
+              && candidateModelId !== model.active_model
+              && !candidateModelId.includes('..')
+              && !candidateModelId.includes('\\');
+            const canaryDraftIsValid = canaryModelIdIsValid && canaryPercentIsValid;
+            const canaryDraftChanged = candidateModelId !== (model.canary_model ?? '')
+              || Number(draft.percent) !== (model.canary_percent || 10);
+            const canaryDraftError = !candidateModelId
+              ? ''
+              : candidateModelId === model.active_model
+              ? 'Model Canary phải khác model Active hiện tại.'
+              : candidateModelId.includes('..') || candidateModelId.includes('\\')
+              ? 'Mã model không được chứa “..” hoặc dấu gạch chéo ngược.'
+              : !canaryPercentIsValid
+              ? 'Tỷ lệ Canary phải là số nguyên từ 1% đến 50%.'
+              : '';
             const componentArtifacts = artifacts.filter(
               (art) => art.component.toLowerCase() === model.component.toLowerCase()
             );
@@ -477,9 +655,9 @@ const Settings = () => {
                   </div>
 
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      Production Ready
+                    <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                      <AlertCircle size={13} />
+                      Cần reload runtime khi thay đổi
                     </span>
                   </div>
                 </div>
@@ -582,7 +760,7 @@ const Settings = () => {
                           ))}
                         </select>
                         <Link
-                          to="/admin/training"
+                          to="/training-center"
                           className="text-primary hover:underline flex items-center gap-1 font-medium whitespace-nowrap"
                           title="Mở Trung tâm Huấn luyện AI"
                         >
@@ -596,7 +774,7 @@ const Settings = () => {
                         <Cpu size={13} className="text-text-muted" />
                         Chưa có model artifact nào từ Huấn luyện AI cho {model.component}.
                       </span>
-                      <Link to="/admin/training" className="text-primary hover:underline flex items-center gap-1">
+                      <Link to="/training-center" className="text-primary hover:underline flex items-center gap-1">
                         Huấn luyện model mới <ExternalLink size={12} />
                       </Link>
                     </div>
@@ -613,6 +791,7 @@ const Settings = () => {
                         }
                         list={`datalist-artifacts-${model.component}`}
                         value={draft.model_id}
+                        aria-invalid={Boolean(canaryDraftError && !canaryModelIdIsValid)}
                         onChange={(event) =>
                           setModelDrafts((previous) => ({
                             ...previous,
@@ -641,7 +820,9 @@ const Settings = () => {
                         type="number"
                         min={1}
                         max={50}
+                        step={1}
                         value={draft.percent}
+                        aria-invalid={Boolean(canaryDraftError && !canaryPercentIsValid)}
                         onChange={(event) =>
                           setModelDrafts((previous) => ({
                             ...previous,
@@ -660,10 +841,10 @@ const Settings = () => {
                       size="md"
                       onClick={() => updateModel(model.component, 'canary')}
                       isLoading={modelSaving === model.component}
-                      disabled={modelSaving !== null}
+                      disabled={modelSaving !== null || !canaryDraftIsValid || !canaryDraftChanged}
                     >
                       <Save size={15} className="mr-1.5" />
-                      Lưu Canary ({canaryPct}%)
+                      Áp dụng Canary ({canaryPct}%)
                     </Button>
 
                     <Button
@@ -704,6 +885,12 @@ const Settings = () => {
                     </Button>
                   </div>
                 </div>
+                {canaryDraftError && (
+                  <p role="alert" className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {canaryDraftError}
+                  </p>
+                )}
               </div>
 
                 {/* Function descriptions for Promote / Rollback / Canary */}
@@ -761,6 +948,7 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={resetAuditFilters}
+                  disabled={auditLoading}
                   className="text-primary hover:underline font-normal text-xs"
                 >
                   Xóa bộ lọc
@@ -773,6 +961,7 @@ const Settings = () => {
                 label="Người thực hiện"
                 placeholder="VD: extension-root"
                 value={auditFilters.actor}
+                disabled={auditLoading}
                 onChange={(event) =>
                   setAuditFilters((previous) => ({ ...previous, actor: event.target.value }))
                 }
@@ -781,6 +970,7 @@ const Settings = () => {
                 label="Hành động"
                 placeholder="VD: model.promote"
                 value={auditFilters.action}
+                disabled={auditLoading}
                 onChange={(event) =>
                   setAuditFilters((previous) => ({ ...previous, action: event.target.value }))
                 }
@@ -789,6 +979,7 @@ const Settings = () => {
                 label="Loại đối tượng"
                 placeholder="VD: model, settings"
                 value={auditFilters.resource_type}
+                disabled={auditLoading}
                 onChange={(event) =>
                   setAuditFilters((previous) => ({ ...previous, resource_type: event.target.value }))
                 }
@@ -797,6 +988,7 @@ const Settings = () => {
                 label="Từ thời điểm"
                 type="datetime-local"
                 value={auditFilters.created_from}
+                disabled={auditLoading}
                 onChange={(event) =>
                   setAuditFilters((previous) => ({ ...previous, created_from: event.target.value }))
                 }
@@ -805,6 +997,7 @@ const Settings = () => {
                 label="Đến thời điểm"
                 type="datetime-local"
                 value={auditFilters.created_to}
+                disabled={auditLoading}
                 onChange={(event) =>
                   setAuditFilters((previous) => ({ ...previous, created_to: event.target.value }))
                 }
@@ -812,7 +1005,7 @@ const Settings = () => {
             </div>
 
             <div className="flex justify-end pt-1">
-              <Button size="sm" onClick={loadAudit}>
+              <Button size="sm" onClick={loadAudit} isLoading={auditLoading}>
                 <Filter size={14} className="mr-1.5" />
                 Áp dụng bộ lọc
               </Button>
@@ -831,7 +1024,13 @@ const Settings = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {audit.length === 0 ? (
+                {auditLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-28 text-center text-text-muted">
+                      Đang tải nhật ký…
+                    </TableCell>
+                  </TableRow>
+                ) : audit.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="h-28 text-center text-text-muted">
                       Chưa ghi nhận sự kiện audit nào phù hợp.
@@ -875,8 +1074,11 @@ const Settings = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-medium border ${badgeColor}`}>
-                            {entry.action}
+                          <span
+                            title={entry.action}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${badgeColor}`}
+                          >
+                            {AUDIT_ACTION_LABELS[entry.action] ?? entry.action}
                           </span>
                         </TableCell>
                         <TableCell>

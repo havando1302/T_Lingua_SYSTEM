@@ -26,7 +26,7 @@ from starlette.websockets import WebSocketDisconnect
 _TEST_ENV = {
     "APP_ENV": "local", "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": secrets.token_urlsafe(48), "JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "MFA_ENCRYPTION_KEY": Fernet.generate_key().decode(),
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "MFA_ENCRYPTION_KEY": Fernet.generate_key().decode(),
     "CORS_ORIGINS": "http://localhost:5173", "TRUSTED_HOSTS": "testserver",
 }
 _fake_queues = types.ModuleType("app.core.queues")

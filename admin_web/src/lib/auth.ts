@@ -16,11 +16,26 @@ export interface LoginResponse {
   expires_in: number;
   user: AuthUser;
 }
+export interface MfaChallenge {
+  status: 'mfa_required' | 'mfa_setup_required';
+  mfa_required: true;
+  enrollment_required: boolean;
+  issuer?: string | null;
+  account_name?: string | null;
+  secret?: string | null;
+  provisioning_uri?: string | null;
+}
+export type LoginResult = LoginResponse | MfaChallenge;
+
+export function isMfaChallenge(result: LoginResult): result is MfaChallenge {
+  return 'status' in result && result.mfa_required === true;
+}
 
 let accessToken: string | null = null;
 let currentUser: AuthUser | null = null;
 let expiresAt = 0;
 let expirationTimer: ReturnType<typeof setTimeout> | undefined;
+let refreshSession: (() => Promise<boolean>) | undefined;
 const listeners = new Set<() => void>();
 
 // Old releases persisted credentials. A page load always starts signed out.
@@ -46,8 +61,16 @@ export function clearSession() {
 }
 
 export function getAccessToken() {
-  if (accessToken && Date.now() >= expiresAt) clearSession();
+  if (accessToken && Date.now() >= expiresAt) return null;
   return accessToken;
+}
+
+export function sessionNeedsRefresh(bufferMs = 30_000) {
+  return !accessToken || Date.now() >= expiresAt - bufferMs;
+}
+
+export function configureSessionRefresh(handler: () => Promise<boolean>) {
+  refreshSession = handler;
 }
 
 export function isAuthUser(user: unknown): user is AuthUser {
@@ -68,7 +91,19 @@ export function setSession(session: LoginResponse) {
   accessToken = session.access_token;
   currentUser = session.user;
   expiresAt = Date.now() + session.expires_in * 1000;
-  expirationTimer = setTimeout(clearSession, Math.min(session.expires_in * 1000, 2_147_483_647));
+  const refreshDelay = Math.max(
+    1_000,
+    session.expires_in * 1000 - Math.min(30_000, session.expires_in * 500),
+  );
+  expirationTimer = setTimeout(() => {
+    if (!refreshSession) {
+      clearSession();
+      return;
+    }
+    void refreshSession().then((restored) => {
+      if (!restored) clearSession();
+    }, clearSession);
+  }, Math.min(refreshDelay, 2_147_483_647));
   emitChange();
 }
 

@@ -21,7 +21,7 @@ from sqlalchemy.orm import sessionmaker
 _TEST_ENV = {
     "APP_ENV": "local", "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": secrets.token_urlsafe(48), "JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "MFA_ENCRYPTION_KEY": Fernet.generate_key().decode(),
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false", "MFA_ENCRYPTION_KEY": Fernet.generate_key().decode(),
 }
 # Importing the application DB must never select a developer's live database.
 with patch.dict(os.environ, _TEST_ENV):
@@ -107,6 +107,21 @@ class AuthenticationTests(unittest.TestCase):
         self.db.commit()
         self.assert_unauthorized(lambda: security.authenticate_token(fresh, self.db))
 
+    def test_refresh_token_renews_access_and_cannot_be_used_as_bearer(self):
+        user = self.user()
+        access, refresh = security.issue_user_session_pair(user, self.db)
+        self.assertEqual(security.authenticate_token(access["access_token"], self.db).user_id, user.id)
+        self.assert_unauthorized(lambda: security.authenticate_token(refresh, self.db))
+
+        renewed, renewed_user = security.refresh_user_session(refresh, self.db)
+        self.assertEqual(renewed_user.id, user.id)
+        self.assertEqual(security.authenticate_token(renewed["access_token"], self.db).user_id, user.id)
+        # A stable cookie lets multiple open tabs renew without invalidating each other.
+        second, _ = security.refresh_user_session(refresh, self.db)
+        self.assertNotEqual(second["access_token"], renewed["access_token"])
+        self.assertTrue(security.revoke_refresh_session(refresh, self.db))
+        self.assert_unauthorized(lambda: security.refresh_user_session(refresh, self.db))
+
     def test_api_key_stores_only_digest_and_is_scoped_revocable(self):
         user = self.user()
         record, raw = security.issue_api_key(self.db, name="synthetic", owner_id=user.public_id,
@@ -136,7 +151,7 @@ class AuthenticationTests(unittest.TestCase):
         self.assert_unauthorized(lambda: security.authenticate_token(raw, self.db))
 
     def test_privileged_mfa_enrollment_replay_and_escalation(self):
-        self.settings.AUTH_REQUIRE_PRIVILEGED_MFA = True
+        self.settings.AUTH_REQUIRE_MFA = True
         user = self.user(role="admin")
         with self.assertRaises(HTTPException):
             security.issue_user_session(user, self.db)
@@ -154,10 +169,30 @@ class AuthenticationTests(unittest.TestCase):
         token = security.issue_user_session(user, self.db, mfa_verified=True)["access_token"]
         self.assertTrue(security.authenticate_token(token, self.db).mfa_verified)
         employee = self.user("second", "employee")
+        with self.assertRaises(HTTPException):
+            security.issue_user_session(employee, self.db)
+        self.settings.AUTH_REQUIRE_MFA = False
         old = security.issue_user_session(employee, self.db)["access_token"]
-        employee.role = "admin"
-        self.db.commit()
+        self.settings.AUTH_REQUIRE_MFA = True
         self.assert_unauthorized(lambda: security.authenticate_token(old, self.db))
+
+    def test_pending_mfa_enrollment_is_required_before_session_issue(self):
+        self.settings.AUTH_REQUIRE_MFA = True
+        user = self.user(role="employee")
+        challenge = security.begin_user_mfa_enrollment(user, self.db)
+        self.assertEqual(challenge["status"], "mfa_setup_required")
+        self.assertEqual(challenge["account_name"], user.username)
+        self.assertIn("otpauth://totp/", challenge["provisioning_uri"])
+        self.assertNotIn(challenge["secret"], user.mfa_secret_encrypted)
+        with self.assertRaises(HTTPException):
+            security.issue_user_session(user, self.db)
+
+        otp = pyotp.TOTP(challenge["secret"]).now()
+        self.assertTrue(security.complete_user_mfa_enrollment(user, otp, self.db))
+        self.assertTrue(user.mfa_enabled)
+        session = security.issue_user_session(user, self.db, mfa_verified=True)
+        self.assertTrue(security.authenticate_token(session["access_token"], self.db).mfa_verified)
+        self.assert_unauthorized(lambda: security.verify_user_mfa(user, otp, self.db))
 
     def test_bad_scope_sets_and_overlong_credentials_are_rejected(self):
         user = self.user()

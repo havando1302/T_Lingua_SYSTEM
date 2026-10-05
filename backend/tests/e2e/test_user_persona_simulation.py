@@ -37,7 +37,7 @@ _TEST_ENV = {
     "APP_ENV": "local",
     "DATABASE_URL": "sqlite:///:memory:",
     "JWT_SECRET_KEY": "user-persona-simulation-secret-key-very-long-and-secure",
-    "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
+    "AUTH_REQUIRE_MFA": "false", "AUTH_REQUIRE_PRIVILEGED_MFA": "false",
 }
 
 with patch.dict(os.environ, _TEST_ENV):

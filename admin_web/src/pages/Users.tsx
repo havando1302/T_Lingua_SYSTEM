@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
 import { useTimedMessage } from '../lib/useTimedMessage';
-import api, { apiErrorMessage } from '../lib/api';
+import api, { apiErrorMessage, locallyHandledRequest } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
@@ -29,11 +29,13 @@ const Users = () => {
     e.preventDefault();
     if (loading) return;
     if (username.trim().length < 3 || /\s/.test(username.trim())) { setError('Tên đăng nhập cần ít nhất 3 ký tự, không chứa khoảng trắng.'); return; }
+    if (username.trim().length > 100) { setError('Tên đăng nhập tối đa 100 ký tự.'); return; }
+    if (password.length < 12) { setError('Mật khẩu phải có ít nhất 12 ký tự.'); return; }
     if (new TextEncoder().encode(password).length > 72) { setError('Mật khẩu tối đa 72 byte UTF-8. Ký tự có dấu có thể chiếm nhiều byte.'); return; }
     setError('');
     setLoading(true);
     try {
-      await api.post('/users', { username: username.trim(), password, role });
+      await api.post('/users', { username: username.trim(), password, role }, locallyHandledRequest);
       setUsername('');
       setPassword('');
       setRole('employee');
@@ -51,7 +53,7 @@ const Users = () => {
     setDeleting(id);
     setError('');
     try {
-      await api.delete(`/users/${id}`);
+      await api.delete(`/users/${id}`, locallyHandledRequest);
       await list.refresh();
     } catch (err) {
       setError(apiErrorMessage(err, 'Không thể vô hiệu hóa tài khoản này.'));
@@ -63,7 +65,7 @@ const Users = () => {
     if (!confirm(`Thu hồi toàn bộ phiên và API key do ${username} sở hữu/tạo?`)) return;
     setResetting(id); setError('');
     try {
-      await api.post(`/users/${id}/reset-sessions`);
+      await api.post(`/users/${id}/reset-sessions`, undefined, locallyHandledRequest);
     } catch (err) {
       setError(apiErrorMessage(err, 'Không thể thu hồi phiên đăng nhập.'));
     } finally { setResetting(null); }
@@ -79,6 +81,10 @@ const Users = () => {
 
   const handleUpdate = async (id: number) => {
     if (updating) return;
+    if (editPassword && editPassword.length < 12) {
+      setError('Mật khẩu mới phải có ít nhất 12 ký tự.');
+      return;
+    }
     if (editPassword && new TextEncoder().encode(editPassword).length > 72) {
       setError('Mật khẩu tối đa 72 byte UTF-8.');
       return;
@@ -89,7 +95,7 @@ const Users = () => {
         role: editRole,
         is_active: editActive,
         ...(editPassword ? { password: editPassword } : {}),
-      });
+      }, locallyHandledRequest);
       setEditing(null);
       setEditPassword('');
       await list.refresh();
@@ -110,7 +116,7 @@ const Users = () => {
           <CardTitle>Tạo Tài khoản mới</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-4 items-end">
+          <form onSubmit={handleCreate} noValidate className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
               <Input label="Tên đăng nhập" minLength={3} maxLength={100} autoComplete="off" value={username} onChange={(e) => setUsername(e.target.value)} required />
             </div>

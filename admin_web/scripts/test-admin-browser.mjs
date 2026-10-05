@@ -18,6 +18,7 @@ let failPublish = false;
 let failLists = false;
 let failDashboard = false;
 let forceUserValidation = false;
+let forceUserUpdateForbidden = false;
 const logs = Array.from({ length: 123 }, (_, index) => ({ id: index + 1, client_id: 'synthetic-client', source_text: `source ${index + 1}`, translated_text: `translation ${index + 1}`, source_lang: 'en', target_lang: 'vi', is_flagged: true, is_reviewed: false, latency: 0, created_at: '2026-09-13T00:00:00' }));
 const users = Array.from({ length: 123 }, (_, index) => ({ id: index + 1, username: `user${index + 1}`, role: 'employee', public_id: `test-${index}`, is_active: true }));
 const keys = Array.from({ length: 123 }, (_, index) => ({ id: index + 1, name: `key${index + 1}`, prefix: `tk_${index}`, scopes: ['translate'], expires_at: '2099-01-01T00:00:00Z', created_at: '2026-09-13T00:00:00Z', is_active: true }));
@@ -49,7 +50,7 @@ function paginate(data, url) {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
-    if (!url.pathname.startsWith('/admin/') && url.pathname !== '/api/session/logout') {
+    if (!url.pathname.startsWith('/admin/') && !['/api/session/logout', '/api/session/refresh'].includes(url.pathname)) {
       const relative = url.pathname.startsWith('/assets/') ? url.pathname.slice(1) : 'index.html';
       const file = resolve(adminRoot, 'dist', relative);
       if (!file.startsWith(resolve(adminRoot, 'dist') + sep)) throw new Error('Invalid static path');
@@ -64,9 +65,28 @@ const server = createServer(async (request, response) => {
     requests.push({ method: request.method, path: url.pathname, params: Object.fromEntries(url.searchParams), data, multipart: url.pathname.endsWith('/upload') ? body : undefined });
     const respond = (value, status = 200) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(value)); };
     const user = () => ({ id: 999, username: role, role, public_id: `synthetic-${role}`, is_active: true, created_at: '2026-09-01T00:00:00Z', mfa_enabled: role !== 'employee' });
-    if (url.pathname === '/admin/login') { const username = new URLSearchParams(body).get('username'); role = username === 'superadmin' ? 'superadmin' : username === 'employee' ? 'employee' : 'admin'; respond({ access_token: 'synthetic-session', token_type: 'bearer', expires_in: 3600, user: user() }); }
+    if (url.pathname === '/admin/login') {
+      const form = new URLSearchParams(body);
+      const username = form.get('username');
+      role = username === 'superadmin' ? 'superadmin' : username === 'employee' ? 'employee' : 'admin';
+      if (username === 'mfa-new' && !form.get('otp')) {
+        respond({ status: 'mfa_setup_required', mfa_required: true, enrollment_required: true, issuer: 'T-Lingua', account_name: username, secret: 'JBSWY3DPEHPK3PXP', provisioning_uri: 'otpauth://totp/T-Lingua:mfa-new?secret=JBSWY3DPEHPK3PXP&issuer=T-Lingua' });
+      } else {
+        response.setHeader('Set-Cookie', 'tlingua_refresh=synthetic-refresh; HttpOnly; Path=/api/session; SameSite=Strict');
+        respond({ access_token: 'synthetic-session', token_type: 'bearer', expires_in: 3600, user: user() });
+      }
+    }
+    else if (url.pathname === '/api/session/refresh') {
+      if ((request.headers.cookie || '').includes('tlingua_refresh=synthetic-refresh')) {
+        response.setHeader('Set-Cookie', 'tlingua_refresh=synthetic-refresh; HttpOnly; Path=/api/session; SameSite=Strict');
+        respond({ access_token: 'synthetic-session-refreshed', token_type: 'bearer', expires_in: 3600, user: user() });
+      } else respond({ detail: 'Invalid or expired credentials' }, 401);
+    }
     else if (url.pathname === '/admin/me') respond(user());
-    else if (url.pathname === '/api/session/logout') respond({ ok: true });
+    else if (url.pathname === '/api/session/logout') {
+      response.setHeader('Set-Cookie', 'tlingua_refresh=; Max-Age=0; HttpOnly; Path=/api/session; SameSite=Strict');
+      respond({ ok: true });
+    }
     else if (url.pathname === '/admin/quality/logs') {
       if (failLists) { respond({ detail: 'Synthetic list failure' }, 503); return; }
       const status = url.searchParams.get('review_status');
@@ -90,11 +110,15 @@ const server = createServer(async (request, response) => {
       else { dictionary.unshift(data); respond({ ok: true }); }
     } else if (url.pathname === '/admin/dictionary') respond(paginate(dictionary, url));
     else if (url.pathname === '/admin/users' && request.method === 'POST') {
-      if (forceUserValidation) respond({ detail: [{ loc: ['body', 'username'], type: 'string_too_short', msg: 'String should have at least 3 characters', ctx: { min_length: 3 } }] }, 422);
+      if (forceUserValidation) { forceUserValidation = false; respond({ detail: [{ loc: ['body', 'username'], type: 'string_too_short', msg: 'String should have at least 3 characters', ctx: { min_length: 3 } }] }, 422); }
+      else if (data.username === 'duplicate-user') respond({ detail: 'Tên đăng nhập đã tồn tại' }, 409);
       else respond({ id: 9000, ...data, is_active: true });
     } else if (/\/admin\/users\/\d+$/.test(url.pathname) && request.method === 'PATCH') {
-      const item = users.find(value => value.id === Number(url.pathname.split('/').at(-1)));
-      Object.assign(item, data); respond(item);
+      if (forceUserUpdateForbidden) { forceUserUpdateForbidden = false; respond({ detail: 'Không thể vô hiệu hóa hoặc đổi quyền của tài khoản đang đăng nhập' }, 403); }
+      else {
+        const item = users.find(value => value.id === Number(url.pathname.split('/').at(-1)));
+        Object.assign(item, data); respond(item);
+      }
     } else if (url.pathname === '/admin/users') respond(paginate(users, url));
     else if (url.pathname === '/admin/apikeys') respond(paginate(keys, url));
     else if (url.pathname === '/admin/settings') respond(settings);
@@ -212,9 +236,25 @@ try {
   await send('Emulation.setTimezoneOverride', { timezoneId: 'Asia/Bangkok' });
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: `${origin}/login` });
-  await waitFor("document.querySelectorAll('label').length === 3");
-  await check('Login labels link to all three controls', async () => assert.equal(await evaluate("Array.from(document.querySelectorAll('label')).every(label => !!label.control)"), true));
+  await waitFor("document.querySelectorAll('label').length === 2");
+  await check('Login labels link to both credential controls', async () => assert.equal(await evaluate("Array.from(document.querySelectorAll('label')).every(label => !!label.control)"), true));
+  await fill(label('Tên đăng nhập'), 'mfa-new');
+  await fill(label('Mật khẩu'), 'SyntheticPassword123!');
+  await click(`document.querySelector('button[type="submit"]')`);
+  await waitFor("document.body.innerText.includes('Liên kết ứng dụng xác thực')");
+  await check('Unenrolled account must complete MFA before navigation', async () => {
+    assert.equal(await evaluate("location.pathname === '/login' && document.body.innerText.includes('JBSW Y3DP EHPK 3PXP')"), true);
+  });
+  await fill(label('Mã xác thực MFA'), '123456');
+  await click(`document.querySelector('button[type="submit"]')`);
+  await waitFor("location.pathname === '/' && document.body.innerText.includes('Khách hàng đã phục vụ')");
+  await click(button('Đăng xuất')); await waitFor("location.pathname === '/login'");
   await login('admin');
+  await send('Page.reload', { ignoreCache: true });
+  await waitFor("location.pathname === '/' && document.body.innerText.includes('Khách hàng đã phục vụ')");
+  await check('Authenticated session survives a full page reload', async () => {
+    assert.equal(requests.some(request => request.path === '/api/session/refresh'), true);
+  });
   await navigate('/qa');
   await waitFor("document.querySelectorAll('tbody tr').length === 25");
   await check('Admin cannot publish dictionary from QA', async () => {
@@ -347,7 +387,7 @@ try {
     await waitFor("document.body.innerText.includes('Chọn file CSV UTF-8 hoặc XLSX có dữ liệu')");
     assert.equal(requests.filter(request => request.path === '/admin/dictionary/upload').length, 0);
     await chooseFile('synthetic.csv');
-    await waitFor("document.body.innerText.includes('Đã nhập 1 cặp dịch vào từ điển.')");
+    await waitFor("document.body.innerText.includes('Đã nhập 1 cặp dịch vào từ điển.') && document.querySelector('input[type=file]').value === ''");
     const upload = requests.find(request => request.path === '/admin/dictionary/upload').multipart;
     assert.match(upload, /name="source_lang"\r\n\r\nvi/); assert.match(upload, /name="target_lang"\r\n\r\nen/);
     assert.equal(await evaluate("document.querySelector('input[type=file]').value"), '');
@@ -359,9 +399,32 @@ try {
     await click(button('Tạo mới')); await waitFor("document.body.innerText.includes('Mật khẩu tối đa 72 byte UTF-8.')");
     assert.equal(requests.filter(request => request.path === '/admin/users' && request.method === 'POST').length, before);
   });
+  await check('Short personnel password uses the Vietnamese inline validation', async () => {
+    await fill(label('Tên đăng nhập'), 'new-user'); await fill(label('Mật khẩu (ít nhất 12 ký tự)'), 'short');
+    const before = requests.filter(request => request.path === '/admin/users' && request.method === 'POST').length;
+    await click(button('Tạo mới')); await waitFor("document.body.innerText.includes('Mật khẩu phải có ít nhất 12 ký tự.')");
+    assert.equal(requests.filter(request => request.path === '/admin/users' && request.method === 'POST').length, before);
+  });
   await check('422 field errors identify the field and constraint', async () => {
     forceUserValidation = true; await fill(label('Mật khẩu (ít nhất 12 ký tự)'), 'ValidTestPassword123!'); await click(button('Tạo mới'));
     await waitFor("document.body.innerText.includes('Tên đăng nhập: Ít nhất 3 ký tự')");
+  });
+  await check('Duplicate username shows one accurate inline error', async () => {
+    await fill(label('Tên đăng nhập'), 'duplicate-user');
+    await fill(label('Mật khẩu (ít nhất 12 ký tự)'), 'ValidTestPassword123!');
+    await click(button('Tạo mới'));
+    await waitFor("document.body.innerText.includes('Tên đăng nhập đã tồn tại')");
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('[role=alert]')).filter(element => element.textContent.includes('Tên đăng nhập đã tồn tại')).length"), 1);
+  });
+  await check('Forbidden personnel update keeps the editor open and explains the correct error', async () => {
+    await click("document.querySelector('button[aria-label=\"Chỉnh sửa user1\"]')");
+    await waitFor("document.body.innerText.includes('Quyền của user1')");
+    forceUserUpdateForbidden = true;
+    await click(button('Lưu'));
+    await waitFor("document.body.innerText.includes('Không thể vô hiệu hóa hoặc đổi quyền của tài khoản đang đăng nhập')");
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('[role=alert]')).filter(element => element.textContent.includes('Không thể vô hiệu hóa hoặc đổi quyền')).length"), 1);
+    assert.equal(await evaluate("document.body.innerText.includes('Quyền của user1')"), true);
+    await click(button('Hủy'));
   });
   await check('User role and password editor calls the protected update API', async () => {
     await click("document.querySelector('button[aria-label=\"Chỉnh sửa user1\"]')");
@@ -369,23 +432,52 @@ try {
     await evaluate(`(() => { const element=${label('Quyền của user1')}; element.value='admin'; element.dispatchEvent(new Event('change',{bubbles:true})); })()`);
     await fill(label('Mật khẩu mới của user1 (để trống nếu giữ nguyên)'), 'ReplacementPassword123!');
     await click(button('Lưu')); await waitFor("!document.body.innerText.includes('Quyền của user1')");
-    const update = requests.find(request => request.path === '/admin/users/1' && request.method === 'PATCH');
+    const update = requests.filter(request => request.path === '/admin/users/1' && request.method === 'PATCH').at(-1);
     assert.equal(update.data.role, 'admin'); assert.equal(update.data.password, 'ReplacementPassword123!');
   });
   await navigate('/settings'); await waitFor("document.body.innerText.includes('Triển khai & Quản lý Model AI')");
+  await check('Settings show correct model names, runtime warning, and valid training links', async () => {
+    const body = await evaluate('document.body.innerText');
+    for (const text of ['Whisper (Nhận diện giọng nói (STT))', 'NLLB-200 (Dịch văn bản)', 'MMS TTS English', 'MMS TTS Vietnamese', 'Cần reload runtime khi thay đổi']) {
+      assert.equal(body.includes(text), true, text);
+    }
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('a')).filter(a => ['Chi tiết', 'Huấn luyện model mới'].some(text => a.textContent.includes(text))).every(a => a.getAttribute('href') === '/training-center')"), true);
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('button')).filter(element => element.textContent.includes('Áp dụng Canary')).every(element => element.disabled)"), true);
+  });
   await check('Settings use canonical saved value and success feedback', async () => {
     const maxCharacters = `document.querySelector('input[type="number"]')`;
     await fill(maxCharacters, '00042'); await click(button('Lưu thiết lập'));
     await waitFor("document.body.innerText.includes('Đã lưu')");
     assert.equal(await evaluate(`${maxCharacters}.value`), '42');
   });
+  await check('Reverting a setting clears the unsaved state', async () => {
+    const maxCharacters = `document.querySelector('input[type="number"]')`;
+    await fill(maxCharacters, '43');
+    await waitFor("document.body.innerText.includes('Lưu tất cả (1)')");
+    await fill(maxCharacters, '42');
+    await waitFor("!document.body.innerText.includes('Lưu tất cả (1)')");
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('button')).find(element => element.textContent.includes('Lưu thiết lập')).disabled"), true);
+  });
   await check('Model canary configuration is sent with an explicit traffic percentage', async () => {
     const nllbCanary = `Array.from(document.querySelectorAll('label')).filter(element => element.textContent.trim() === 'Mã model Canary (hoặc chọn từ danh sách trên)')[1]?.control`;
+    const nllbPercent = `Array.from(document.querySelectorAll('label')).filter(element => element.textContent.trim() === 'Tỷ lệ chia (%)')[1]?.control`;
     await fill(nllbCanary, 'synthetic/nllb-v2');
-    await click("Array.from(document.querySelectorAll('button')).filter(element => element.textContent.includes('Lưu Canary'))[1]");
+    await fill(nllbPercent, '10.5');
+    assert.equal(await evaluate("Array.from(document.querySelectorAll('button')).filter(element => element.textContent.includes('Áp dụng Canary'))[1].disabled"), true);
+    await fill(nllbPercent, '10');
+    await click("Array.from(document.querySelectorAll('button')).filter(element => element.textContent.includes('Áp dụng Canary'))[1]");
     await waitFor(`${nllbCanary}.value === 'synthetic/nllb-v2'`);
     const canary = requests.find(request => request.path === '/admin/models/nllb/canary');
     assert.equal(canary.data.percent, 10);
+  });
+  await check('Audit local date filters are sent to the API as UTC', async () => {
+    const before = requests.filter(request => request.path === '/admin/audit').length;
+    await fill(label('Từ thời điểm'), '2026-09-13T03:00');
+    await click(button('Áp dụng bộ lọc'));
+    await waitFor(`true`);
+    for (let index = 0; index < 100 && requests.filter(request => request.path === '/admin/audit').length === before; index++) await sleep(20);
+    const auditRequest = requests.filter(request => request.path === '/admin/audit').at(-1);
+    assert.equal(auditRequest.params.created_from, '2026-09-12T20:00:00.000Z');
   });
   await check('First dashboard failure does not display fabricated zero metrics', async () => {
     failDashboard = true; await navigate('/');
