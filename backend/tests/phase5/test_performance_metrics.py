@@ -48,6 +48,19 @@ class Phase5PerformanceMetricsTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(summary["latencies_ms"]["translate"]["p50"], 0.0)
         self.assertGreater(summary["latencies_ms"]["end_to_end"]["p50"], 0.0)
 
+    def test_telemetry_percentiles_use_nearest_rank_for_small_samples(self):
+        tracker = PipelineTelemetryTracker(max_history=10)
+        tracker._completed_metrics.extend([
+            TurnMetric(turn_id="fast", session_id="s", t_turn_received=10.0, t_translate_done=10.1),
+            TurnMetric(turn_id="slow", session_id="s", t_turn_received=20.0, t_translate_done=20.4),
+        ])
+        tracker._total_turns_processed = 2
+
+        latency = tracker.get_summary()["latencies_ms"]["end_to_end"]
+        self.assertEqual(latency["p50"], 100.0)
+        self.assertEqual(latency["p90"], 400.0)
+        self.assertEqual(latency["p99"], 400.0)
+
     async def test_fair_session_queue_round_robin(self):
         fq = FairSessionQueue(max_per_session=5, max_total_items=20)
 

@@ -219,6 +219,9 @@ class AdminExtensionTests(unittest.TestCase):
         self.assertEqual(refreshed.status_code, 200, refreshed.text)
         self.assertNotEqual(refreshed.json()["access_token"], login.json()["access_token"])
         self.assertEqual(refreshed.json()["user"]["id"], self.employee.id)
+        rotated_cookie = refreshed.headers.get("set-cookie", "").lower()
+        self.assertIn("tlingua_refresh=", rotated_cookie)
+        self.assertIn("httponly", rotated_cookie)
 
         logged_out = self.client.post("/api/session/logout")
         self.assertEqual(logged_out.status_code, 204, logged_out.text)
@@ -386,6 +389,69 @@ class AdminExtensionTests(unittest.TestCase):
             json={"source_text": "xin chào", "translated_text": "hello", "source_lang": "vi", "target_lang": "en"},
         )
         self.assertEqual(write_dictionary.status_code, 403, write_dictionary.text)
+
+    def test_metrics_filters_use_local_calendar_and_never_invent_latency(self):
+        rows = [
+            ("before", datetime(2026, 1, 1, 16, 59), 0.1),
+            ("start", datetime(2026, 1, 1, 17, 0), 0.2),
+            ("end", datetime(2026, 1, 2, 16, 59), 0.4),
+            ("after", datetime(2026, 1, 2, 17, 0), 0.8),
+            ("no-latency", datetime(2026, 1, 4, 5, 0), 0.0),
+        ]
+        self.db.add_all([
+            TranslationLog(
+                client_id=client_id,
+                source_text="Xin chào",
+                translated_text="Hello",
+                source_lang="vi",
+                target_lang="en",
+                latency=latency,
+                created_at=created_at,
+            )
+            for client_id, created_at, latency in rows
+        ])
+        self.db.commit()
+
+        local_day = "start_date=2026-01-02&end_date=2026-01-02&tz_offset_minutes=-420"
+        timeseries = self.client.get(
+            f"/admin/metrics/timeseries?{local_day}", headers=self.headers,
+        )
+        self.assertEqual(timeseries.status_code, 200, timeseries.text)
+        self.assertEqual(timeseries.json(), [{"date": "2026-01-02", "requests": 2, "avg_latency": 0.3}])
+
+        dashboard = self.client.get(
+            f"/admin/metrics/dashboard?{local_day}", headers=self.headers,
+        )
+        self.assertEqual(dashboard.status_code, 200, dashboard.text)
+        self.assertEqual(dashboard.json()["total_translations"], 2)
+        self.assertEqual(dashboard.json()["unique_clients"], 2)
+
+        pipeline = self.client.get(
+            f"/admin/metrics/pipeline?{local_day}", headers=self.headers,
+        )
+        self.assertEqual(pipeline.status_code, 200, pipeline.text)
+        pipeline_data = pipeline.json()
+        self.assertEqual(pipeline_data["total_completed"], 2)
+        self.assertEqual(pipeline_data["latencies_ms"]["end_to_end"]["p50"], 200.0)
+        self.assertEqual(pipeline_data["latencies_ms"]["end_to_end"]["p90"], 400.0)
+        self.assertFalse(pipeline_data["stage_metrics_available"])
+        self.assertEqual(pipeline_data["latencies_ms"]["stt"]["avg"], 0.0)
+
+        no_latency = self.client.get(
+            "/admin/metrics/pipeline?start_date=2026-01-04&end_date=2026-01-04&tz_offset_minutes=-420",
+            headers=self.headers,
+        )
+        self.assertEqual(no_latency.status_code, 200, no_latency.text)
+        self.assertEqual(no_latency.json()["total_completed"], 1)
+        self.assertEqual(no_latency.json()["latencies_ms"]["end_to_end"]["avg"], 0.0)
+
+        for query in (
+            "start_date=2026-01-03&end_date=2026-01-02",
+            "start_date=not-a-date",
+            "time_range=unsupported",
+        ):
+            response = self.client.get(f"/admin/metrics/dashboard?{query}", headers=self.headers)
+            self.assertEqual(response.status_code, 422, f"{query}: {response.text}")
 
     def test_model_canary_promote_rollback_and_filtered_audit(self):
         initial = self.client.get("/admin/models/deployments", headers=self.headers)

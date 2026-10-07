@@ -131,6 +131,25 @@ def restore_backup(archive_path: Path, target_dir: Path = DEFAULT_DATA_DIR) -> b
         shutil.rmtree(temp_extract, ignore_errors=True)
 
 
+# Security v2 overrides the legacy implementation above. Keeping this import near
+# the CLI also preserves compatibility for callers importing this module.
+try:
+    from . import secure_backup as _secure_backup
+except ImportError:  # Direct execution: python scripts/backup_restore.py
+    import secure_backup as _secure_backup
+
+
+calculate_sha256 = _secure_backup.calculate_sha256
+
+
+def create_backup(data_dir=DEFAULT_DATA_DIR, output_dir=DEFAULT_BACKUP_DIR, *, encryption_key=None):
+    return _secure_backup.create_backup(data_dir, output_dir, encryption_key=encryption_key)
+
+
+def restore_backup(archive_path, target_dir=DEFAULT_DATA_DIR, *, encryption_key=None):
+    return _secure_backup.restore_backup(archive_path, target_dir, encryption_key=encryption_key)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="T-Lingua Backup and Recovery Utility")
     subparsers = parser.add_subparsers(dest="command", required=True)

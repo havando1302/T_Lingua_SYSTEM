@@ -41,7 +41,7 @@ with patch.dict(os.environ, _TEST_ENV):
         issue_user_session,
         RESOURCE_SCOPES,
     )
-    from jose import jwt
+    import jwt
     from app.services import translation_memory as tm
     from app.services.session_actor import SessionActor
     from app.models.turn_model import TurnMetadata

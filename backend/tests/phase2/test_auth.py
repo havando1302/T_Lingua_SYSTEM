@@ -12,7 +12,7 @@ from unittest.mock import patch
 import bcrypt
 from cryptography.fernet import Fernet
 from fastapi import HTTPException
-from jose import jwt
+import jwt
 import pyotp
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
@@ -113,14 +113,16 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(security.authenticate_token(access["access_token"], self.db).user_id, user.id)
         self.assert_unauthorized(lambda: security.authenticate_token(refresh, self.db))
 
-        renewed, renewed_user = security.refresh_user_session(refresh, self.db)
+        renewed, renewed_user, rotated_refresh = security.refresh_user_session(refresh, self.db)
         self.assertEqual(renewed_user.id, user.id)
         self.assertEqual(security.authenticate_token(renewed["access_token"], self.db).user_id, user.id)
-        # A stable cookie lets multiple open tabs renew without invalidating each other.
-        second, _ = security.refresh_user_session(refresh, self.db)
-        self.assertNotEqual(second["access_token"], renewed["access_token"])
-        self.assertTrue(security.revoke_refresh_session(refresh, self.db))
+        self.assertNotEqual(rotated_refresh, refresh)
+        # A stolen refresh token becomes unusable immediately after rotation.
         self.assert_unauthorized(lambda: security.refresh_user_session(refresh, self.db))
+        second, _, second_refresh = security.refresh_user_session(rotated_refresh, self.db)
+        self.assertNotEqual(second["access_token"], renewed["access_token"])
+        self.assertTrue(security.revoke_refresh_session(second_refresh, self.db))
+        self.assert_unauthorized(lambda: security.refresh_user_session(second_refresh, self.db))
 
     def test_api_key_stores_only_digest_and_is_scoped_revocable(self):
         user = self.user()

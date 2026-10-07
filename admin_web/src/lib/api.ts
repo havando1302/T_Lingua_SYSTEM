@@ -11,6 +11,7 @@ import {
 declare module 'axios' {
   interface AxiosRequestConfig {
     suppressGlobalError?: boolean;
+    authRetryAttempted?: boolean;
   }
 }
 
@@ -104,14 +105,28 @@ function createClient(path: string) {
     else delete config.headers.Authorization;
     return config;
   });
-  client.interceptors.response.use((response) => response, (error: unknown) => {
+  client.interceptors.response.use((response) => response, async (error: unknown) => {
     if (axios.isCancel(error) || (axios.isAxiosError(error) && (error.code === 'ERR_CANCELED' || error.name === 'CanceledError'))) {
       return Promise.reject(error);
     }
     if (axios.isAxiosError(error)) {
       const sentAuthorization = error.config?.headers?.Authorization;
       const token = getAccessToken();
-      if (error.response?.status === 401 && token && sentAuthorization === `Bearer ${token}`) clearSession();
+      const isSessionEndpoint = error.config?.url?.includes('/api/session/') ?? false;
+      if (error.response?.status === 401 && token
+          && sentAuthorization === `Bearer ${token}`
+          && error.config && !error.config.authRetryAttempted && !isSessionEndpoint) {
+        error.config.authRetryAttempted = true;
+        const restored = await refreshSession();
+        const renewedToken = getAccessToken();
+        if (restored && renewedToken) {
+          error.config.headers.Authorization = `Bearer ${renewedToken}`;
+          return client.request(error.config);
+        }
+      }
+      if (error.response?.status === 401 && token && sentAuthorization === `Bearer ${token}`) {
+        clearSession();
+      }
       if (!error.config?.url?.endsWith('/login') && !error.config?.suppressGlobalError) {
         const message = apiErrorMessage(error);
         if (message) {
@@ -141,8 +156,9 @@ export function refreshSession(): Promise<boolean> {
   }).catch((error: unknown) => {
     const transientFailure = axios.isAxiosError(error)
       && (!error.response || error.response.status >= 500);
-    if (!transientFailure) clearSession();
-    return transientFailure;
+    if (transientFailure) throw error;
+    clearSession();
+    return false;
   }).finally(() => {
     pendingRefresh = null;
   });

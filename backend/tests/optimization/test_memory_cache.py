@@ -346,9 +346,11 @@ class MemoryCacheTests(unittest.TestCase):
         metadata = _validate_tm(self.path)
         self.assertEqual(metadata["shape"], "client_mapping")
         self.assertEqual(metadata["entry_count"], 3)  # 2 entries plus storage format marker.
-        archive = create_backup(self.temp, self.temp / "backup")
+        import base64
+        key = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+        archive = create_backup(self.temp, self.temp / "backup", encryption_key=key)
         restored = self.temp / "restored"
-        self.assertTrue(restore_backup(archive, restored))
+        self.assertTrue(restore_backup(archive, restored, encryption_key=key))
         self.assertEqual((restored / self.path.name).read_bytes(), self.path.read_bytes())
         with patch.object(tm, "_TM_FILE", str(restored / self.path.name)):
             tm._load()

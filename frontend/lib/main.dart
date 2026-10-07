@@ -5,6 +5,7 @@ import 'dart:async';
 import 'core/constants.dart';
 import 'services/auth_session_service.dart';
 import 'services/history_storage_service.dart';
+import 'services/secure_history_box.dart';
 
 import 'package:hive_flutter/hive_flutter.dart'; // [NEW] Hive Flutter init
 
@@ -34,9 +35,7 @@ void main() async {
   }
   await Hive.initFlutter(); // [NEW] Khởi tạo Hive với đường dẫn mặc định
   Hive.registerAdapter(HistoryModelAdapter()); // [NEW] Đăng ký adapter
-  await Hive.openBox<HistoryModel>(
-    'history',
-  ); // [NEW] Mở box sẵn để dùng toàn app
+  await SecureHistoryBox.openAndMigrate();
   await Hive.openBox<String>('settings'); // [NEW] Mở box settings cho config
 
   // Khởi tạo SettingsController (sẽ load settings & sync locale)

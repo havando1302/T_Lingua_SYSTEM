@@ -5,6 +5,7 @@ Cung cấp thống kê P50, P90, P99 và throughput không gây nghẽn event lo
 """
 import time
 import statistics
+import math
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
@@ -204,9 +205,9 @@ class PipelineTelemetryTracker:
                 return {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0}
             sorted_vals = sorted(values)
             n = len(sorted_vals)
-            p50 = sorted_vals[int(n * 0.50)]
-            p90 = sorted_vals[min(int(n * 0.90), n - 1)]
-            p99 = sorted_vals[min(int(n * 0.99), n - 1)]
+            p50 = sorted_vals[max(0, math.ceil(n * 0.50) - 1)]
+            p90 = sorted_vals[max(0, math.ceil(n * 0.90) - 1)]
+            p99 = sorted_vals[max(0, math.ceil(n * 0.99) - 1)]
             avg = statistics.mean(sorted_vals)
             return {
                 "p50": round(p50, 2),

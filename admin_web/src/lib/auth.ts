@@ -37,6 +37,7 @@ let expiresAt = 0;
 let expirationTimer: ReturnType<typeof setTimeout> | undefined;
 let refreshSession: (() => Promise<boolean>) | undefined;
 const listeners = new Set<() => void>();
+const TRANSIENT_REFRESH_RETRY_MS = 10_000;
 
 // Old releases persisted credentials. A page load always starts signed out.
 for (const storageName of ['localStorage', 'sessionStorage'] as const) {
@@ -95,15 +96,23 @@ export function setSession(session: LoginResponse) {
     1_000,
     session.expires_in * 1000 - Math.min(30_000, session.expires_in * 500),
   );
-  expirationTimer = setTimeout(() => {
+  const refreshWhenDue = () => {
     if (!refreshSession) {
       clearSession();
       return;
     }
     void refreshSession().then((restored) => {
       if (!restored) clearSession();
-    }, clearSession);
-  }, Math.min(refreshDelay, 2_147_483_647));
+    }, () => {
+      // A temporary network/server outage must not destroy a valid refresh
+      // cookie. Keep the UI state and retry; protected requests wait for the
+      // same refresh operation before sending credentials.
+      if (currentUser) {
+        expirationTimer = setTimeout(refreshWhenDue, TRANSIENT_REFRESH_RETRY_MS);
+      }
+    });
+  };
+  expirationTimer = setTimeout(refreshWhenDue, Math.min(refreshDelay, 2_147_483_647));
   emitChange();
 }
 

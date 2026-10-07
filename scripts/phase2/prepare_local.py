@@ -47,6 +47,8 @@ def prepare_local(backup_name="pre-phase2.env"):
     }
     if not values.get("MFA_ENCRYPTION_KEY"):
         updates["MFA_ENCRYPTION_KEY"] = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii")
+    if not values.get("BACKUP_ENCRYPTION_KEY"):
+        updates["BACKUP_ENCRYPTION_KEY"] = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii")
     if not values.get("CORS_ORIGINS") or values.get("CORS_ORIGINS") == "*":
         updates["CORS_ORIGINS"] = SAFE_ORIGINS
     if not values.get("TRUSTED_HOSTS"):
@@ -81,7 +83,13 @@ def prepare_local(backup_name="pre-phase2.env"):
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
-    return {"status": "local_security_prepared", "jwt_rotated": True, "mfa_key_created": "MFA_ENCRYPTION_KEY" in updates, "backup": str(backup.relative_to(ROOT))}
+    return {
+        "status": "local_security_prepared",
+        "jwt_rotated": True,
+        "mfa_key_created": "MFA_ENCRYPTION_KEY" in updates,
+        "backup_key_created": "BACKUP_ENCRYPTION_KEY" in updates,
+        "backup": str(backup.relative_to(ROOT)),
+    }
 
 
 def main():

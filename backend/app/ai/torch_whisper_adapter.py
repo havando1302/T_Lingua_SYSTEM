@@ -7,7 +7,7 @@ from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
 
 class TorchWhisperModel:
-    def __init__(self, model_id: str, device: str, *, local_files_only: bool = False):
+    def __init__(self, model_id: str, device: str, *, revision: str, local_files_only: bool = False):
         def load_cached_first(loader, **kwargs):
             try:
                 return loader.from_pretrained(model_id, local_files_only=True, **kwargs)
@@ -16,9 +16,13 @@ class TorchWhisperModel:
                     raise
                 return loader.from_pretrained(model_id, local_files_only=False, **kwargs)
 
-        self.processor = load_cached_first(WhisperProcessor)
+        self.processor = load_cached_first(WhisperProcessor, revision=revision)
         dtype = torch.float16 if device == "cuda" else torch.float32
-        self.model = load_cached_first(WhisperForConditionalGeneration, dtype=dtype).to(device).eval()
+        self.model = load_cached_first(
+            WhisperForConditionalGeneration,
+            revision=revision,
+            dtype=dtype,
+        ).to(device).eval()
         self.model.generation_config.max_length = None
         self.device = device
         self.dtype = dtype

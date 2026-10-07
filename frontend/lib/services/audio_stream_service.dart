@@ -5,7 +5,16 @@ import 'package:record/record.dart';
 
 class MicrophonePermissionException implements Exception {}
 
-class AudioStreamService {
+abstract interface class AudioCapture {
+  Future<Stream<Uint8List>> startStream({
+    required int sampleRate,
+    required int channels,
+  });
+  Future<void> stop();
+  Future<void> dispose();
+}
+
+class AudioStreamService implements AudioCapture {
   final AudioRecorder _record = AudioRecorder();
   Future<void> _operations = Future.value();
   int _generation = 0;
@@ -16,6 +25,7 @@ class AudioStreamService {
     return next;
   }
 
+  @override
   Future<Stream<Uint8List>> startStream({
     required int sampleRate,
     required int channels,
@@ -46,6 +56,7 @@ class AudioStreamService {
     });
   }
 
+  @override
   Future<void> stop() {
     _generation++;
     return _serialize(() async {
@@ -53,6 +64,7 @@ class AudioStreamService {
     });
   }
 
+  @override
   Future<void> dispose() {
     _generation++;
     return _serialize(_record.dispose);

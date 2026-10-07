@@ -4,6 +4,7 @@ from pydantic import Field
 from typing import Literal
 from app.core.auth_settings import AuthSettings
 from app.core.policy_settings import PolicySettings
+from app.core.model_registry import approved_revision
 
 
 class Settings(AuthSettings, PolicySettings):
@@ -13,15 +14,19 @@ class Settings(AuthSettings, PolicySettings):
     WHISPER_MODEL: str = "small"
     WHISPER_BACKEND: Literal["auto", "ctranslate2", "transformers"] = "auto"
     WHISPER_TORCH_MODEL: str = "openai/whisper-large-v3-turbo"
+    WHISPER_TORCH_REVISION: str = "41f01f3fe87f28c78e2fbf8b568835947dd65ed9"
     WHISPER_TORCH_LOCAL_ONLY: bool = False
     WHISPER_DEVICE: Literal["auto", "cpu", "cuda"] = "auto"
     WHISPER_CPU_THREADS: int = Field(default=4, ge=1, le=32)
     WHISPER_COMPUTE_TYPE: str = "auto"
     WHISPER_BEAM_SIZE: int = Field(default=3, ge=1, le=10)
     NLLB_MODEL: str = "facebook/nllb-200-distilled-1.3B"
+    NLLB_REVISION: str = "7be3e24664b38ce1cac29b8aeed6911aa0cf0576"
     TRANSLATION_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
     TTS_MODEL_ENG: str = "facebook/mms-tts-eng"
+    TTS_MODEL_ENG_REVISION: str = "c71de0fe7204c83f1c10820a7d696d0b450048ba"
     TTS_MODEL_VIE: str = "facebook/mms-tts-vie"
+    TTS_MODEL_VIE_REVISION: str = "b58928d033932a49aa8e3d6cf11625b25fe928d2"
     HF_TOKEN: str = ""
     ENABLE_DEEPFILTER: bool = True
     DENOISE_ATTENUATION_DB: float = Field(default=12.0, ge=0.0, le=60.0)
@@ -30,6 +35,17 @@ class Settings(AuthSettings, PolicySettings):
     STT_WORKER_POOL_SIZE: int = Field(default=2, ge=1, le=8)
     TRANSLATION_WORKER_POOL_SIZE: int = Field(default=2, ge=1, le=8)
     TTS_WORKER_POOL_SIZE: int = Field(default=1, ge=1, le=8)
+
+    def model_post_init(self, __context) -> None:
+        expected = {
+            "WHISPER_TORCH_REVISION": approved_revision(self.WHISPER_TORCH_MODEL),
+            "NLLB_REVISION": approved_revision(self.NLLB_MODEL),
+            "TTS_MODEL_ENG_REVISION": approved_revision(self.TTS_MODEL_ENG),
+            "TTS_MODEL_VIE_REVISION": approved_revision(self.TTS_MODEL_VIE),
+        }
+        for field, revision in expected.items():
+            if getattr(self, field) != revision:
+                raise ValueError(f"{field} must match the approved immutable model revision")
 
 
 settings = Settings()

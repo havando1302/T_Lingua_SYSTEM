@@ -87,6 +87,7 @@ def main() -> None:
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", default="facebook/nllb-200-distilled-1.3B")
+    parser.add_argument("--revision", required=True)
     parser.add_argument("--epochs", type=float, default=3.0)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--gradient-accumulation", type=int, default=8)
@@ -100,8 +101,8 @@ def main() -> None:
         raise ValueError("Output directory must be empty")
     set_seed(args.seed)
     raw = load_dataset(args.dataset)
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
-    model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
+    tokenizer = AutoTokenizer.from_pretrained(args.model, revision=args.revision)
+    model = AutoModelForSeq2SeqLM.from_pretrained(args.model, revision=args.revision)
     if not args.full_finetune:
         from peft import LoraConfig, TaskType, get_peft_model
         model = get_peft_model(model, LoraConfig(

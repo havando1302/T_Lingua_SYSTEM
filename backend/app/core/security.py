@@ -11,7 +11,8 @@ import bcrypt
 from cryptography.fernet import Fernet, InvalidToken
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -83,7 +84,7 @@ def decode_token(token: str) -> dict:
     return jwt.decode(
         token, settings.JWT_SECRET_KEY, algorithms=["HS256"],
         issuer=TOKEN_ISSUER, audience=TOKEN_AUDIENCE,
-        options={"require_exp": True, "require_iat": True, "require_sub": True, "require_jti": True},
+        options={"require": ["exp", "iat", "sub", "jti"]},
     )
 
 
@@ -105,6 +106,7 @@ def _issue_session(
     mfa_verified: bool = False,
     token_kind: str | None = None,
     lifetime: timedelta | None = None,
+    commit: bool = True,
 ) -> dict:
     settings = get_auth_settings()
     minutes = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES if user else settings.AUTH_GUEST_TOKEN_EXPIRE_MINUTES
@@ -134,7 +136,8 @@ def _issue_session(
             db.rollback()
             raise HTTPException(status_code=503, detail="Guest session capacity reached", headers={"Retry-After": "60"})
     db.add(session)
-    db.commit()
+    if commit:
+        db.commit()
     return {
         "access_token": token, "token_type": "bearer",
         "expires_in": max(1, int((expires_at - now).total_seconds())),
@@ -143,17 +146,29 @@ def _issue_session(
     }
 
 
-def issue_user_session(user: User, db: Session, *, mfa_verified: bool = False) -> dict:
+def issue_user_session(
+    user: User,
+    db: Session,
+    *,
+    mfa_verified: bool = False,
+    _commit: bool = True,
+) -> dict:
     if not user.is_active or not user.public_id or user.role not in VALID_ROLES:
         raise _unauthorized()
     if (user.mfa_enabled or user_requires_mfa(user)) and not mfa_verified:
         raise HTTPException(status_code=403, detail="MFA verification is required")
-    return _issue_session(db, owner_id=user.public_id, user=user, mfa_verified=mfa_verified)
+    return _issue_session(
+        db,
+        owner_id=user.public_id,
+        user=user,
+        mfa_verified=mfa_verified,
+        commit=_commit,
+    )
 
 
 def issue_user_session_pair(user: User, db: Session, *, mfa_verified: bool = False) -> tuple[dict, str]:
     """Issue a short bearer token plus a longer opaque-to-JS refresh credential."""
-    access = issue_user_session(user, db, mfa_verified=mfa_verified)
+    access = issue_user_session(user, db, mfa_verified=mfa_verified, _commit=False)
     refresh = _issue_session(
         db,
         owner_id=user.public_id,
@@ -161,7 +176,9 @@ def issue_user_session_pair(user: User, db: Session, *, mfa_verified: bool = Fal
         mfa_verified=mfa_verified,
         token_kind="refresh",
         lifetime=timedelta(days=get_auth_settings().AUTH_REFRESH_TOKEN_EXPIRE_DAYS),
+        commit=False,
     )
+    db.commit()
     return access, refresh["access_token"]
 
 
@@ -199,7 +216,7 @@ def authenticate_token(token: str | None, db: Session) -> Principal:
         uuid.UUID(session_id)
         if payload.get("kind") not in {"user", "guest"}:
             raise ValueError("Invalid session kind")
-    except (JWTError, KeyError, ValueError, TypeError, AttributeError):
+    except (InvalidTokenError, KeyError, ValueError, TypeError, AttributeError):
         raise _unauthorized()
     stored = db.get(AuthSession, session_id, populate_existing=True)
     if (
@@ -233,7 +250,7 @@ def _authenticate_refresh_token(token: str | None, db: Session) -> tuple[AuthSes
         uuid.UUID(session_id)
         if payload.get("kind") != "refresh":
             raise ValueError("Invalid refresh token kind")
-    except (JWTError, KeyError, ValueError, TypeError, AttributeError):
+    except (InvalidTokenError, KeyError, ValueError, TypeError, AttributeError):
         raise _unauthorized()
     stored = db.get(AuthSession, session_id, populate_existing=True)
     if (
@@ -253,11 +270,39 @@ def _authenticate_refresh_token(token: str | None, db: Session) -> tuple[AuthSes
     return stored, user
 
 
-def refresh_user_session(refresh_token: str | None, db: Session) -> tuple[dict, User]:
-    """Issue a new short bearer token from a valid browser refresh session."""
+def refresh_user_session(refresh_token: str | None, db: Session) -> tuple[dict, User, str]:
+    """Atomically consume a refresh token and rotate it with the access token."""
     stored, user = _authenticate_refresh_token(refresh_token, db)
-    access = issue_user_session(user, db, mfa_verified=stored.mfa_verified)
-    return access, user
+    rotated_at = _utcnow()
+    consumed = db.query(AuthSession).filter(
+        AuthSession.id == stored.id,
+        AuthSession.revoked_at.is_(None),
+        AuthSession.token_hash == hash_api_key(refresh_token),
+    ).update({AuthSession.revoked_at: rotated_at}, synchronize_session=False)
+    if consumed != 1:
+        db.rollback()
+        raise _unauthorized()
+    try:
+        access = issue_user_session(
+            user,
+            db,
+            mfa_verified=stored.mfa_verified,
+            _commit=False,
+        )
+        refresh = _issue_session(
+            db,
+            owner_id=user.public_id,
+            user=user,
+            mfa_verified=stored.mfa_verified,
+            token_kind="refresh",
+            lifetime=timedelta(days=get_auth_settings().AUTH_REFRESH_TOKEN_EXPIRE_DAYS),
+            commit=False,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return access, user, refresh["access_token"]
 
 
 def revoke_refresh_session(refresh_token: str | None, db: Session) -> bool:

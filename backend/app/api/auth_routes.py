@@ -14,7 +14,7 @@ from app.core.security import (
     revoke_session,
     refresh_user_session,
 )
-from app.core.session_cookie import REFRESH_COOKIE_NAME, clear_refresh_cookie
+from app.core.session_cookie import REFRESH_COOKIE_NAME, clear_refresh_cookie, set_refresh_cookie
 from app.db.database import get_db
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def logout(request: Request, token: str | None = Depends(oauth2_scheme), db: Ses
 @router.post("/refresh")
 def refresh(request: Request, response: Response, db: Session = Depends(get_db)):
     try:
-        session, user = refresh_user_session(
+        session, user, rotated_refresh_token = refresh_user_session(
             request.cookies.get(REFRESH_COOKIE_NAME), db,
         )
     except HTTPException as error:
@@ -63,9 +63,9 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
             content={"detail": error.detail},
             headers=error.headers,
         )
-        clear_refresh_cookie(invalid)
         return invalid
     response.headers["Cache-Control"] = "no-store"
+    set_refresh_cookie(response, rotated_refresh_token)
     return {
         **session,
         "user": {

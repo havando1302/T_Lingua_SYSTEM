@@ -17,6 +17,7 @@ let role = 'admin';
 let failPublish = false;
 let failLists = false;
 let failDashboard = false;
+let failSystem = false;
 let forceUserValidation = false;
 let forceUserUpdateForbidden = false;
 const logs = Array.from({ length: 123 }, (_, index) => ({ id: index + 1, client_id: 'synthetic-client', source_text: `source ${index + 1}`, translated_text: `translation ${index + 1}`, source_lang: 'en', target_lang: 'vi', is_flagged: true, is_reviewed: false, latency: 0, created_at: '2026-09-13T00:00:00' }));
@@ -157,11 +158,14 @@ const server = createServer(async (request, response) => {
     } else if (url.pathname === '/admin/metrics/dashboard') {
       if (failDashboard) respond({ detail: 'Synthetic metric failure' }, 503);
       else respond({ total_translations: 12, unique_clients: 2, avg_latency: 0.4, flagged_translations: 1, sample_limit: 1000, scope: 'since_process_start', started_at: '2026-09-13T00:00:00Z' });
-    } else if (url.pathname === '/admin/system/status') respond({ cpu_usage: 1, ram_usage: 20, ram_total: 16, disk_usage: 30, disk_total: 100, inference_runtime: { whisper_device: 'cpu', whisper_compute_type: 'int8', whisper_cpu_fallback: true } });
+    } else if (url.pathname === '/admin/system/status') {
+      if (failSystem) respond({ detail: 'Synthetic system failure' }, 503);
+      else respond({ cpu_usage: 1, ram_usage: 20, ram_total: 16, disk_usage: 30, disk_total: 100, inference_runtime: { whisper_device: 'cpu', whisper_compute_type: 'int8', whisper_cpu_fallback: true } });
+    }
     else if (url.pathname === '/admin/metrics/timeseries' || url.pathname === '/admin/metrics/languages') respond([]);
     else if (url.pathname === '/admin/metrics/pipeline') {
       const stage = { p50: 12, p90: 24, p99: 40, avg: 15 };
-      respond({ active_turns: 0, total_completed: 12, total_errors: 0, throughput_turns_per_sec: 0.2, latencies_ms: Object.fromEntries(['queue_wait', 'stt', 'translate', 'tts_first_chunk', 'tts_total', 'end_to_end'].map(name => [name, stage])) });
+      respond({ active_turns: 0, total_completed: 12, total_errors: 0, throughput_turns_per_sec: 0.2, scope: 'persisted', stage_metrics_available: false, latencies_ms: Object.fromEntries(['queue_wait', 'stt', 'translate', 'tts_first_chunk', 'tts_total', 'end_to_end'].map(name => [name, stage])) });
     } else respond({ detail: `Unmocked endpoint ${url.pathname}` }, 404);
   } catch (error) { response.writeHead(500); response.end(String(error)); }
 });
@@ -487,10 +491,40 @@ try {
     await waitFor("document.body.innerText.includes('Khách hàng đã phục vụ')");
     assert.equal(await evaluate("document.body.innerText.includes('Đang dùng CPU dự phòng')"), true);
   });
+  await check('System status failure does not hide valid dashboard metrics', async () => {
+    failSystem = true;
+    await click(button('Hôm nay'));
+    await waitFor("document.body.innerText.includes('Không tải được tài nguyên hệ thống')");
+    assert.equal(await evaluate("document.body.innerText.includes('Khách hàng đã phục vụ')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('12')"), true);
+    failSystem = false;
+    await click(button('Toàn thời gian'));
+    await waitFor("!document.body.innerText.includes('Không tải được tài nguyên hệ thống')");
+  });
   await navigate('/analytics'); await waitFor("document.body.innerText.includes('Độ trễ toàn trình (P50 / P90 / P99)')");
   await check('Analytics percentile labels and persisted time filters are clear', async () => {
     assert.equal(await evaluate("document.body.innerText.includes('P95')"), false);
     assert.equal(await evaluate("document.body.innerText.includes('Tất cả')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('không suy diễn số liệu riêng')"), true);
+    const analyticsRequest = requests.filter(request => request.path === '/admin/metrics/timeseries').at(-1);
+    assert.equal(analyticsRequest.params.tz_offset_minutes, '-420');
+  });
+  await check('Custom analytics dates validate before requesting and preserve local dates', async () => {
+    await click(button('Tùy chỉnh ngày'));
+    await fill("document.querySelectorAll('input[type=date]')[0]", '2026-10-10');
+    await fill("document.querySelectorAll('input[type=date]')[1]", '2026-10-01');
+    const beforeInvalidApply = requests.filter(request => request.path === '/admin/metrics/timeseries').length;
+    await click(button('Áp dụng bộ lọc'));
+    await waitFor("document.body.innerText.includes('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.')");
+    assert.equal(requests.filter(request => request.path === '/admin/metrics/timeseries').length, beforeInvalidApply);
+
+    await fill("document.querySelectorAll('input[type=date]')[1]", '2026-10-12');
+    await click(button('Áp dụng bộ lọc'));
+    for (let index = 0; index < 100 && requests.filter(request => request.path === '/admin/metrics/timeseries').length === beforeInvalidApply; index++) await sleep(20);
+    const filteredRequest = requests.filter(request => request.path === '/admin/metrics/timeseries').at(-1);
+    assert.equal(filteredRequest.params.start_date, '2026-10-10');
+    assert.equal(filteredRequest.params.end_date, '2026-10-12');
+    assert.equal(filteredRequest.params.tz_offset_minutes, '-420');
   });
   assert.deepEqual(browserErrors, []);
   console.log(JSON.stringify({ passed: results.length, failed: 0, browserErrors, results }, null, 2));

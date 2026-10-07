@@ -11,6 +11,12 @@ interface LanguageMetric {
   value: number;
 }
 
+interface TimeSeriesMetric {
+  date: string;
+  requests: number;
+  avg_latency: number;
+}
+
 interface LatencyPercentile {
   p50: number;
   p90: number;
@@ -23,6 +29,8 @@ interface PipelineMetrics {
   total_completed: number;
   total_errors: number;
   throughput_turns_per_sec: number;
+  scope?: 'since_process_start' | 'persisted';
+  stage_metrics_available?: boolean;
   latencies_ms: {
     queue_wait: LatencyPercentile;
     stt: LatencyPercentile;
@@ -43,8 +51,71 @@ function getLocalTodayStr(): string {
   return `${y}-${m}-${day}`;
 }
 
+function finiteNumber(value: unknown): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function normalizeTimeSeries(value: unknown): TimeSeriesMetric[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const row = item as Record<string, unknown>;
+    if (typeof row.date !== 'string') return [];
+    return [{
+      date: row.date,
+      requests: Math.max(0, Math.trunc(finiteNumber(row.requests))),
+      avg_latency: Math.max(0, finiteNumber(row.avg_latency)),
+    }];
+  });
+}
+
+function normalizeLanguages(value: unknown): LanguageMetric[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const row = item as Record<string, unknown>;
+    const count = Math.max(0, Math.trunc(finiteNumber(row.value)));
+    if (typeof row.name !== 'string' || !row.name.trim() || count === 0) return [];
+    return [{ name: row.name, value: count }];
+  });
+}
+
+function normalizeLatency(value: unknown): LatencyPercentile {
+  const data = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  return {
+    p50: Math.max(0, finiteNumber(data.p50)),
+    p90: Math.max(0, finiteNumber(data.p90)),
+    p99: Math.max(0, finiteNumber(data.p99)),
+    avg: Math.max(0, finiteNumber(data.avg)),
+  };
+}
+
+function normalizePipeline(value: unknown): PipelineMetrics | null {
+  if (!value || typeof value !== 'object') return null;
+  const data = value as Record<string, unknown>;
+  const latencies = data.latencies_ms && typeof data.latencies_ms === 'object'
+    ? data.latencies_ms as Record<string, unknown> : {};
+  return {
+    active_turns: Math.max(0, Math.trunc(finiteNumber(data.active_turns))),
+    total_completed: Math.max(0, Math.trunc(finiteNumber(data.total_completed))),
+    total_errors: Math.max(0, Math.trunc(finiteNumber(data.total_errors))),
+    throughput_turns_per_sec: Math.max(0, finiteNumber(data.throughput_turns_per_sec)),
+    scope: data.scope === 'since_process_start' ? 'since_process_start' : 'persisted',
+    stage_metrics_available: data.stage_metrics_available === true,
+    latencies_ms: {
+      queue_wait: normalizeLatency(latencies.queue_wait),
+      stt: normalizeLatency(latencies.stt),
+      translate: normalizeLatency(latencies.translate),
+      tts_first_chunk: normalizeLatency(latencies.tts_first_chunk),
+      tts_total: normalizeLatency(latencies.tts_total),
+      end_to_end: normalizeLatency(latencies.end_to_end),
+    },
+  };
+}
+
 const Analytics = () => {
-  const [timeSeries, setTimeSeries] = useState<any[]>([]);
+  const [timeSeries, setTimeSeries] = useState<TimeSeriesMetric[]>([]);
   const [languageData, setLanguageData] = useState<LanguageMetric[]>([]);
   const [pipelineMetrics, setPipelineMetrics] = useState<PipelineMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,10 +125,24 @@ const Analytics = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [customApplied, setCustomApplied] = useState<{ start: string; end: string } | null>(null);
+  const [customError, setCustomError] = useState('');
 
   const [error, setError] = useTimedMessage('');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [reload, setReload] = useState(0);
+
+  const applyCustomRange = () => {
+    if (!startDate && !endDate) {
+      setCustomError('Vui lòng chọn ít nhất một mốc ngày.');
+      return;
+    }
+    if (startDate && endDate && startDate > endDate) {
+      setCustomError('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.');
+      return;
+    }
+    setCustomError('');
+    setCustomApplied({ start: startDate, end: endDate });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,8 +150,10 @@ const Analytics = () => {
     const fetchData = async () => {
       if (pending) return;
       pending = true;
+      setLoading(true);
       try {
         const params = new URLSearchParams();
+        params.set('tz_offset_minutes', String(new Date().getTimezoneOffset()));
         if (timeRange === 'today') {
           const today = getLocalTodayStr();
           params.append('start_date', today);
@@ -88,9 +175,9 @@ const Analytics = () => {
         if (controller.signal.aborted) return;
         setError('');
         setUpdatedAt(new Date());
-        setTimeSeries(tsRes.data || []);
-        setLanguageData(langRes.data || []);
-        setPipelineMetrics(pipeRes.data || null);
+        setTimeSeries(normalizeTimeSeries(tsRes.data));
+        setLanguageData(normalizeLanguages(langRes.data));
+        setPipelineMetrics(normalizePipeline(pipeRes.data));
       } catch (err) {
         if (!controller.signal.aborted) setError(apiErrorMessage(err));
       } finally {
@@ -101,23 +188,18 @@ const Analytics = () => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => { controller.abort(); clearInterval(interval); };
-  }, [reload, timeRange, customApplied]);
+  }, [reload, timeRange, customApplied, setError]);
 
   // Derived metrics summary in the active filter range
   const totalRequests = useMemo(() => timeSeries.reduce((acc, cur) => acc + (cur.requests || 0), 0), [timeSeries]);
   const totalLangRequests = useMemo(() => languageData.reduce((acc, cur) => acc + (cur.value || 0), 0), [languageData]);
   const avgPeriodLatency = useMemo(() => {
     const valid = timeSeries.filter(t => t.requests > 0 && t.avg_latency > 0);
-    if (valid.length === 0) {
-      if (pipelineMetrics?.latencies_ms?.end_to_end?.avg) {
-        return pipelineMetrics.latencies_ms.end_to_end.avg / 1000;
-      }
-      return 0;
-    }
+    if (valid.length === 0) return 0;
     const sum = valid.reduce((acc, cur) => acc + cur.avg_latency * cur.requests, 0);
     const total = valid.reduce((acc, cur) => acc + cur.requests, 0);
     return total > 0 ? (sum / total) : 0;
-  }, [timeSeries, pipelineMetrics]);
+  }, [timeSeries]);
 
   const rangeLabel = useMemo(() => {
     switch (timeRange) {
@@ -148,6 +230,7 @@ const Analytics = () => {
   );
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const stageMetricsAvailable = pipelineMetrics?.stage_metrics_available === true;
 
   return (
     <div className="space-y-6">
@@ -158,9 +241,9 @@ const Analytics = () => {
           <p className="text-xs text-text-muted mt-1">Dữ liệu thực tế được lưu trữ vĩnh viễn và đồng bộ liên tục</p>
         </div>
 
-        <Button variant="ghost" size="sm" onClick={() => setReload(v => v + 1)} className="self-start md:self-auto text-xs">
+        <Button variant="ghost" size="sm" onClick={() => setReload(v => v + 1)} disabled={loading} className="self-start md:self-auto text-xs">
           <RotateCcw className="w-3.5 h-3.5 mr-1" />
-          Làm mới
+          {loading ? 'Đang cập nhật…' : 'Làm mới'}
         </Button>
       </div>
 
@@ -182,6 +265,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('all'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === 'all'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'all' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Tất cả
@@ -189,6 +273,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('today'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === 'today'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'today' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Hôm nay
@@ -196,6 +281,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('7d'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === '7d'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === '7d' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   7 ngày qua
@@ -203,6 +289,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('week'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === 'week'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'week' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Tuần này
@@ -210,6 +297,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('30d'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === '30d'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === '30d' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   30 ngày qua
@@ -217,6 +305,7 @@ const Analytics = () => {
                 <button
                   type="button"
                   onClick={() => { setTimeRange('month'); setCustomApplied(null); }}
+                  aria-pressed={timeRange === 'month'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'month' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Tháng này
@@ -229,9 +318,11 @@ const Analytics = () => {
                     const e = endDate || today;
                     setStartDate(s);
                     setEndDate(e);
+                    setCustomError('');
                     setCustomApplied({ start: s, end: e });
                     setTimeRange('custom');
                   }}
+                  aria-pressed={timeRange === 'custom'}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${timeRange === 'custom' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'}`}
                 >
                   Tùy chỉnh ngày
@@ -246,6 +337,7 @@ const Analytics = () => {
               </span>
               <span className="text-text-muted">
                 Cập nhật lúc: {updatedAt.toLocaleTimeString('vi-VN')}
+                {loading && ' · Đang cập nhật…'}
               </span>
             </div>
           </div>
@@ -258,15 +350,13 @@ const Analytics = () => {
                 <input
                   type="date"
                   value={startDate}
+                  aria-invalid={Boolean(customError)}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    setStartDate(val);
-                    if (val && endDate) {
-                      setCustomApplied({ start: val, end: endDate });
-                    }
+                    setStartDate(e.target.value);
+                    setCustomError('');
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setCustomApplied({ start: startDate, end: endDate });
+                    if (e.key === 'Enter') applyCustomRange();
                   }}
                   className="h-8 rounded-md border border-border bg-background px-2.5 text-xs text-text focus:outline-none focus:ring-1 focus:ring-primary"
                 />
@@ -276,15 +366,13 @@ const Analytics = () => {
                 <input
                   type="date"
                   value={endDate}
+                  aria-invalid={Boolean(customError)}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    setEndDate(val);
-                    if (startDate && val) {
-                      setCustomApplied({ start: startDate, end: val });
-                    }
+                    setEndDate(e.target.value);
+                    setCustomError('');
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setCustomApplied({ start: startDate, end: endDate });
+                    if (e.key === 'Enter') applyCustomRange();
                   }}
                   className="h-8 rounded-md border border-border bg-background px-2.5 text-xs text-text focus:outline-none focus:ring-1 focus:ring-primary"
                 />
@@ -292,7 +380,7 @@ const Analytics = () => {
               <Button
                 size="sm"
                 className="h-8 text-xs px-3"
-                onClick={() => setCustomApplied({ start: startDate, end: endDate })}
+                onClick={applyCustomRange}
                 disabled={!startDate && !endDate}
               >
                 <Filter className="w-3.5 h-3.5 mr-1" />
@@ -306,6 +394,7 @@ const Analytics = () => {
                   const today = getLocalTodayStr();
                   setStartDate(today);
                   setEndDate(today);
+                  setCustomError('');
                   setCustomApplied({ start: today, end: today });
                 }}
               >
@@ -319,12 +408,15 @@ const Analytics = () => {
                   onClick={() => {
                     setStartDate('');
                     setEndDate('');
+                    setCustomError('');
                     setCustomApplied(null);
+                    setTimeRange('all');
                   }}
                 >
                   Đặt lại
                 </Button>
               )}
+              {customError && <p role="alert" className="w-full text-xs text-red-600 dark:text-red-400">{customError}</p>}
             </div>
           )}
 
@@ -349,6 +441,11 @@ const Analytics = () => {
       {/* Real-time & Baseline Pipeline Latency Metrics */}
       {pipelineMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {!stageMetricsAvailable && (
+            <p role="status" className="md:col-span-4 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+              Dữ liệu lịch sử chỉ lưu độ trễ toàn trình; không suy diễn số liệu riêng cho STT, dịch thuật và TTS.
+            </p>
+          )}
           <Card>
             <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
               <span className="text-sm font-medium text-text-muted">Độ trễ toàn trình (P50 / P90 / P99)</span>
@@ -371,10 +468,12 @@ const Analytics = () => {
             </CardHeader>
             <CardContent className="py-2 px-4">
               <div className="text-2xl font-bold">
-                {pipelineMetrics.latencies_ms.stt.p50} ms
+                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.stt.p50} ms` : '—'}
               </div>
               <p className="text-xs text-text-muted mt-1">
-                P90: {pipelineMetrics.latencies_ms.stt.p90} ms | TB: {pipelineMetrics.latencies_ms.stt.avg} ms
+                {stageMetricsAvailable
+                  ? `P90: ${pipelineMetrics.latencies_ms.stt.p90} ms | TB: ${pipelineMetrics.latencies_ms.stt.avg} ms`
+                  : 'Không có dữ liệu stage trong phạm vi này.'}
               </p>
             </CardContent>
           </Card>
@@ -386,10 +485,12 @@ const Analytics = () => {
             </CardHeader>
             <CardContent className="py-2 px-4">
               <div className="text-2xl font-bold">
-                {pipelineMetrics.latencies_ms.translate.p50} ms
+                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.translate.p50} ms` : '—'}
               </div>
               <p className="text-xs text-text-muted mt-1">
-                P90: {pipelineMetrics.latencies_ms.translate.p90} ms | TB: {pipelineMetrics.latencies_ms.translate.avg} ms
+                {stageMetricsAvailable
+                  ? `P90: ${pipelineMetrics.latencies_ms.translate.p90} ms | TB: ${pipelineMetrics.latencies_ms.translate.avg} ms`
+                  : 'Không có dữ liệu stage trong phạm vi này.'}
               </p>
             </CardContent>
           </Card>
@@ -401,10 +502,12 @@ const Analytics = () => {
             </CardHeader>
             <CardContent className="py-2 px-4">
               <div className="text-2xl font-bold">
-                {pipelineMetrics.latencies_ms.tts_first_chunk.p50} ms
+                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.tts_first_chunk.p50} ms` : '—'}
               </div>
               <p className="text-xs text-text-muted mt-1">
-                Tổng lượt hoàn thành: {pipelineMetrics.total_completed}
+                {stageMetricsAvailable
+                  ? `Tổng lượt hoàn thành: ${pipelineMetrics.total_completed}`
+                  : 'Không có dữ liệu stage trong phạm vi này.'}
               </p>
             </CardContent>
           </Card>

@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.security import require_admin, require_superadmin
+from app.core.model_registry import PINNED_MODEL_REVISIONS
 from app.db.database import SessionLocal, get_db
 from app.db.models import (
     AuditLog, DeploymentEvent, ModelArtifact, ModelDeployment, QualityReview,
@@ -44,6 +45,9 @@ ALLOWED_BASE_MODELS = {
         "openai/whisper-large-v3",
     },
 }
+for _models in ALLOWED_BASE_MODELS.values():
+    if not _models.issubset(PINNED_MODEL_REVISIONS):
+        raise RuntimeError("Every training model must have an immutable approved revision")
 TASK_DEFAULTS = {
     "nllb": {"epochs": 3.0, "batch_size": 2, "gradient_accumulation": 8,
              "learning_rate": 2e-4, "max_source_length": 256, "max_target_length": 256},

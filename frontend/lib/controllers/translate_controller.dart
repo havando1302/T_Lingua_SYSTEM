@@ -20,7 +20,7 @@ import 'settings_controller.dart';
 
 class TranslationLogic extends ChangeNotifier {
   final RealtimeWebSocketService _ws;
-  final AudioStreamService _audio;
+  final AudioCapture _audio;
   final AudioPlayerService _player;
   static TranslationLogic? _microphoneOwner;
   static Future<void> _microphoneQueue = Future.value();
@@ -67,7 +67,7 @@ class TranslationLogic extends ChangeNotifier {
 
   TranslationLogic({
     RealtimeWebSocketService? websocket,
-    AudioStreamService? audio,
+    AudioCapture? audio,
     AudioPlayerService? player,
   }) : _ws = websocket ?? RealtimeWebSocketService(),
        _audio = audio ?? AudioStreamService(),
@@ -116,6 +116,14 @@ class TranslationLogic extends ChangeNotifier {
     });
     _microphoneQueue = claim.catchError((Object _) {});
     return claim;
+  }
+
+  void _rememberCancelledTurn(String turnId) {
+    _cancelledTurns.add(turnId);
+    // A long-running app must not retain every historical turn forever.
+    while (_cancelledTurns.length > 128) {
+      _cancelledTurns.remove(_cancelledTurns.first);
+    }
   }
 
   void swapLanguages() {
@@ -170,8 +178,23 @@ class TranslationLogic extends ChangeNotifier {
     await mic.start(() async {
       _starting = true;
       final generation = ++_recordingGeneration;
+      final turnId =
+          '${DateTime.now().millisecondsSinceEpoch}-$_recordingGeneration';
 
       try {
+        // Barge-in is latest-turn-wins: invalidate and stop previous playback
+        // before opening the microphone so TTS cannot leak into the next STT.
+        final supersededTurnId = activeTurnId;
+        if (supersededTurnId != null && supersededTurnId != turnId) {
+          _rememberCancelledTurn(supersededTurnId);
+          if (_ws.isConnected) {
+            _ws.cancelTurn(turnId: supersededTurnId);
+          }
+        }
+        activeTurnId = turnId;
+        await _player.setActiveTurn(turnId);
+        if (_disposed || generation != _recordingGeneration) return;
+
         await _claimMicrophone(generation);
         if (_disposed ||
             generation != _recordingGeneration ||
@@ -184,11 +207,6 @@ class TranslationLogic extends ChangeNotifier {
             !_ws.isConnected) {
           throw Exception('Connection not established');
         }
-
-        final turnId =
-            '${DateTime.now().millisecondsSinceEpoch}-$_recordingGeneration';
-        activeTurnId = turnId;
-        _player.setActiveTurn(turnId);
 
         final stream = await _audio.startStream(
           sampleRate: audioSampleRate,
@@ -227,6 +245,8 @@ class TranslationLogic extends ChangeNotifier {
       } catch (error) {
         if (_disposed || generation != _recordingGeneration) return;
         await _audio.stop();
+        if (activeTurnId == turnId) activeTurnId = null;
+        await _player.clearQueueForTurn(turnId);
         if (_microphoneOwner == this) _microphoneOwner = null;
         errorMessage = error is SessionException
             ? error.message
@@ -264,7 +284,7 @@ class TranslationLogic extends ChangeNotifier {
 
   Future<void> cancelRecording() async {
     final cancellingTurnId = activeTurnId;
-    if (cancellingTurnId != null) _cancelledTurns.add(cancellingTurnId);
+    if (cancellingTurnId != null) _rememberCancelledTurn(cancellingTurnId);
     activeTurnId = null;
     _recordingGeneration++;
 

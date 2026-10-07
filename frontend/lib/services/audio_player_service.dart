@@ -10,8 +10,39 @@ class _AudioChunk {
   _AudioChunk(this.bytes, this.rate);
 }
 
-class AudioPlayerService {
+/// Small playback boundary so interruption ordering can be tested without a
+/// native audio device. Production still delegates to audioplayers.
+abstract interface class AudioPlayback {
+  Stream<void> get onPlayerComplete;
+  Future<void> setPlaybackRate(double rate);
+  Future<void> play(Source source);
+  Future<void> stop();
+  Future<void> dispose();
+}
+
+class _AudioplayersPlayback implements AudioPlayback {
   final AudioPlayer _player;
+
+  _AudioplayersPlayback(this._player);
+
+  @override
+  Stream<void> get onPlayerComplete => _player.onPlayerComplete;
+
+  @override
+  Future<void> setPlaybackRate(double rate) => _player.setPlaybackRate(rate);
+
+  @override
+  Future<void> play(Source source) => _player.play(source);
+
+  @override
+  Future<void> stop() => _player.stop();
+
+  @override
+  Future<void> dispose() => _player.dispose();
+}
+
+class AudioPlayerService {
+  final AudioPlayback _player;
   final Queue<_AudioChunk> _audioQueue = Queue<_AudioChunk>();
   final List<Uint8List> _turnChunks = [];
   List<Uint8List> _lastCompleteTurnChunks = [];
@@ -22,8 +53,9 @@ class AudioPlayerService {
   int _generation = 0;
   String? _activeTurnId;
 
-  AudioPlayerService({AudioPlayer? player})
-    : _player = player ?? AudioPlayer() {
+  AudioPlayerService({AudioPlayer? player, AudioPlayback? playback})
+    : assert(player == null || playback == null),
+      _player = playback ?? _AudioplayersPlayback(player ?? AudioPlayer()) {
     _completion = _player.onPlayerComplete.listen((_) {
       _isPlaying = false;
       _playNext();
@@ -45,7 +77,7 @@ class AudioPlayerService {
     });
   }
 
-  void setActiveTurn(String turnId) {
+  Future<void> setActiveTurn(String turnId) async {
     if (_activeTurnId == turnId) return;
     _generation++;
     _activeTurnId = turnId;
@@ -54,6 +86,9 @@ class AudioPlayerService {
     _lastCompleteTurnChunks = [];
     _isPlaying = false;
     _schedule(_player.stop);
+    // Do not open the microphone until native playback has really stopped.
+    // This prevents old TTS from leaking into the next STT recording.
+    await _commands;
   }
 
   Future<void> playUrl(String url, {double rate = 1.0}) async {

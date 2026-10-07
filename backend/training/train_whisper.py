@@ -125,6 +125,7 @@ def main() -> None:
     parser.add_argument("--dataset", type=Path, required=True, help="whisper-training.zip")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", default="openai/whisper-large-v3-turbo")
+    parser.add_argument("--revision", required=True)
     parser.add_argument("--epochs", type=float, default=3.0)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--gradient-accumulation", type=int, default=16)
@@ -139,8 +140,8 @@ def main() -> None:
         root = Path(directory)
         safe_extract(args.dataset, root)
         raw = load_rows(root)
-        processor = WhisperProcessor.from_pretrained(args.model)
-        model = WhisperForConditionalGeneration.from_pretrained(args.model)
+        processor = WhisperProcessor.from_pretrained(args.model, revision=args.revision)
+        model = WhisperForConditionalGeneration.from_pretrained(args.model, revision=args.revision)
         model.config.use_cache = False
         model.generation_config.forced_decoder_ids = None
         if not args.full_finetune:

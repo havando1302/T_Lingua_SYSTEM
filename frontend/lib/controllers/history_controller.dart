@@ -5,10 +5,11 @@ import 'package:hive/hive.dart';
 
 import '../models/history.dart';
 import '../services/history_storage_service.dart';
+import '../services/secure_history_box.dart';
 
 class HistoryController extends ChangeNotifier {
   static const int pageSize = 50;
-  final Box<HistoryModel> _box = Hive.box<HistoryModel>('history');
+  final Box<HistoryModel> _box = Hive.box<HistoryModel>(secureHistoryBoxName);
   StreamSubscription<BoxEvent>? _boxSub;
   List<HistoryModel> _historyList = [];
   int _visibleLimit = pageSize;

@@ -64,20 +64,11 @@ async def readiness_check(request: Request, response: Response):
 
     if not is_ready:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {
-            "status": "not_ready",
-            "ready": False,
-            "database": "ok" if db_ok else "unavailable",
-            "models": "ok" if models_ok else "loading",
-            "workers": "ok" if workers_ok else "error",
-        }
+        # Component detail belongs in internal logs/metrics, not in a public
+        # unauthenticated probe response.
+        return {"status": "not_ready", "ready": False}
 
-    return {
-        "status": "ready",
-        "ready": True,
-        "environment": settings.APP_ENV,
-        "device": model_manager.device,
-    }
+    return {"status": "ready", "ready": True}
 
 
 @router.get("/health")

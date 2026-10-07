@@ -1,4 +1,5 @@
 import os
+import base64
 import sys
 import unittest
 import tempfile
@@ -74,7 +75,7 @@ class Phase6OperationsLifecycleTests(unittest.TestCase):
             self.assertEqual(resp.status_code, 503)
             data = resp.json()
             self.assertEqual(data.get("status"), "not_ready")
-            self.assertEqual(data.get("database"), "unavailable")
+            self.assertEqual(data, {"status": "not_ready", "ready": False})
             # Ensure no raw tracebacks leaked
             self.assertNotIn("Traceback", resp.text)
 
@@ -94,11 +95,13 @@ class Phase6OperationsLifecycleTests(unittest.TestCase):
         tm_file.write_text('{"user1": {"xin chào": "hello"}}', encoding="utf-8")
 
         # 1. Create backup
-        archive = create_backup(data_dir=data_dir, output_dir=backup_dir)
+        key = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+        archive = create_backup(data_dir=data_dir, output_dir=backup_dir, encryption_key=key)
         self.assertTrue(archive.exists())
+        self.assertTrue(archive.name.endswith(".tar.gz.enc"))
 
         # 2. Restore to clean directory
-        ok = restore_backup(archive_path=archive, target_dir=restore_dir)
+        ok = restore_backup(archive_path=archive, target_dir=restore_dir, encryption_key=key)
         self.assertTrue(ok)
 
         # 3. Verify content and checksum
@@ -109,6 +112,23 @@ class Phase6OperationsLifecycleTests(unittest.TestCase):
         self.assertTrue(restored_tm.exists())
         self.assertEqual(calculate_sha256(db_file), calculate_sha256(restored_db))
         self.assertEqual(calculate_sha256(tm_file), calculate_sha256(restored_tm))
+
+    def test_backup_rejects_tampering_and_wrong_key(self):
+        data_dir = Path(self.test_dir) / "data"
+        backup_dir = Path(self.test_dir) / "backups"
+        restore_dir = Path(self.test_dir) / "restored"
+        data_dir.mkdir()
+        (data_dir / "admin.db").write_bytes(b"sensitive-test-data")
+        key = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+        wrong_key = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+        archive = create_backup(data_dir, backup_dir, encryption_key=key)
+
+        self.assertFalse(restore_backup(archive, restore_dir, encryption_key=wrong_key))
+        content = bytearray(archive.read_bytes())
+        content[len(content) // 2] ^= 1
+        archive.write_bytes(content)
+        self.assertFalse(restore_backup(archive, restore_dir, encryption_key=key))
+        self.assertFalse((restore_dir / "admin.db").exists())
 
 
 if __name__ == "__main__":

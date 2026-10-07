@@ -12,8 +12,9 @@ import csv
 import hashlib
 import io
 import json
+import math
 import zipfile
-import xml.etree.ElementTree as ElementTree
+from defusedxml import ElementTree
 import openpyxl
 from pydantic import BaseModel, Field, field_validator
 from typing import Any, List, Literal
@@ -351,39 +352,72 @@ def _parse_date_flexible(val: Any) -> datetime | None:
     return None
 
 
-def _apply_metrics_time_filter(query, time_range: Any = None, start_date: Any = None, end_date: Any = None):
+def _metrics_timezone_offset(value: Any) -> int:
+    # JavaScript Date#getTimezoneOffset is UTC - local time (Bangkok = -420).
+    return value if isinstance(value, int) and -840 <= value <= 840 else 0
+
+
+def _metrics_time_bounds(time_range: Any = None, start_date: Any = None,
+                         end_date: Any = None, tz_offset_minutes: Any = 0) -> tuple[datetime | None, datetime | None]:
     now = datetime.utcnow()
+    offset = timedelta(minutes=_metrics_timezone_offset(tz_offset_minutes))
     s_dt = _parse_date_flexible(start_date)
     e_dt = _parse_date_flexible(end_date)
+    if _is_valid_str(start_date) and s_dt is None:
+        raise HTTPException(status_code=422, detail="Ngày bắt đầu không hợp lệ")
+    if _is_valid_str(end_date) and e_dt is None:
+        raise HTTPException(status_code=422, detail="Ngày kết thúc không hợp lệ")
+    if s_dt and e_dt and s_dt > e_dt:
+        raise HTTPException(status_code=422, detail="Ngày bắt đầu phải trước hoặc bằng ngày kết thúc")
     if s_dt or e_dt:
-        if s_dt:
-            query = query.filter(TranslationLog.created_at >= s_dt)
-        if e_dt:
-            query = query.filter(TranslationLog.created_at < e_dt + timedelta(days=1))
-        return query
+        # User-entered dates are local calendar dates; stored timestamps are UTC.
+        return (s_dt + offset if s_dt else None,
+                e_dt + timedelta(days=1) + offset if e_dt else None)
 
     if not _is_valid_str(time_range):
-        return query
+        return None, None
 
     tr = time_range.strip().lower()
+    local_now = now - offset
+    start_local = None
     if tr in ("today", "1d", "hom_nay"):
-        start_dt = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        query = query.filter(TranslationLog.created_at >= start_dt)
+        start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif tr in ("7d", "7_days"):
-        start_dt = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
-        query = query.filter(TranslationLog.created_at >= start_dt)
+        start_local = (local_now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
     elif tr in ("week", "this_week"):
-        start_dt = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-        query = query.filter(TranslationLog.created_at >= start_dt)
+        start_local = (local_now - timedelta(days=local_now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
     elif tr in ("30d", "30_days"):
-        start_dt = (now - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
-        query = query.filter(TranslationLog.created_at >= start_dt)
+        start_local = (local_now - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
     elif tr in ("month", "this_month"):
-        start_dt = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        query = query.filter(TranslationLog.created_at >= start_dt)
+        start_local = local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     elif tr == "all":
-        pass
+        return None, None
+    else:
+        raise HTTPException(status_code=422, detail="Khoảng thời gian không được hỗ trợ")
+    return start_local + offset if start_local else None, None
+
+
+def _apply_metrics_time_filter(query, time_range: Any = None, start_date: Any = None,
+                               end_date: Any = None, tz_offset_minutes: Any = 0):
+    start_utc, end_utc = _metrics_time_bounds(time_range, start_date, end_date, tz_offset_minutes)
+    if start_utc:
+        query = query.filter(TranslationLog.created_at >= start_utc)
+    if end_utc:
+        query = query.filter(TranslationLog.created_at < end_utc)
     return query
+
+
+def _metrics_date_bucket(tz_offset_minutes: Any = 0):
+    local_shift = -_metrics_timezone_offset(tz_offset_minutes)
+    return func.date(TranslationLog.created_at, f"{local_shift:+d} minutes")
+
+
+def _nearest_rank(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    index = max(0, min(math.ceil(percentile * len(ordered)) - 1, len(ordered) - 1))
+    return ordered[index]
 
 
 # --- DASHBOARD / METRICS ---
@@ -392,6 +426,7 @@ def get_dashboard_metrics(
     time_range: str | None = Query(default=None),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
+    tz_offset_minutes: int = Query(default=0, ge=-840, le=840),
     db: Session = Depends(get_db),
     user: User = Depends(require_reporting_user),
 ):
@@ -409,17 +444,17 @@ def get_dashboard_metrics(
         }
 
     base_q = db.query(TranslationLog)
-    base_q = _apply_metrics_time_filter(base_q, time_range, start_date, end_date)
+    base_q = _apply_metrics_time_filter(base_q, time_range, start_date, end_date, tz_offset_minutes)
 
     total_translations = base_q.count()
     flagged_translations = base_q.filter(TranslationLog.is_flagged == True).count()
 
     avg_lat = db.query(func.avg(TranslationLog.latency))
-    avg_lat = _apply_metrics_time_filter(avg_lat, time_range, start_date, end_date)
+    avg_lat = _apply_metrics_time_filter(avg_lat, time_range, start_date, end_date, tz_offset_minutes)
     avg_lat_val = avg_lat.filter(TranslationLog.latency > 0).scalar() or 0.0
 
     clients_q = db.query(func.count(func.distinct(TranslationLog.client_id)))
-    clients_q = _apply_metrics_time_filter(clients_q, time_range, start_date, end_date)
+    clients_q = _apply_metrics_time_filter(clients_q, time_range, start_date, end_date, tz_offset_minutes)
     unique_clients = clients_q.scalar() or 0
 
     return {
@@ -920,6 +955,7 @@ def get_metrics_timeseries(
     time_range: str | None = Query(default=None),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
+    tz_offset_minutes: int = Query(default=0, ge=-840, le=840),
     db: Session = Depends(get_db),
     user: User = Depends(require_reporting_user),
 ):
@@ -931,24 +967,23 @@ def get_metrics_timeseries(
     if not has_filter and len(telemetry_ts) > 0:
         return telemetry_ts
 
-    fallback_avg = db.query(func.avg(TranslationLog.latency)).filter(TranslationLog.latency > 0).scalar() or 0.45
-
+    date_bucket = _metrics_date_bucket(tz_offset_minutes)
     q = db.query(
-        func.date(TranslationLog.created_at).label("d"),
+        date_bucket.label("d"),
         func.count(TranslationLog.id).label("cnt"),
         func.avg(case((TranslationLog.latency > 0, TranslationLog.latency), else_=None)).label("avg_lat"),
     ).filter(TranslationLog.created_at.isnot(None))
 
     effective_range = time_range if has_filter else "all"
-    q = _apply_metrics_time_filter(q, effective_range, start_date, end_date)
+    q = _apply_metrics_time_filter(q, effective_range, start_date, end_date, tz_offset_minutes)
 
-    rows = q.group_by(func.date(TranslationLog.created_at)).order_by(func.date(TranslationLog.created_at)).all()
+    rows = q.group_by(date_bucket).order_by(date_bucket).all()
 
     result = []
     for r in rows:
         d_str = str(r[0])
         cnt = int(r[1])
-        avg_lat = round(float(r[2] if r[2] is not None and r[2] > 0 else fallback_avg), 3)
+        avg_lat = round(float(r[2] if r[2] is not None and r[2] > 0 else 0.0), 3)
         result.append({
             "date": d_str,
             "requests": cnt,
@@ -961,6 +996,7 @@ def get_metrics_languages(
     time_range: str | None = Query(default=None),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
+    tz_offset_minutes: int = Query(default=0, ge=-840, le=840),
     db: Session = Depends(get_db),
     user: User = Depends(require_reporting_user),
 ):
@@ -978,7 +1014,7 @@ def get_metrics_languages(
             func.count(TranslationLog.id).label("val"),
         )
         effective_range = time_range if has_filter else "all"
-        q = _apply_metrics_time_filter(q, effective_range, start_date, end_date)
+        q = _apply_metrics_time_filter(q, effective_range, start_date, end_date, tz_offset_minutes)
         rows = q.group_by(TranslationLog.source_lang, TranslationLog.target_lang).all()
         stats = [{"source_lang": r[0] or "vi", "target_lang": r[1] or "en", "value": int(r[2])} for r in rows]
 
@@ -1002,6 +1038,7 @@ def get_metrics_pipeline(
     time_range: str | None = Query(default=None),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
+    tz_offset_minutes: int = Query(default=0, ge=-840, le=840),
     db: Session = Depends(get_db),
     user: User = Depends(require_reporting_user),
 ):
@@ -1010,7 +1047,7 @@ def get_metrics_pipeline(
     if not has_filter:
         summary = GLOBAL_TELEMETRY.get_summary()
         if summary["total_completed"] > 0:
-            return summary
+            return {**summary, "scope": "since_process_start", "stage_metrics_available": True}
 
     effective_range = time_range if has_filter else "all"
     empty_result = {
@@ -1018,6 +1055,8 @@ def get_metrics_pipeline(
         "total_completed": 0,
         "total_errors": 0,
         "throughput_turns_per_sec": 0.0,
+        "scope": "persisted",
+        "stage_metrics_available": False,
         "latencies_ms": {
             "queue_wait": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
             "stt": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
@@ -1030,26 +1069,19 @@ def get_metrics_pipeline(
 
     try:
         q_lat = db.query(TranslationLog.latency).filter(TranslationLog.latency > 0)
-        q_lat = _apply_metrics_time_filter(q_lat, effective_range, start_date, end_date)
+        q_lat = _apply_metrics_time_filter(q_lat, effective_range, start_date, end_date, tz_offset_minutes)
         lats_s = [r[0] for r in q_lat.all()]
 
         q_total = db.query(func.count(TranslationLog.id))
-        q_total = _apply_metrics_time_filter(q_total, effective_range, start_date, end_date)
+        q_total = _apply_metrics_time_filter(q_total, effective_range, start_date, end_date, tz_offset_minutes)
         total_count = q_total.scalar() or 0
-
-        if not lats_s and total_count > 0:
-            all_lats = db.query(TranslationLog.latency).filter(TranslationLog.latency > 0).all()
-            if all_lats:
-                lats_s = [r[0] for r in all_lats]
-            else:
-                lats_s = [0.45]
 
         if lats_s:
             lats_ms = sorted([round(x * 1000, 1) for x in lats_s])
             n = len(lats_ms)
-            p50 = lats_ms[int(n * 0.50)]
-            p90 = lats_ms[min(int(n * 0.90), n - 1)]
-            p99 = lats_ms[min(int(n * 0.99), n - 1)]
+            p50 = _nearest_rank(lats_ms, 0.50)
+            p90 = _nearest_rank(lats_ms, 0.90)
+            p99 = _nearest_rank(lats_ms, 0.99)
             avg = round(sum(lats_ms) / n, 1)
             return {
                 "active_turns": 0,
@@ -1059,17 +1091,21 @@ def get_metrics_pipeline(
                 "latencies_ms": {
                     "queue_wait": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
                     "end_to_end": {"p50": p50, "p90": p90, "p99": p99, "avg": avg},
-                    "translate": {"p50": round(p50 * 0.7, 1), "p90": round(p90 * 0.7, 1), "p99": round(p99 * 0.7, 1), "avg": round(avg * 0.7, 1)},
-                    "stt": {"p50": round(p50 * 0.2, 1), "p90": round(p90 * 0.2, 1), "p99": round(p99 * 0.2, 1), "avg": round(avg * 0.2, 1)},
-                    "tts_first_chunk": {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)},
-                    "tts_total": {"p50": round(p50 * 0.1, 1), "p90": round(p90 * 0.1, 1), "p99": round(p99 * 0.1, 1), "avg": round(avg * 0.1, 1)},
+                    "translate": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+                    "stt": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+                    "tts_first_chunk": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
+                    "tts_total": {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0},
                 },
+                "scope": "persisted",
+                "stage_metrics_available": False,
             }
         else:
             empty_result["total_completed"] = total_count
             return empty_result
-    except Exception:
-        return GLOBAL_TELEMETRY.get_summary()
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=500, detail="Không thể tổng hợp số liệu pipeline") from error
 
 @router.get("/audit")
 def get_audit_log(

@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 
 import '../controllers/settings_controller.dart';
 import '../models/history.dart';
+import 'secure_history_box.dart';
 
 enum HistorySaveResult { saved, alreadySaved, disabled, empty }
 
@@ -12,7 +13,7 @@ class HistoryStorageService {
   static final instance = HistoryStorageService();
   Timer? _timer;
   bool _pruning = false;
-  Box<HistoryModel> get _box => Hive.box<HistoryModel>('history');
+  Box<HistoryModel> get _box => Hive.box<HistoryModel>(secureHistoryBoxName);
 
   void start() {
     SettingsController.instance.addListener(_settingsChanged);

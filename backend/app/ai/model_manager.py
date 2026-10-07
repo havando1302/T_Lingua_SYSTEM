@@ -85,6 +85,7 @@ class ModelManager:
                 from app.ai.torch_whisper_adapter import TorchWhisperModel
                 self.whisper_model = TorchWhisperModel(
                     getattr(s, "WHISPER_TORCH_MODEL", "openai/whisper-large-v3-turbo"), "cuda",
+                    revision=s.WHISPER_TORCH_REVISION,
                     local_files_only=getattr(s, "WHISPER_TORCH_LOCAL_ONLY", False),
                 )
                 self._whisper_backend = "transformers"
@@ -132,17 +133,19 @@ class ModelManager:
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
         import os
 
-        self.nllb_tokenizer = AutoTokenizer.from_pretrained(s.NLLB_MODEL)
+        self.nllb_tokenizer = AutoTokenizer.from_pretrained(
+            s.NLLB_MODEL, revision=s.NLLB_REVISION,
+        )
 
         use_int8 = os.getenv("NLLB_INT8", "0") == "1"
         if use_int8:
             self.nllb_model = AutoModelForSeq2SeqLM.from_pretrained(
-                s.NLLB_MODEL, load_in_8bit=True, device_map="auto"
+                s.NLLB_MODEL, revision=s.NLLB_REVISION, load_in_8bit=True, device_map="auto"
             )
         else:
             torch_dtype = torch.float16 if self._device == "cuda" else None
             self.nllb_model = AutoModelForSeq2SeqLM.from_pretrained(
-                s.NLLB_MODEL, torch_dtype=torch_dtype
+                s.NLLB_MODEL, revision=s.NLLB_REVISION, torch_dtype=torch_dtype
             ).to(self._device)
 
             if self._device == "cuda":
@@ -179,10 +182,18 @@ class ModelManager:
         print("  Loading VITS (ENG + VIE) ...", end=" ", flush=True)
         from transformers import VitsModel, AutoTokenizer as VitsTokenizer
 
-        self.tts_model_eng = VitsModel.from_pretrained(s.TTS_MODEL_ENG).to(self._device).eval()
-        self.tts_tokenizer_eng = VitsTokenizer.from_pretrained(s.TTS_MODEL_ENG)
-        self.tts_model_vie = VitsModel.from_pretrained(s.TTS_MODEL_VIE).to(self._device).eval()
-        self.tts_tokenizer_vie = VitsTokenizer.from_pretrained(s.TTS_MODEL_VIE)
+        self.tts_model_eng = VitsModel.from_pretrained(
+            s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
+        ).to(self._device).eval()
+        self.tts_tokenizer_eng = VitsTokenizer.from_pretrained(
+            s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
+        )
+        self.tts_model_vie = VitsModel.from_pretrained(
+            s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
+        ).to(self._device).eval()
+        self.tts_tokenizer_vie = VitsTokenizer.from_pretrained(
+            s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
+        )
         print(f"OK ({time.time() - t0:.1f}s)")
 
         # --- DeepFilterNet (optional) ---

@@ -25,6 +25,7 @@ from app.services.training_control import (
     artifact_directory, directory_fingerprint, file_sha256, relative_storage_uri,
     resolve_storage_uri,
 )
+from app.core.model_registry import approved_revision
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -99,7 +100,8 @@ def command_for(job: TrainingJob, dataset_path: Path, output_path: Path) -> list
     module = "training.train_nllb" if job.task == "nllb" else "training.train_whisper"
     command = [
         sys.executable, "-m", module, "--dataset", str(dataset_path), "--output", str(output_path),
-        "--model", job.base_model, "--epochs", str(config["epochs"]),
+        "--model", job.base_model, "--revision", approved_revision(job.base_model),
+        "--epochs", str(config["epochs"]),
         "--batch-size", str(config["batch_size"]),
         "--gradient-accumulation", str(config["gradient_accumulation"]),
         "--learning-rate", str(config["learning_rate"]), "--seed", str(config["seed"]),
