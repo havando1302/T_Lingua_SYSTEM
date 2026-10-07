@@ -487,7 +487,7 @@ def isolated_suite(legacy=False):
                     self.app.state.worker_tasks = tasks
                     response = await client.get("/health/ready")
                     self.assertEqual(response.status_code, 503, response.text)
-                    self.assertEqual(response.json()["workers"], "error")
+                    self.assertEqual(response.json(), {"status": "not_ready", "ready": False})
                 self.app.state.worker_tasks = [SimpleNamespace(done=lambda: False), SimpleNamespace(done=lambda: False)]
                 self.assertEqual((await client.get("/health/ready")).status_code, 200)
                 self.app.state.is_draining = True

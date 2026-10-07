@@ -8,7 +8,7 @@ pydantic-settings==2.15.0
 faster-whisper==1.2.1
 transformers==5.15.1
 sentencepiece==0.2.2
-accelerate==1.14.0
+accelerate==1.15.0
 
 # ── Audio Processing ────────────────────
 librosa==0.11.0
@@ -26,7 +26,7 @@ psycopg2-binary==2.9.13
 # ── Authentication ──────────────────────
 bcrypt==3.2.2
 cryptography==50.0.0
-PyJWT[crypto]==2.10.1
+PyJWT[crypto]==2.15.0
 pyotp==2.9.0
 
 # ── WebSocket ───────────────────────────

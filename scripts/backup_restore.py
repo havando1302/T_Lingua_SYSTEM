@@ -96,7 +96,18 @@ def restore_backup(archive_path: Path, target_dir: Path = DEFAULT_DATA_DIR) -> b
             for member in tar.getmembers():
                 if member.name.startswith(("/", "\\", "..")) or ".." in member.name:
                     raise SecurityError(f"Malicious member path detected: {member.name}")
-            tar.extractall(path=temp_extract)
+            # Legacy compatibility path: extract only validated regular files,
+            # never use extractall. Public callers are overridden by v2 below.
+            allowed = {"admin.db", "translation_memory.json", "manifest.json"}
+            for member in tar.getmembers():
+                if member.name not in allowed or not member.isfile():
+                    raise SecurityError("Unexpected archive member")
+                source = tar.extractfile(member)
+                if source is None:
+                    raise SecurityError("Unreadable archive member")
+                destination = temp_extract / member.name
+                with destination.open("xb") as output:
+                    shutil.copyfileobj(source, output)
 
         manifest_file = temp_extract / "manifest.json"
         if not manifest_file.exists():
