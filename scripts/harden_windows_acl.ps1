@@ -24,8 +24,8 @@ $accounts = @($ServiceAccount, 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators') 
 
 function Assert-WorkspaceTarget([string]$Path) {
     $resolved = [System.IO.Path]::GetFullPath($Path)
-    $relative = [System.IO.Path]::GetRelativePath($repoRoot, $resolved)
-    if ([System.IO.Path]::IsPathRooted($relative) -or $relative -eq '..' -or $relative.StartsWith("..$([System.IO.Path]::DirectorySeparatorChar)")) {
+    $rootPrefix = $repoRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+    if (-not $resolved.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing path outside workspace: $resolved"
     }
     return $resolved
