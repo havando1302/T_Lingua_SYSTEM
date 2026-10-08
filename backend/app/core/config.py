@@ -28,7 +28,9 @@ class Settings(AuthSettings, PolicySettings):
     TTS_MODEL_VIE: str = "facebook/mms-tts-vie"
     TTS_MODEL_VIE_REVISION: str = "b58928d033932a49aa8e3d6cf11625b25fe928d2"
     HF_TOKEN: str = ""
-    ENABLE_DEEPFILTER: bool = True
+    # DeepFilterNet 0.5.x requires the retired torchaudio stack. Keep it off in
+    # the hardened runtime; Whisper remains robust to ordinary ambient noise.
+    ENABLE_DEEPFILTER: bool = False
     DENOISE_ATTENUATION_DB: float = Field(default=12.0, ge=0.0, le=60.0)
     DENOISE_MIN_AUDIO_SECONDS: float = Field(default=3.0, ge=0.0, le=10.0)
     PREWARM_MODELS: bool = True

@@ -18,11 +18,11 @@ WORKDIR /app
 # Copy requirements trước để tận dụng Docker cache
 COPY requirements.txt .
 
-# Cài đặt PyTorch với CUDA 11.8 (GPU support)
-# Chúng ta cài riêng Torch để đảm bảo lấy đúng phiên bản CUDA, tránh tải bản CPU
+# Security-supported GPU runtime. The application does not require torchvision
+# or torchaudio, so they are excluded to reduce binary attack surface.
 RUN pip install --no-cache-dir \
-    torch==2.7.1+cu118 torchvision==0.22.1+cu118 torchaudio==2.7.1+cu118 \
-    --index-url https://download.pytorch.org/whl/cu118
+    torch==2.13.0+cu130 \
+    --index-url https://download.pytorch.org/whl/cu130
 
 # Cài đặt các thư viện còn lại
 RUN pip install --no-cache-dir -r requirements.txt

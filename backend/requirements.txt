@@ -15,7 +15,6 @@ librosa==0.11.0
 soundfile==0.14.0
 scipy==1.15.3
 webrtcvad-wheels==2.0.14
-deepfilternet==0.5.6
 
 # ── Database ────────────────────────────
 SQLAlchemy==2.0.52
