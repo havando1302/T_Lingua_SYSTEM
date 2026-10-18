@@ -10,6 +10,8 @@ import unittest
 from unittest.mock import patch
 
 import bcrypt
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.schema import CreateColumn
 from cryptography.fernet import Fernet
 from fastapi import HTTPException
 import jwt
@@ -250,6 +252,22 @@ class ConfigurationTests(unittest.TestCase):
 
 
 class MigrationTests(unittest.TestCase):
+    def test_postgresql_additive_columns_use_native_types_and_boolean_defaults(self):
+        from app.db.security_migration import _ADDITIONS
+
+        definitions = [
+            str(CreateColumn(column).compile(dialect=postgresql.dialect()))
+            for columns in _ADDITIONS.values()
+            for column in columns.values()
+        ]
+        rendered = "\n".join(definitions).upper()
+        self.assertNotIn("DATETIME", rendered)
+        self.assertNotIn("BOOLEAN DEFAULT 0", rendered)
+        self.assertNotIn("BOOLEAN DEFAULT 1", rendered)
+        self.assertIn("TIMESTAMP WITHOUT TIME ZONE", rendered)
+        self.assertIn("BOOLEAN DEFAULT TRUE", rendered)
+        self.assertIn("BOOLEAN DEFAULT FALSE", rendered)
+
     def test_realtime_audio_migration_makes_reviewer_uploader_optional(self):
         engine = create_engine("sqlite:///:memory:")
         try:
