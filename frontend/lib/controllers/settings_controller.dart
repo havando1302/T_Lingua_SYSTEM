@@ -41,25 +41,49 @@ class SettingsController extends ChangeNotifier {
     AppLocalizations.instance.init(_language);
   }
 
-  Future<void> setVoiceSpeed(String value) async {
+  Future<void> setVoiceSpeed(String value, {bool persist = true}) async {
+    final previous = _voiceSpeed;
     _voiceSpeed = value;
-    await _box.put('voice_speed', value);
     notifyListeners();
+    if (!persist) return;
+    try {
+      await _box.put('voice_speed', value);
+    } catch (_) {
+      _voiceSpeed = previous;
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  Future<void> setHistoryEnabled(bool value) async {
-    await _box.put('history_opt_in', value.toString());
+  Future<void> setHistoryEnabled(bool value, {bool persist = true}) async {
+    final previous = _historyEnabled;
     _historyEnabled = value;
     notifyListeners();
+    if (!persist) return;
+    try {
+      await _box.put('history_opt_in', value.toString());
+    } catch (_) {
+      _historyEnabled = previous;
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  Future<void> setHistoryRetentionDays(int value) async {
+  Future<void> setHistoryRetentionDays(int value, {bool persist = true}) async {
     if (value < 1 || value > 30) {
       throw ArgumentError('Retention must be between 1 and 30 days.');
     }
-    await _box.put('history_retention_days', value.toString());
+    final previous = _historyRetentionDays;
     _historyRetentionDays = value;
     notifyListeners();
+    if (!persist) return;
+    try {
+      await _box.put('history_retention_days', value.toString());
+    } catch (_) {
+      _historyRetentionDays = previous;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> setVoiceGender(String value) async {
@@ -68,11 +92,20 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setLanguage(String value) async {
+  Future<void> setLanguage(String value, {bool persist = true}) async {
     if (value != 'vi' && value != 'en') return;
+    final previous = _language;
     _language = value;
-    await _box.put('app_language', value);
     AppLocalizations.instance.setLocale(value);
     notifyListeners();
+    if (!persist) return;
+    try {
+      await _box.put('app_language', value);
+    } catch (_) {
+      _language = previous;
+      AppLocalizations.instance.setLocale(previous);
+      notifyListeners();
+      rethrow;
+    }
   }
 }

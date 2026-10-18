@@ -1,5 +1,7 @@
 import os
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 
@@ -20,6 +22,20 @@ with patch.dict(os.environ, _TEST_ENV):
 
 
 class TranslationQualityTests(unittest.TestCase):
+    def setUp(self):
+        # Legacy compatibility tests must never read or overwrite runtime data.
+        self.tm_temp = tempfile.TemporaryDirectory(prefix="tm-quality-")
+        self.addCleanup(self.tm_temp.cleanup)
+        for name in ("_memory", "_guest_memory", "_guest_expiry"):
+            patcher = patch.object(tm, name, {})
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        tm_file_patcher = patch.object(
+            tm, "_TM_FILE", str(Path(self.tm_temp.name) / "translation_memory.json")
+        )
+        tm_file_patcher.start()
+        self.addCleanup(tm_file_patcher.stop)
+
     def test_tm_direction_awareness_and_isolation(self):
         owner = "test-owner-p4"
         # Add Vietnamese -> English entry

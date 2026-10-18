@@ -173,9 +173,11 @@ class TMDeleteRequest(BaseModel):
 
 
 @router.get("/api/translation-memory")
-def get_translation_memory(client_id: str | None = None, principal: Principal = Depends(require_scope("tm:read"))):
+def get_translation_memory(client_id: str | None = None, principal: Principal = Depends(require_scope("tm:read")),
+                           db: Session = Depends(get_db)):
     owner = owner_namespace(principal, client_id)
-    return {"entries": tm.get_all(owner), "count": tm.count(owner)}
+    repository = tm.get_tm_repository()
+    return {"entries": repository.get_all(owner, db=db), "count": repository.count(owner, db=db)}
 
 
 @router.post("/api/translation-memory")
@@ -188,10 +190,10 @@ def add_translation_memory(entry: TMEntry, principal: Principal = Depends(requir
         except ValueError:
             raise HTTPException(409, "Guest dictionary is unavailable") from None
     try:
-        if not tm.add_many(
+        if not tm.get_tm_repository().add_many(
             [{"source_text": source, "translated_text": target}], owner,
             max_entries=500, volatile=principal.role == "guest",
-            source_lang=entry.source_lang, target_lang=entry.target_lang,
+            source_lang=entry.source_lang, target_lang=entry.target_lang, db=db,
         ):
             raise HTTPException(422, "Invalid entry")
     except ValueError as error:
@@ -200,18 +202,25 @@ def add_translation_memory(entry: TMEntry, principal: Principal = Depends(requir
         raise HTTPException(422, "Invalid dictionary entry or language pair") from None
     except OSError:
         raise HTTPException(503, "Dictionary storage is unavailable") from None
-    return {"message": "Added successfully", "source_text": source, "translated_text": target, "total_entries": tm.count(owner)}
+    # Database-backed dictionaries participate in the request transaction.
+    # Guest dictionaries are volatile, so this is a harmless no-op for them.
+    db.commit()
+    return {"message": "Added successfully", "source_text": source, "translated_text": target,
+            "total_entries": tm.get_tm_repository().count(owner, db=db)}
 
 
 @router.post("/api/translation-memory/delete")
-def delete_translation_memory(entry: TMDeleteRequest, principal: Principal = Depends(require_scope("tm:write"))):
+def delete_translation_memory(entry: TMDeleteRequest, principal: Principal = Depends(require_scope("tm:write")),
+                              db: Session = Depends(get_db)):
     owner = owner_namespace(principal, entry.client_id)
     try:
-        if not tm.delete(entry.source_text, owner):
+        if not tm.get_tm_repository().delete(entry.source_text, owner, db=db):
             raise HTTPException(404, "Entry not found")
     except OSError:
         raise HTTPException(503, "Dictionary storage is unavailable") from None
-    return {"message": "Deleted successfully", "source_text": entry.source_text, "total_entries": tm.count(owner)}
+    db.commit()
+    return {"message": "Deleted successfully", "source_text": entry.source_text,
+            "total_entries": tm.get_tm_repository().count(owner, db=db)}
 
 
 class FlagTranslationRequest(BaseModel):

@@ -37,6 +37,29 @@ class TranslationLog(Base):
     is_reviewed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False) # Đã được QA xem xét / chỉnh sửa
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True, nullable=True)
 
+
+class PipelineMetric(Base):
+    """Content-free, durable telemetry for one realtime speech turn."""
+    __tablename__ = "pipeline_metrics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    turn_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    session_id_hash: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    source_lang: Mapped[str] = mapped_column(String(16), default="vi", index=True, nullable=False)
+    target_lang: Mapped[str] = mapped_column(String(16), default="en", index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), default="success", index=True, nullable=False)
+    error_stage: Mapped[str | None] = mapped_column(String(32), index=True, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    queue_wait_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    stt_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    translate_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tts_first_chunk_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tts_total_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    end_to_end_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    audio_duration_s: Mapped[float | None] = mapped_column(Float, nullable=True)
+    text_length: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True, nullable=False)
+
 class ApiKey(Base):
     __tablename__ = "api_keys"
 
@@ -84,7 +107,7 @@ class TranslationMemoryEntry(Base):
     __tablename__ = "translation_memory_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    owner_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False, default="global:approved")
+    owner_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False, default="global:approved")
     source_lang: Mapped[str] = mapped_column(String(16), index=True, nullable=False, default="vi")
     target_lang: Mapped[str] = mapped_column(String(16), index=True, nullable=False, default="en")
     source_text: Mapped[str] = mapped_column(Text, nullable=False)

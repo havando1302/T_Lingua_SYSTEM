@@ -164,8 +164,16 @@ const server = createServer(async (request, response) => {
     }
     else if (url.pathname === '/admin/metrics/timeseries' || url.pathname === '/admin/metrics/languages') respond([]);
     else if (url.pathname === '/admin/metrics/pipeline') {
-      const stage = { p50: 12, p90: 24, p99: 40, avg: 15 };
-      respond({ active_turns: 0, total_completed: 12, total_errors: 0, throughput_turns_per_sec: 0.2, scope: 'persisted', stage_metrics_available: false, latencies_ms: Object.fromEntries(['queue_wait', 'stt', 'translate', 'tts_first_chunk', 'tts_total', 'end_to_end'].map(name => [name, stage])) });
+      const stage = { p50: 120, p90: 240, p99: 400, avg: 150, min: 80, max: 450, count: 12, missing_count: 0, availability_pct: 100, slo_ms: 500, breach_count: 0, breach_rate: 0 };
+      respond({
+        active_turns: 1, total_completed: 12, total_success: 11, total_errors: 1, total_cancelled: 0,
+        success_rate: 91.7, error_rate: 8.3, throughput_turns_per_sec: 0.2,
+        scope: 'persisted', stage_metrics_available: true, bottleneck: 'stt',
+        latencies_ms: Object.fromEntries(['queue_wait', 'stt', 'translate', 'tts_first_chunk', 'tts_total', 'end_to_end'].map(name => [name, stage])),
+        error_breakdown: [{ stage: 'tts', count: 1 }],
+        stage_timeseries: [{ date: '2026-09-13', requests: 12, stt_p90: 240, translate_p90: 140, tts_first_chunk_p90: 210, end_to_end_p90: 600 }],
+        slowest_turns: [{ turn_id: 'synthetic-slow-turn', created_at: '2026-09-13T00:00:00Z', source_lang: 'vi', target_lang: 'en', status: 'success', bottleneck: 'stt', queue_wait_ms: 20, stt_ms: 400, translate_ms: 120, tts_first_chunk_ms: 200, tts_total_ms: 300, end_to_end_ms: 850 }],
+      });
     } else respond({ detail: `Unmocked endpoint ${url.pathname}` }, 404);
   } catch (error) { response.writeHead(500); response.end(String(error)); }
 });
@@ -505,7 +513,9 @@ try {
   await check('Analytics percentile labels and persisted time filters are clear', async () => {
     assert.equal(await evaluate("document.body.innerText.includes('P95')"), false);
     assert.equal(await evaluate("document.body.innerText.includes('Tất cả')"), true);
-    assert.equal(await evaluate("document.body.innerText.includes('không suy diễn số liệu riêng')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Xu hướng P90 theo từng stage')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Top request chậm nhất')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Nút thắt hiện tại')"), true);
     const analyticsRequest = requests.filter(request => request.path === '/admin/metrics/timeseries').at(-1);
     assert.equal(analyticsRequest.params.tz_offset_minutes, '-420');
   });

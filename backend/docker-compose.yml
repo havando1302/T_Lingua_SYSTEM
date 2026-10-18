@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     volumes:
-      # Ánh xạ thư mục data để lưu vĩnh viễn Translation Memory và Context
+      # Database, Translation Memory metadata, datasets and consented audio.
       - ./data:/app/data
       # Ánh xạ huggingface cache để không phải tải lại model AI mỗi lần xóa container
       - ./outputs:/app/outputs

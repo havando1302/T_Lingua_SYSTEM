@@ -15,6 +15,7 @@ from app.utils.text_utils import split_text_for_streaming
 from app.core.gpu_manager import GPU_MANAGER
 from app.core.telemetry import GLOBAL_TELEMETRY
 from app.workers.runtime import finish_work
+from app.services.pipeline_metrics import persist_pipeline_metric
 
 _tts_semaphore = asyncio.Semaphore(TTS_CONCURRENCY)
 
@@ -128,13 +129,15 @@ async def tts_worker(worker_id: int = 0):
                     ok = await session.send_message(done) if hasattr(session, "send_message") else await _safe_send_json(websocket, done)
                     if ok:
                         GLOBAL_TELEMETRY.record_stage(metric_id, "tts_done")
-                        GLOBAL_TELEMETRY.complete_turn(metric_id)
+                        metric = GLOBAL_TELEMETRY.complete_turn(metric_id)
+                        await asyncio.to_thread(persist_pipeline_metric, metric, status="success")
                         completed = True
 
         except (WebSocketDisconnect, ConnectionClosedError):
             continue
         except Exception as e:
-            GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(e).__name__)
+            metric = GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(e).__name__)
+            await asyncio.to_thread(persist_pipeline_metric, metric, status="error", error_stage="tts")
             logger.error("tts_failed error_type=%s", type(e).__name__)
             if session and session.is_running and hasattr(session, "send_message"):
                 await session.send_message({"type": "error", "code": "tts_unavailable", "message": "Speech synthesis is temporarily unavailable", "turn_id": turn.turn_id if turn else None})

@@ -31,6 +31,7 @@ class TurnMetric:
     error: Optional[str] = None
     source_lang: str = "vi"
     target_lang: str = "en"
+    received_at: datetime = field(default_factory=datetime.utcnow)
 
     @property
     def queue_wait_ms(self) -> float:
@@ -152,14 +153,16 @@ class PipelineTelemetryTracker:
                 self._language_counts[pair] = self._language_counts.get(pair, 0) + 1
             return metric
 
-    def discard_turn(self, turn_id: str, *, error: str | None = None) -> None:
+    def discard_turn(self, turn_id: str, *, error: str | None = None) -> Optional[TurnMetric]:
         with self._lock:
             metric = self._active_metrics.pop(turn_id, None)
             if metric:
                 if error and metric.error is None:
                     self._total_errors += 1
+                    metric.error = error
                 elif not error:
                     self._total_cancelled += 1
+            return metric
 
     def get_activity_summary(self) -> dict:
         """Content-free process metrics; never persist transcript or translation text."""
@@ -202,7 +205,8 @@ class PipelineTelemetryTracker:
 
         def _calc_percentiles(values: List[float]) -> Dict[str, float]:
             if not values:
-                return {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0}
+                return {"p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0,
+                        "min": 0.0, "max": 0.0, "count": 0}
             sorted_vals = sorted(values)
             n = len(sorted_vals)
             p50 = sorted_vals[max(0, math.ceil(n * 0.50) - 1)]
@@ -214,6 +218,9 @@ class PipelineTelemetryTracker:
                 "p90": round(p90, 2),
                 "p99": round(p99, 2),
                 "avg": round(avg, 2),
+                "min": round(sorted_vals[0], 2),
+                "max": round(sorted_vals[-1], 2),
+                "count": n,
             }
 
         queue_waits = [m.queue_wait_ms for m in completed if m.queue_wait_ms > 0]

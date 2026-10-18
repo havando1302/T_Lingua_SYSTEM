@@ -32,6 +32,8 @@ class ModelManager:
         self._whisper_backend: str = "not_loaded"
         self._whisper_model_id: str = "not_loaded"
         self._whisper_fallback: bool = False
+        self._tts_device: str = "not_loaded"
+        self._tts_dtype: str = "not_loaded"
         self._load_seconds: float = 0.0
 
     # ── Helpers ─────────────────────────────────────────────
@@ -145,7 +147,7 @@ class ModelManager:
         else:
             torch_dtype = torch.float16 if self._device == "cuda" else None
             self.nllb_model = AutoModelForSeq2SeqLM.from_pretrained(
-                s.NLLB_MODEL, revision=s.NLLB_REVISION, torch_dtype=torch_dtype
+                s.NLLB_MODEL, revision=s.NLLB_REVISION, dtype=torch_dtype
             ).to(self._device)
 
             if self._device == "cuda":
@@ -182,15 +184,35 @@ class ModelManager:
         print("  Loading VITS (ENG + VIE) ...", end=" ", flush=True)
         from transformers import VitsModel, AutoTokenizer as VitsTokenizer
 
+        configured_tts_device = getattr(s, "TTS_DEVICE", "auto")
+        if configured_tts_device == "auto":
+            if self._device == "cuda" and torch.cuda.is_available():
+                vram_gb = torch.cuda.get_device_properties(0).total_memory / 1024**3
+                tts_device = "cuda" if vram_gb >= 8 else "cpu"
+            else:
+                tts_device = "cpu"
+        else:
+            tts_device = configured_tts_device
+        configured_tts_dtype = getattr(s, "TTS_DTYPE", "float32")
+        if configured_tts_dtype == "float16" and tts_device == "cuda":
+            tts_dtype = torch.float16
+        elif configured_tts_dtype == "auto":
+            tts_dtype = torch.float16 if tts_device == "cuda" else torch.float32
+        else:
+            tts_dtype = torch.float32
+        self._tts_device = tts_device
+        self._tts_dtype = str(tts_dtype).removeprefix("torch.")
         self.tts_model_eng = VitsModel.from_pretrained(
             s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
-        ).to(self._device).eval()
+            dtype=tts_dtype,
+        ).to(tts_device).eval()
         self.tts_tokenizer_eng = VitsTokenizer.from_pretrained(
             s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
         )
         self.tts_model_vie = VitsModel.from_pretrained(
             s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
-        ).to(self._device).eval()
+            dtype=tts_dtype,
+        ).to(tts_device).eval()
         self.tts_tokenizer_vie = VitsTokenizer.from_pretrained(
             s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
         )
@@ -218,7 +240,7 @@ class ModelManager:
 
         if self._device == "cuda" and getattr(s, "PREWARM_MODELS", True):
             t0 = time.perf_counter()
-            print("  Prewarming speech models ...", end=" ", flush=True)
+            print("  Prewarming inference models ...", end=" ", flush=True)
             try:
                 import numpy as np
                 from app.ai.torch_whisper_adapter import TorchWhisperModel
@@ -232,6 +254,20 @@ class ModelManager:
                         enhance(self.deepfilter_model, self.deepfilter_state,
                                 torch.zeros(1, 48000),
                                 atten_lim_db=getattr(s, "DENOISE_ATTENUATION_DB", 12.0))
+                # NLLB's first CUDA generation initializes kernels and is
+                # materially slower than steady state.  Pay that cost during
+                # startup so the first user turn has normal latency.
+                self.nllb_tokenizer.src_lang = "vie_Latn"
+                nllb_inputs = self.nllb_tokenizer(
+                    "Hệ thống đã sẵn sàng.", return_tensors="pt"
+                ).to(self._device)
+                with torch.inference_mode():
+                    self.nllb_model.generate(
+                        **nllb_inputs,
+                        forced_bos_token_id=self.nllb_tokenizer.convert_tokens_to_ids("eng_Latn"),
+                        max_new_tokens=16,
+                        num_beams=1,
+                    )
                 for model, tokenizer, sample in (
                     (self.tts_model_eng, self.tts_tokenizer_eng, "Ready."),
                     (self.tts_model_vie, self.tts_tokenizer_vie, "Sẵn sàng."),
@@ -271,6 +307,8 @@ class ModelManager:
                 "whisper_backend": self._whisper_backend,
                 "whisper_model_id": self._whisper_model_id,
                 "whisper_compute_type": self._whisper_compute_type,
+                "tts_device": self._tts_device,
+                "tts_dtype": self._tts_dtype,
                 "whisper_cpu_fallback": self._whisper_fallback,
                 "model_load_seconds": round(self._load_seconds, 3)}
 

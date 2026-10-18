@@ -25,6 +25,7 @@ from app.services.deepfilter_service import denoise_numpy
 from app.core.gpu_manager import GPU_MANAGER
 from app.core.telemetry import GLOBAL_TELEMETRY
 from app.workers.runtime import finish_work
+from app.services.pipeline_metrics import persist_pipeline_metric
 
 _stt_semaphore = asyncio.Semaphore(STT_CONCURRENCY)
 
@@ -150,7 +151,7 @@ async def stt_worker(worker_id: int = 0):
                 )
                 async with _stt_semaphore:
                     cid = getattr(session, "client_id", getattr(session, "owner_id", "default"))
-                    glossary_prompt = tm.get_glossary_prompt(cid)
+                    glossary_prompt = tm.get_tm_repository().get_glossary_prompt(cid)
                     final_result = await asyncio.to_thread(
                         transcribe_audio,
                         audio_np,
@@ -226,7 +227,8 @@ async def stt_worker(worker_id: int = 0):
         except (WebSocketDisconnect, ConnectionClosedError):
             continue
         except Exception as error:
-            GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(error).__name__)
+            metric = GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(error).__name__)
+            await asyncio.to_thread(persist_pipeline_metric, metric, status="error", error_stage="stt")
             logger.error("stt_failed error_type=%s", type(error).__name__)
             if session and session.is_running and hasattr(session, "send_message"):
                 await session.send_message({"type": "error", "code": "stt_unavailable", "message": "Speech recognition is temporarily unavailable", "turn_id": item.get("turn").turn_id if item.get("turn") else None})

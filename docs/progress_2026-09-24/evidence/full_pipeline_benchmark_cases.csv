@@ -1,11 +1,11 @@
 ﻿case_id,source_lang,target_lang,transcript,translation,tts_samples,stt_ms,translation_ms,tts_ms,end_to_end_ms
-V2_VI_EN_001,vi,en,Đơn hàng ị sẽ được trao đến Đà Nẵng vào thứ tư.,Your order will be delivered to Da Nang on Wednesday.,54784,381.82140000026266,371.3828999998441,401.45209999991494,1154.6564000000217
-V2_VI_EN_002,vi,en,Cộng học thỹ thuật bắt đầu lúc tải phong.,Technical training begins at the loading dock.,51456,348.0815999992046,336.86650000072405,125.53399999978865,810.4820999997173
-V2_VI_EN_003,vi,en,Vui lòng sau lưu máy chủ trước khi cập nhật hệ thống.,Please back up the server before updating the system.,57856,391.94009999937407,358.10680000031425,129.36679999984335,879.4136999995317
-V2_VI_EN_004,vi,en,Ai khoảng minh bị khoa sau lần đăng nhập sai?,Who's about to get sick after a bad login?,44800,297.858200000519,382.8500999998141,131.7932000001747,812.5015000005078
-V2_VI_EN_005,vi,en,"Chuyến bay đến hải phòng Khởi Hành, lúc vào thứ Ba.","Flight to the launch site, Tuesday.",39168,362.52629999944475,292.4173999999766,143.06410000062897,798.0078000000503
-V2_EN_VI_001,en,vi,"I kid you, pub food will arrive in an anthed.","Tôi đùa anh, đồ ăn quán rượu sẽ đến trong một con kiến.",72960,261.2448999998378,533.0847000004724,143.25379999991128,937.5834000002214
-V2_EN_VI_002,en,vi,the technical meeting starts at Vafahit in Roomed Broad.,cuộc họp kỹ thuật bắt đầu tại Vafahit ở Roomed Broad.,68608,284.12029999981314,459.93929999985994,126.13520000013523,870.1947999998083
-V2_EN_VI_003,en,vi,Please restart the server after installing the update.,Vui lòng khởi động lại máy chủ sau khi cài đặt bản cập nhật.,75520,205.91830000012123,484.8119999996925,132.50179999977263,823.2320999995864
-V2_EN_VI_004,en,vi,Thus a mind must change the password within days.,"Vì vậy, một tâm trí phải thay đổi mật khẩu trong vài ngày.",75776,249.8465999997279,504.0820000003805,133.3191000003353,887.2477000004437
-V2_EN_VI_005,en,vi,The train to Haifan leaves at Tharbzons Bay.,Tàu đến Haifan khởi hành tại vịnh Tharbzons.,48640,310.2158000001509,503.43080000038753,158.36789999957546,972.0145000001139
+V2_VI_EN_001,vi,en,Đơn hàng sẽ được giao đến Đà Nẵng vào thứ tư,The order will be delivered to Da Nang on Wednesday.,52224,455.1105999998981,473.0152999982238,395.3493000008166,1323.4751999989385
+V2_VI_EN_002,vi,en,Cuộc học kỹ thuật bắt đầu lúc tại phòng.,Engineering classes start in the classroom.,55040,319.4225999977789,294.5691000059014,376.48279999848455,990.4745000021649
+V2_VI_EN_003,vi,en,Vui lòng sao lương máy chủ trước khi cập nhật hệ thống.,Please pay the server before updating the system.,53760,379.7861999992165,366.10469999868656,369.1689999977825,1115.0598999956856
+V2_VI_EN_004,vi,en,Tài khoản minh bị khóa sau lần đăng nhập sai.,The account was locked after a false login.,42752,368.0540999994264,428.50020000332734,213.68580000125803,1010.2401000040118
+V2_VI_EN_005,vi,en,Chuyến bay đến Hải Phòng khởi hành. Lúc vào thứ ba.,The flight to the Navy Yard leaves on Tuesday.,50944,368.8611000034143,318.21730000228854,381.64149999647634,1068.7199000021792
+V2_EN_VI_001,en,vi,Akech Palptha will arrive and announced,Akech Palptha sẽ đến và thông báo,48896,286.52709999732906,310.79370000225026,347.5588000001153,944.8795999996946
+V2_EN_VI_002,en,vi,The technical meeting starts at Draven in Rume Drave.,Cuộc họp kỹ thuật bắt đầu ở Draven ở Rume Drave.,69888,349.2106999983662,508.22299999708775,419.7156000009272,1277.1492999963812
+V2_EN_VI_003,en,vi,Please restart the server after installing the update.,Vui lòng khởi động lại máy chủ sau khi cài đặt bản cập nhật.,70400,343.72269999585114,771.8179000003147,412.47000000294065,1528.0105999991065
+V2_EN_VI_004,en,vi,Thus their mind must change the password within days.,"Vì vậy, tâm trí của họ phải thay đổi mật khẩu trong vài ngày.",70400,377.89820000034524,684.6379000053275,150.45249999820953,1212.9886000038823
+V2_EN_VI_005,en,vi,The train to Eiffen leaves at Povlon's Bayet.,Tàu đến Eiffen sẽ khởi hành tại Povlon's Bayet.,67584,346.0107000064454,518.9651999971829,168.52949999884004,1033.5054000024684

@@ -19,16 +19,19 @@ def init_db():
     from app.db.security_migration import init_security_schema
 
     result = init_security_schema(engine)
+    from app.services.translation_memory import migrate_legacy_json_to_database
     defaults = [
         ("max_chars_per_request", "5000", "Maximum characters per translation"),
         ("enable_cache", "true", "Enable translation cache"),
         ("rate_limit_rpm", "60", "Maximum requests per minute"),
     ]
     with SessionLocal() as db:
+        tm_migration = migrate_legacy_json_to_database(db)
         for key, value, description in defaults:
             if db.query(SystemSetting).filter(SystemSetting.key == key).first() is None:
                 db.add(SystemSetting(key=key, value=value, description=description))
         db.commit()
+    result["translation_memory"] = tm_migration
     return result
 
 

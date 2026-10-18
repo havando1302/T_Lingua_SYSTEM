@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { useTimedMessage } from '../lib/useTimedMessage';
 import api, { apiErrorMessage } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Activity, Gauge, Clock, Zap, Calendar, Filter, RotateCcw, ArrowRight, Languages } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { Activity, Gauge, Clock, Zap, Calendar, Filter, RotateCcw, ArrowRight, Languages, ShieldCheck, CircleAlert, Database, TimerReset } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 
 interface LanguageMetric {
   name: string;
@@ -22,12 +23,48 @@ interface LatencyPercentile {
   p90: number;
   p99: number;
   avg: number;
+  min: number;
+  max: number;
+  count: number;
+  missing_count: number;
+  availability_pct: number;
+  slo_ms: number;
+  breach_count: number;
+  breach_rate: number;
+}
+
+interface StageTimeSeriesMetric {
+  date: string;
+  requests: number;
+  stt_p90: number;
+  translate_p90: number;
+  tts_first_chunk_p90: number;
+  end_to_end_p90: number;
+}
+
+interface SlowTurnMetric {
+  turn_id: string;
+  created_at: string;
+  source_lang: string;
+  target_lang: string;
+  status: string;
+  bottleneck: string | null;
+  queue_wait_ms: number;
+  stt_ms: number;
+  translate_ms: number;
+  tts_first_chunk_ms: number;
+  tts_total_ms: number;
+  end_to_end_ms: number;
 }
 
 interface PipelineMetrics {
   active_turns: number;
   total_completed: number;
+  total_success: number;
   total_errors: number;
+  total_cancelled: number;
+  success_rate: number;
+  error_rate: number;
   throughput_turns_per_sec: number;
   scope?: 'since_process_start' | 'persisted';
   stage_metrics_available?: boolean;
@@ -39,6 +76,10 @@ interface PipelineMetrics {
     tts_total: LatencyPercentile;
     end_to_end: LatencyPercentile;
   };
+  bottleneck: string | null;
+  error_breakdown: Array<{ stage: string; count: number }>;
+  stage_timeseries: StageTimeSeriesMetric[];
+  slowest_turns: SlowTurnMetric[];
 }
 
 type TimeFilterPreset = 'all' | 'today' | '7d' | 'week' | '30d' | 'month' | 'custom';
@@ -88,7 +129,55 @@ function normalizeLatency(value: unknown): LatencyPercentile {
     p90: Math.max(0, finiteNumber(data.p90)),
     p99: Math.max(0, finiteNumber(data.p99)),
     avg: Math.max(0, finiteNumber(data.avg)),
+    min: Math.max(0, finiteNumber(data.min)),
+    max: Math.max(0, finiteNumber(data.max)),
+    count: Math.max(0, Math.trunc(finiteNumber(data.count))),
+    missing_count: Math.max(0, Math.trunc(finiteNumber(data.missing_count))),
+    availability_pct: Math.min(100, Math.max(0, finiteNumber(data.availability_pct))),
+    slo_ms: Math.max(0, finiteNumber(data.slo_ms)),
+    breach_count: Math.max(0, Math.trunc(finiteNumber(data.breach_count))),
+    breach_rate: Math.min(100, Math.max(0, finiteNumber(data.breach_rate))),
   };
+}
+
+function normalizeStageTimeSeries(value: unknown): StageTimeSeriesMetric[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const row = item as Record<string, unknown>;
+    if (typeof row.date !== 'string') return [];
+    return [{
+      date: row.date,
+      requests: Math.max(0, Math.trunc(finiteNumber(row.requests))),
+      stt_p90: Math.max(0, finiteNumber(row.stt_p90)),
+      translate_p90: Math.max(0, finiteNumber(row.translate_p90)),
+      tts_first_chunk_p90: Math.max(0, finiteNumber(row.tts_first_chunk_p90)),
+      end_to_end_p90: Math.max(0, finiteNumber(row.end_to_end_p90)),
+    }];
+  });
+}
+
+function normalizeSlowTurns(value: unknown): SlowTurnMetric[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const row = item as Record<string, unknown>;
+    if (typeof row.turn_id !== 'string' || typeof row.created_at !== 'string') return [];
+    return [{
+      turn_id: row.turn_id,
+      created_at: row.created_at,
+      source_lang: typeof row.source_lang === 'string' ? row.source_lang : '—',
+      target_lang: typeof row.target_lang === 'string' ? row.target_lang : '—',
+      status: typeof row.status === 'string' ? row.status : 'unknown',
+      bottleneck: typeof row.bottleneck === 'string' ? row.bottleneck : null,
+      queue_wait_ms: Math.max(0, finiteNumber(row.queue_wait_ms)),
+      stt_ms: Math.max(0, finiteNumber(row.stt_ms)),
+      translate_ms: Math.max(0, finiteNumber(row.translate_ms)),
+      tts_first_chunk_ms: Math.max(0, finiteNumber(row.tts_first_chunk_ms)),
+      tts_total_ms: Math.max(0, finiteNumber(row.tts_total_ms)),
+      end_to_end_ms: Math.max(0, finiteNumber(row.end_to_end_ms)),
+    }];
+  });
 }
 
 function normalizePipeline(value: unknown): PipelineMetrics | null {
@@ -99,7 +188,11 @@ function normalizePipeline(value: unknown): PipelineMetrics | null {
   return {
     active_turns: Math.max(0, Math.trunc(finiteNumber(data.active_turns))),
     total_completed: Math.max(0, Math.trunc(finiteNumber(data.total_completed))),
+    total_success: Math.max(0, Math.trunc(finiteNumber(data.total_success ?? data.total_completed))),
     total_errors: Math.max(0, Math.trunc(finiteNumber(data.total_errors))),
+    total_cancelled: Math.max(0, Math.trunc(finiteNumber(data.total_cancelled))),
+    success_rate: Math.min(100, Math.max(0, finiteNumber(data.success_rate))),
+    error_rate: Math.min(100, Math.max(0, finiteNumber(data.error_rate))),
     throughput_turns_per_sec: Math.max(0, finiteNumber(data.throughput_turns_per_sec)),
     scope: data.scope === 'since_process_start' ? 'since_process_start' : 'persisted',
     stage_metrics_available: data.stage_metrics_available === true,
@@ -111,7 +204,69 @@ function normalizePipeline(value: unknown): PipelineMetrics | null {
       tts_total: normalizeLatency(latencies.tts_total),
       end_to_end: normalizeLatency(latencies.end_to_end),
     },
+    bottleneck: typeof data.bottleneck === 'string' ? data.bottleneck : null,
+    error_breakdown: Array.isArray(data.error_breakdown) ? data.error_breakdown.flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const row = item as Record<string, unknown>;
+      if (typeof row.stage !== 'string') return [];
+      return [{ stage: row.stage, count: Math.max(0, Math.trunc(finiteNumber(row.count))) }];
+    }) : [],
+    stage_timeseries: normalizeStageTimeSeries(data.stage_timeseries),
+    slowest_turns: normalizeSlowTurns(data.slowest_turns),
   };
+}
+
+const STAGE_LABELS: Record<string, string> = {
+  queue_wait: 'Chờ hàng đợi', stt: 'Nhận dạng STT', translate: 'Dịch NLLB',
+  tts_first_chunk: 'TTS chunk đầu', tts_total: 'TTS toàn bộ', end_to_end: 'Toàn trình',
+  unknown: 'Không xác định',
+};
+
+function formatMs(value: number): string {
+  if (!value) return '—';
+  return value >= 1000 ? `${(value / 1000).toFixed(2)} s` : `${Math.round(value)} ms`;
+}
+
+function LatencyCard({ title, metric, icon, color }: {
+  title: string; metric: LatencyPercentile; icon: ReactNode; color: string;
+}) {
+  const hasData = metric.count > 0 || metric.p50 > 0;
+  const withinSlo = hasData && metric.slo_ms > 0 && metric.p90 <= metric.slo_ms;
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="p-4 pb-2 flex-row items-start justify-between space-y-0">
+        <div>
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="mt-1 text-[11px] text-text-muted">P50 · P90 · P99</p>
+        </div>
+        <span className={`rounded-lg p-2 ${color}`}>{icon}</span>
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <div className="flex items-end justify-between gap-2">
+          <span className="text-2xl font-bold tracking-tight">{hasData ? formatMs(metric.p50) : '—'}</span>
+          {hasData && metric.slo_ms > 0 && (
+            <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${withinSlo ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-red-500/10 text-red-700 dark:text-red-300'}`}>
+              {withinSlo ? 'Đạt SLA' : 'Vượt SLA'}
+            </span>
+          )}
+        </div>
+        {hasData ? (
+          <>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <div><p className="text-text-muted">P90</p><p className="font-semibold">{formatMs(metric.p90)}</p></div>
+              <div><p className="text-text-muted">P99</p><p className="font-semibold">{formatMs(metric.p99)}</p></div>
+              <div><p className="text-text-muted">Trung bình</p><p className="font-semibold">{formatMs(metric.avg)}</p></div>
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-[11px] text-text-muted">
+              <span>{metric.count || '—'} mẫu · phủ {metric.availability_pct || 100}%</span>
+              <span>{formatMs(metric.min)} – {formatMs(metric.max)}</span>
+            </div>
+            {metric.slo_ms > 0 && <p className="mt-1 text-[11px] text-text-muted">Ngưỡng {formatMs(metric.slo_ms)} · vi phạm {metric.breach_rate}%</p>}
+          </>
+        ) : <p className="mt-3 text-xs text-text-muted">Chưa có dữ liệu stage trong phạm vi này.</p>}
+      </CardContent>
+    </Card>
+  );
 }
 
 const Analytics = () => {
@@ -440,78 +595,91 @@ const Analytics = () => {
 
       {/* Real-time & Baseline Pipeline Latency Metrics */}
       {pipelineMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <Card><CardContent className="p-4"><p className="text-xs text-text-muted">Tổng pipeline</p><p className="mt-1 text-2xl font-bold">{pipelineMetrics.total_completed}</p><p className="mt-1 text-[11px] text-text-muted">{pipelineMetrics.active_turns} đang xử lý</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-text-muted">Tỷ lệ thành công</p><p className="mt-1 text-2xl font-bold text-emerald-600">{pipelineMetrics.success_rate || (pipelineMetrics.total_completed > 0 && pipelineMetrics.total_errors === 0 ? 100 : 0)}%</p><p className="mt-1 text-[11px] text-text-muted">{pipelineMetrics.total_success} lượt thành công</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-text-muted">Tỷ lệ lỗi</p><p className={`mt-1 text-2xl font-bold ${pipelineMetrics.error_rate > 2 ? 'text-red-600' : ''}`}>{pipelineMetrics.error_rate}%</p><p className="mt-1 text-[11px] text-text-muted">{pipelineMetrics.total_errors} lỗi ghi nhận</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-text-muted">Thông lượng</p><p className="mt-1 text-2xl font-bold">{(pipelineMetrics.throughput_turns_per_sec * 60).toFixed(1)}</p><p className="mt-1 text-[11px] text-text-muted">lượt/phút</p></CardContent></Card>
+            <Card className="col-span-2 lg:col-span-1"><CardContent className="p-4"><p className="text-xs text-text-muted">Nút thắt hiện tại</p><p className="mt-1 text-lg font-bold text-amber-600">{pipelineMetrics.bottleneck ? STAGE_LABELS[pipelineMetrics.bottleneck] : 'Chưa xác định'}</p><p className="mt-1 text-[11px] text-text-muted">Theo độ trễ trung bình</p></CardContent></Card>
+          </div>
+
           {!stageMetricsAvailable && (
-            <p role="status" className="md:col-span-4 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
-              Dữ liệu lịch sử chỉ lưu độ trễ toàn trình; không suy diễn số liệu riêng cho STT, dịch thuật và TTS.
+            <p role="status" className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+              Bắt đầu từ phiên bản này, số liệu STT, NLLB và TTS được lưu bền vững. Dữ liệu cũ chỉ có độ trễ toàn trình; hệ thống không suy diễn số liệu riêng cho từng stage.
             </p>
           )}
-          <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <span className="text-sm font-medium text-text-muted">Độ trễ toàn trình (P50 / P90 / P99)</span>
-              <Gauge className="w-4 h-4 text-blue-500" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <LatencyCard title="Độ trễ toàn trình (P50 / P90 / P99)" metric={pipelineMetrics.latencies_ms.end_to_end} icon={<Gauge className="h-4 w-4" />} color="bg-blue-500/10 text-blue-600" />
+            <LatencyCard title="Chờ hàng đợi" metric={pipelineMetrics.latencies_ms.queue_wait} icon={<TimerReset className="h-4 w-4" />} color="bg-cyan-500/10 text-cyan-600" />
+            <LatencyCard title="Nhận dạng STT" metric={pipelineMetrics.latencies_ms.stt} icon={<Clock className="h-4 w-4" />} color="bg-emerald-500/10 text-emerald-600" />
+            <LatencyCard title="Dịch thuật NLLB" metric={pipelineMetrics.latencies_ms.translate} icon={<Languages className="h-4 w-4" />} color="bg-amber-500/10 text-amber-600" />
+            <LatencyCard title="TTS chunk đầu tiên" metric={pipelineMetrics.latencies_ms.tts_first_chunk} icon={<Zap className="h-4 w-4" />} color="bg-purple-500/10 text-purple-600" />
+            <LatencyCard title="TTS toàn bộ" metric={pipelineMetrics.latencies_ms.tts_total} icon={<Activity className="h-4 w-4" />} color="bg-pink-500/10 text-pink-600" />
+          </div>
+        </div>
+      )}
+
+      {pipelineMetrics && pipelineMetrics.stage_timeseries.length > 0 && (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Card className="xl:col-span-2">
+            <CardHeader>
+              <CardTitle>Xu hướng P90 theo từng stage</CardTitle>
+              <CardDescription>Phát hiện stage suy giảm theo ngày; đơn vị mili giây</CardDescription>
             </CardHeader>
-            <CardContent className="py-2 px-4">
-              <div className="text-2xl font-bold">
-                {pipelineMetrics.latencies_ms.end_to_end.p50} ms
+            <CardContent>
+              <div className="h-[320px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={pipelineMetrics.stage_timeseries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '0.5rem' }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="stt_p90" name="STT P90" stroke="#10b981" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="translate_p90" name="NLLB P90" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="tts_first_chunk_p90" name="TTS chunk đầu P90" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="end_to_end_p90" name="Toàn trình P90" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-              <p className="text-xs text-text-muted mt-1">
-                P90: {pipelineMetrics.latencies_ms.end_to_end.p90} ms | P99: {pipelineMetrics.latencies_ms.end_to_end.p99} ms
-              </p>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <span className="text-sm font-medium text-text-muted">Độ trễ nhận dạng STT</span>
-              <Clock className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent className="py-2 px-4">
-              <div className="text-2xl font-bold">
-                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.stt.p50} ms` : '—'}
-              </div>
-              <p className="text-xs text-text-muted mt-1">
-                {stageMetricsAvailable
-                  ? `P90: ${pipelineMetrics.latencies_ms.stt.p90} ms | TB: ${pipelineMetrics.latencies_ms.stt.avg} ms`
-                  : 'Không có dữ liệu stage trong phạm vi này.'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <span className="text-sm font-medium text-text-muted">Độ trễ dịch thuật NLLB</span>
-              <Zap className="w-4 h-4 text-amber-500" />
-            </CardHeader>
-            <CardContent className="py-2 px-4">
-              <div className="text-2xl font-bold">
-                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.translate.p50} ms` : '—'}
-              </div>
-              <p className="text-xs text-text-muted mt-1">
-                {stageMetricsAvailable
-                  ? `P90: ${pipelineMetrics.latencies_ms.translate.p90} ms | TB: ${pipelineMetrics.latencies_ms.translate.avg} ms`
-                  : 'Không có dữ liệu stage trong phạm vi này.'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <span className="text-sm font-medium text-text-muted">TTS Chunk đầu tiên</span>
-              <Activity className="w-4 h-4 text-purple-500" />
-            </CardHeader>
-            <CardContent className="py-2 px-4">
-              <div className="text-2xl font-bold">
-                {stageMetricsAvailable ? `${pipelineMetrics.latencies_ms.tts_first_chunk.p50} ms` : '—'}
-              </div>
-              <p className="text-xs text-text-muted mt-1">
-                {stageMetricsAvailable
-                  ? `Tổng lượt hoàn thành: ${pipelineMetrics.total_completed}`
-                  : 'Không có dữ liệu stage trong phạm vi này.'}
-              </p>
+            <CardHeader><CardTitle>Sức khỏe vận hành</CardTitle><CardDescription>SLA, lỗi và độ phủ telemetry</CardDescription></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 p-3"><span className="flex items-center gap-2 text-sm"><ShieldCheck className="h-4 w-4 text-emerald-600" />Thành công</span><strong>{pipelineMetrics.total_success}</strong></div>
+              <div className="flex items-center justify-between rounded-lg bg-red-500/10 p-3"><span className="flex items-center gap-2 text-sm"><CircleAlert className="h-4 w-4 text-red-600" />Lỗi</span><strong>{pipelineMetrics.total_errors}</strong></div>
+              <div className="flex items-center justify-between rounded-lg bg-blue-500/10 p-3"><span className="flex items-center gap-2 text-sm"><Database className="h-4 w-4 text-blue-600" />Độ phủ STT</span><strong>{pipelineMetrics.latencies_ms.stt.availability_pct}%</strong></div>
+              {pipelineMetrics.error_breakdown.length > 0 ? pipelineMetrics.error_breakdown.map(item => (
+                <div key={item.stage} className="flex items-center justify-between border-t border-border pt-2 text-xs text-text-muted"><span>Lỗi {STAGE_LABELS[item.stage] || item.stage}</span><strong className="text-text">{item.count}</strong></div>
+              )) : <p className="text-xs text-text-muted">Không có lỗi trong phạm vi đang chọn.</p>}
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {pipelineMetrics && pipelineMetrics.slowest_turns.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Top request chậm nhất</CardTitle><CardDescription>Trace không chứa nội dung hội thoại; dùng để khoanh vùng bottleneck</CardDescription></CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader><TableRow><TableHead>Thời điểm</TableHead><TableHead>Trace</TableHead><TableHead>Ngôn ngữ</TableHead><TableHead>Bottleneck</TableHead><TableHead className="text-right">STT</TableHead><TableHead className="text-right">NLLB</TableHead><TableHead className="text-right">TTS đầu</TableHead><TableHead className="text-right">Toàn trình</TableHead></TableRow></TableHeader>
+              <TableBody>{pipelineMetrics.slowest_turns.map(turn => (
+                <TableRow key={turn.turn_id}>
+                  <TableCell className="whitespace-nowrap text-xs">{new Date(turn.created_at).toLocaleString('vi-VN')}</TableCell>
+                  <TableCell className="font-mono text-xs" title={turn.turn_id}>{turn.turn_id.slice(0, 10)}…</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs">{turn.source_lang} → {turn.target_lang}</TableCell>
+                  <TableCell><span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs text-amber-700 dark:text-amber-300">{turn.bottleneck ? STAGE_LABELS[turn.bottleneck] : '—'}</span></TableCell>
+                  <TableCell className="text-right text-xs">{formatMs(turn.stt_ms)}</TableCell>
+                  <TableCell className="text-right text-xs">{formatMs(turn.translate_ms)}</TableCell>
+                  <TableCell className="text-right text-xs">{formatMs(turn.tts_first_chunk_ms)}</TableCell>
+                  <TableCell className="text-right font-semibold">{formatMs(turn.end_to_end_ms)}</TableCell>
+                </TableRow>
+              ))}</TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       {/* CHARTS SECTION */}

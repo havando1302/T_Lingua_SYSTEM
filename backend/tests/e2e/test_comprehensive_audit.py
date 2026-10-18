@@ -13,6 +13,7 @@ import json
 import uuid
 import unittest
 import asyncio
+import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -55,6 +56,17 @@ class ComprehensiveE2ESystemAuditTests(unittest.IsolatedAsyncioTestCase):
         cls.client = TestClient(app)
 
     def setUp(self):
+        # Legacy JSON compatibility checks must never touch the live dictionary.
+        self.tm_temp = tempfile.TemporaryDirectory(prefix="tm-e2e-audit-")
+        self.addCleanup(self.tm_temp.cleanup)
+        for name in ("_memory", "_guest_memory", "_guest_expiry"):
+            patcher = patch.object(tm, name, {})
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        tm_file_patcher = patch.object(tm, "_TM_FILE", str(Path(self.tm_temp.name) / "translation_memory.json"))
+        tm_file_patcher.start()
+        self.addCleanup(tm_file_patcher.stop)
+
         # Database in-memory setup for isolated testing with cross-thread support
         self.engine = create_engine(
             "sqlite:///:memory:",

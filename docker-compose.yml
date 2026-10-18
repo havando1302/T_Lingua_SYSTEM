@@ -12,7 +12,9 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - ./data:/app/data # Gắn volume chung để lưu DB và Translation Memory
+      # Use the same durable directory as local backend runs. Switching between
+      # `python backend/run.py` and Docker must not switch databases.
+      - ./backend/data:/app/data
       - ./backend/outputs:/app/outputs
       - hf_cache:/home/tlingua/.cache/huggingface
     environment:
@@ -77,6 +79,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  data:
-    driver: local
   hf_cache:

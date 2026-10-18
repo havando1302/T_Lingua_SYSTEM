@@ -17,7 +17,7 @@
 
 ## 📖 Tổng quan
 
-**T-Lingua** là hệ thống dịch thuật thời gian thực từ giọng nói sang giọng nói (Speech-to-Speech), được xây dựng hoàn toàn trên nền tảng AI mã nguồn mở. Hệ thống có khả năng nhận âm thanh trực tiếp từ người dùng, nhận diện giọng nói, dịch thuật, và tổng hợp lại thành giọng đọc trong vòng **vài trăm mili-giây**.
+**T-Lingua** là hệ thống dịch thuật gần thời gian thực từ giọng nói sang giọng nói (Speech-to-Speech), được xây dựng hoàn toàn trên nền tảng AI mã nguồn mở. Hệ thống nhận âm thanh trực tiếp, nhận diện giọng nói, dịch và tổng hợp giọng đọc; độ trễ toàn tuyến phụ thuộc GPU, độ dài câu và bước TTS.
 
 ### 🎯 Mục tiêu
 
@@ -25,6 +25,19 @@
 - Hoạt động hoàn toàn **on-premise** — không phụ thuộc cloud API
 - Hiệu suất cao với GPU, nhẹ cho CPU khi cần
 - Kiến trúc modular, dễ tích hợp và mở rộng
+
+### Trạng thái kiểm chứng bản dùng thử (18/10/2026)
+
+| Chỉ số | Kết quả thực nghiệm |
+|---|---:|
+| Dịch 500 câu — trung bình / p95 | 583.856 ms / 963.746 ms |
+| Câu dịch hoàn tất trong 1 giây | 96.4% |
+| Chất lượng dịch token-F1 / chrF | 67.9145% / 65.2574% |
+| STT 500 câu — trung bình / độ chính xác từ | 784.389 ms / 82.0044% |
+| Một mẫu âm thanh chạy đủ STT → dịch → TTS | 4.46 giây (TTS CPU: 2.89 giây) |
+| Kiểm thử tự động | Backend 144/144; Flutter 7/7; build Admin và Flutter Web đạt |
+
+Mục tiêu tốc độ dịch dưới 1 giây đã đạt trên bộ 500 câu. Mục tiêu chất lượng tự động 70% chưa đạt ở tổng thể; chiều Anh → Việt hiện là phần cần ưu tiên cải thiện. Xem [báo cáo tối ưu](outputs/fresh500_optimized_20261014/before_after_optimization_report.json) và [hướng dẫn triển khai dùng thử](docs/TRIAL_DEPLOYMENT.md).
 
 ---
 
@@ -378,12 +391,17 @@ python scripts/run_inference_ab_soak.py
 
 ## 📁 Dữ liệu Runtime
 
-Dữ liệu được lưu trong `backend/data/` (mount như Docker volume):
+Dữ liệu có cấu trúc được lưu trong `backend/data/admin.db`. Cả chế độ local và
+Docker đều dùng cùng thư mục `backend/data/`:
 
 | File | Mô tả |
 |------|-------|
-| `admin.db` | SQLite database (users, sessions, settings, QA logs) |
-| `translation_memory.json` | Cache dịch thuật — tái sử dụng kết quả đã biết |
+| `admin.db` | SQLite database: tài khoản, phiên, cài đặt, lịch sử/QA, telemetry, training metadata và Translation Memory |
+| `translation_memory.json.pre-db-*.bak` | Bản sao an toàn của dữ liệu từ điển cũ sau migration; không còn là nguồn dữ liệu đang chạy |
+
+Model, audio và dataset nhị phân vẫn được lưu dưới dạng file bền vững trong
+`backend/data/` hoặc `backend/outputs/`; metadata và checksum của chúng nằm trong
+database. Xem [chính sách lưu trữ dữ liệu](docs/DATA_PERSISTENCE.md).
 
 ---
 

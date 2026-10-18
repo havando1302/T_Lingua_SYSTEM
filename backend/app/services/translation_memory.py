@@ -1,11 +1,14 @@
-"""Single-process translation memory with durable language pairs and volatile guests.
+"""Database-backed translation memory with volatile guest dictionaries.
 
-The on-disk shape remains dict[owner, dict[str, str]] for existing backup tools.
-A format marker distinguishes encoded keys from arbitrary legacy source text.
+The JSON implementation is retained only for one-time migration, recovery
+tooling and isolated compatibility tests. Production reads and writes the
+``translation_memory_entries`` database table.
 """
 import json
+import hashlib
 import os
 import re
+import shutil
 import tempfile
 import threading
 from datetime import datetime, timezone
@@ -16,6 +19,7 @@ from app.services.translation_cache import invalidate_all, invalidate_owner
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 _TM_FILE = os.path.join(_DATA_DIR, "translation_memory.json")
+_DEFAULT_TM_FILE = _TM_FILE
 _FORMAT_MARKER = "\0tm:format"
 _FORMAT_VALUE = {"key_encoding": "2"}
 _KEY_PREFIX = "\0tm:v2:"
@@ -375,32 +379,398 @@ class ITranslationMemoryRepository:
     def count(self, client_id: str = "default") -> int:
         raise NotImplementedError
 
+    def get_entries(self, client_id: str = "default") -> list[dict]:
+        raise NotImplementedError
+
+    def add_many(self, entries: list[dict], client_id: str = "default", **kwargs) -> int:
+        raise NotImplementedError
+
+    def get_glossary_prompt(self, client_id: str = "default") -> str:
+        raise NotImplementedError
+
 
 class JsonTranslationMemoryRepository(ITranslationMemoryRepository):
     def lookup(self, text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> Optional[str]:
         return lookup(text, client_id, source_lang, target_lang)
 
-    def add(self, source_text: str, translated_text: str, client_id: str = "default", *, volatile: bool = False, source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> bool:
+    def add(self, source_text: str, translated_text: str, client_id: str = "default", *, volatile: bool = False, source_lang: Optional[str] = None, target_lang: Optional[str] = None, db=None) -> bool:
         return add(source_text, translated_text, client_id, volatile=volatile, source_lang=source_lang, target_lang=target_lang)
 
     def lookup_fuzzy(self, text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None, *, threshold: float = 0.92) -> Optional[str]:
         return lookup_fuzzy(text, client_id, source_lang, target_lang, threshold=threshold)
 
-    def delete(self, source_text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> bool:
+    def delete(self, source_text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None, *, db=None) -> bool:
         return delete(source_text, client_id, source_lang, target_lang)
 
-    def get_all(self, client_id: str = "default") -> dict[str, str]:
-        return get_all(client_id)
+    def get_all(self, client_id: str = "default", source_lang: Optional[str] = None,
+                target_lang: Optional[str] = None, *, db=None) -> dict[str, str]:
+        return get_all(client_id, source_lang, target_lang)
 
-    def count(self, client_id: str = "default") -> int:
+    def count(self, client_id: str = "default", *, db=None) -> int:
         return count(client_id)
 
+    def get_entries(self, client_id: str = "default", **kwargs) -> list[dict]:
+        return get_entries(client_id)
 
-_default_repository = JsonTranslationMemoryRepository()
+    def add_many(self, entries: list[dict], client_id: str = "default", **kwargs) -> int:
+        kwargs.pop("db", None)
+        return add_many(entries, client_id, **kwargs)
+
+    def get_glossary_prompt(self, client_id: str = "default") -> str:
+        return get_glossary_prompt(client_id)
+
+
+class DatabaseTranslationMemoryRepository(ITranslationMemoryRepository):
+    """Database-backed Translation Memory; only authenticated guest entries remain volatile."""
+
+    @staticmethod
+    def _is_guest(client_id: str) -> bool:
+        with _lock:
+            _expire_guests()
+            return client_id in _guest_expiry
+
+    @staticmethod
+    def _session(db=None):
+        if db is not None:
+            return db, False
+        from app.db.database import SessionLocal
+        from app.db.models import TranslationMemoryEntry
+        session = SessionLocal()
+        bind = session.get_bind()
+        if bind.dialect.name == "sqlite" and (bind.url.database is None or bind.url.database == ":memory:"):
+            TranslationMemoryEntry.__table__.create(bind=bind, checkfirst=True)
+        return session, True
+
+    @staticmethod
+    def _finish(db, owned: bool, *, commit: bool = False) -> None:
+        if owned:
+            try:
+                if commit:
+                    db.commit()
+            finally:
+                db.close()
+
+    def lookup(self, text: str, client_id: str = "default", source_lang: Optional[str] = None,
+               target_lang: Optional[str] = None, *, db=None) -> Optional[str]:
+        if self._is_guest(client_id):
+            return lookup(text, client_id, source_lang, target_lang)
+        source = _normalize(text)
+        if not source:
+            return None
+        pair = _pair(source_lang, target_lang)
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            query = session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.source_text_normalized == source,
+                TranslationMemoryEntry.norm_version == 1,
+            )
+            rows = query.order_by(TranslationMemoryEntry.updated_at.desc(), TranslationMemoryEntry.id.desc()).all()
+            if pair != ("", ""):
+                exact = next((row for row in rows if (row.source_lang, row.target_lang) == pair), None)
+                fallback = next((row for row in rows if (row.source_lang, row.target_lang) == ("", "")), None)
+                row = exact or fallback
+            else:
+                row = next((item for item in rows if (item.source_lang, item.target_lang) == ("", "")), None)
+                row = row or (rows[0] if rows else None)
+            return row.translated_text if row else None
+        finally:
+            self._finish(session, owned)
+
+    def lookup_fuzzy(self, text: str, client_id: str = "default", source_lang: Optional[str] = None,
+                     target_lang: Optional[str] = None, *, threshold: float = 0.92,
+                     ambiguity_margin: float = 0.03, db=None) -> Optional[str]:
+        if self._is_guest(client_id):
+            return lookup_fuzzy(text, client_id, source_lang, target_lang,
+                                threshold=threshold, ambiguity_margin=ambiguity_margin)
+        source = _normalize(text)
+        if len(source) < 8 or len(source.split()) < 2:
+            return None
+        if not 0.8 <= threshold <= 1.0 or not 0.0 <= ambiguity_margin <= 0.2:
+            raise ValueError("Invalid fuzzy matching threshold")
+        pair = _pair(source_lang, target_lang)
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            rows = session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.norm_version == 1,
+            ).all()
+            candidates: list[tuple[float, str]] = []
+            for row in rows:
+                if pair != ("", "") and (row.source_lang, row.target_lang) not in (pair, ("", "")):
+                    continue
+                candidate = row.source_text_normalized
+                if candidate == source:
+                    return row.translated_text
+                if abs(len(candidate) - len(source)) > max(4, int(len(source) * 0.2)):
+                    continue
+                score = SequenceMatcher(None, source, candidate, autojunk=False).ratio()
+                if score >= threshold:
+                    candidates.append((score, row.translated_text))
+            if not candidates:
+                return None
+            candidates.sort(key=lambda item: item[0], reverse=True)
+            if len(candidates) > 1 and candidates[0][0] - candidates[1][0] < ambiguity_margin:
+                return None
+            return candidates[0][1]
+        finally:
+            self._finish(session, owned)
+
+    def add_many(self, entries: list[dict], client_id: str = "default", *, volatile: bool = False,
+                 source_lang: Optional[str] = None, target_lang: Optional[str] = None,
+                 max_entries: Optional[int] = None, db=None) -> int:
+        _owner(client_id)
+        if volatile or self._is_guest(client_id):
+            return add_many(entries, client_id, volatile=volatile, source_lang=source_lang,
+                            target_lang=target_lang, max_entries=max_entries)
+        default_pair = _pair(source_lang, target_lang)
+        prepared = []
+        for row in entries:
+            if not isinstance(row, dict) or not isinstance(row.get("source_text"), str) or not isinstance(row.get("translated_text"), str):
+                raise ValueError("Dictionary entries require source and translated text")
+            source, target = _normalize(row["source_text"]), row["translated_text"].strip()
+            if not source or not target:
+                raise ValueError("Dictionary entries must not be empty")
+            src, tgt = _pair(row.get("source_lang", default_pair[0]), row.get("target_lang", default_pair[1]))
+            prepared.append((source, target, src, tgt, row["source_text"].strip()))
+        if not prepared:
+            return 0
+
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            existing = session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.norm_version == 1,
+            ).all()
+            by_key = {(row.source_text_normalized, row.source_lang, row.target_lang): row for row in existing}
+            planned: list[tuple[str, str, str, str, str]] = []
+            for source, target, src, tgt, original in prepared:
+                if src:
+                    key = (source, src, tgt)
+                else:
+                    plain_key = (source, "", "")
+                    if plain_key in by_key:
+                        key = plain_key
+                    else:
+                        matches = [candidate for candidate in by_key if candidate[0] == source]
+                        if len(matches) > 1:
+                            raise ValueError("Specify a language pair for a term with multiple translations")
+                        key = matches[0] if matches else plain_key
+                planned.append((source, target, key[1], key[2], original))
+                by_key.setdefault(key, None)
+            if max_entries is not None and len(by_key) > max_entries:
+                raise ValueError("Dictionary capacity reached")
+
+            for source, target, src, tgt, original in planned:
+                if src:
+                    legacy = session.query(TranslationMemoryEntry).filter(
+                        TranslationMemoryEntry.owner_id == client_id,
+                        TranslationMemoryEntry.source_text_normalized == source,
+                        TranslationMemoryEntry.source_lang == "",
+                        TranslationMemoryEntry.target_lang == "",
+                        TranslationMemoryEntry.norm_version == 1,
+                    ).first()
+                    if legacy is not None:
+                        session.delete(legacy)
+                row = session.query(TranslationMemoryEntry).filter(
+                    TranslationMemoryEntry.owner_id == client_id,
+                    TranslationMemoryEntry.source_text_normalized == source,
+                    TranslationMemoryEntry.source_lang == src,
+                    TranslationMemoryEntry.target_lang == tgt,
+                    TranslationMemoryEntry.norm_version == 1,
+                ).first()
+                if row is None:
+                    row = TranslationMemoryEntry(
+                        owner_id=client_id, source_lang=src, target_lang=tgt,
+                        source_text=original, source_text_normalized=source,
+                        translated_text=target, norm_version=1,
+                        is_approved=client_id == "global:approved",
+                    )
+                    session.add(row)
+                else:
+                    row.source_text = original
+                    row.translated_text = target
+                    row.is_approved = client_id == "global:approved"
+                    row.updated_at = datetime.utcnow()
+            session.flush()
+            self._finish(session, owned, commit=True)
+            invalidate_owner(client_id)
+            return len(prepared)
+        except Exception:
+            if owned:
+                session.rollback()
+                session.close()
+            raise
+
+    def add(self, source_text: str, translated_text: str, client_id: str = "default", *,
+            volatile: bool = False, source_lang: Optional[str] = None,
+            target_lang: Optional[str] = None, db=None) -> bool:
+        if not _normalize(source_text) or not translated_text.strip():
+            return False
+        return bool(self.add_many(
+            [{"source_text": source_text, "translated_text": translated_text}], client_id,
+            volatile=volatile, source_lang=source_lang, target_lang=target_lang, db=db,
+        ))
+
+    def delete(self, source_text: str, client_id: str = "default", source_lang: Optional[str] = None,
+               target_lang: Optional[str] = None, *, db=None) -> bool:
+        if self._is_guest(client_id):
+            return delete(source_text, client_id, source_lang, target_lang)
+        source, pair = _normalize(source_text), _pair(source_lang, target_lang)
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            query = session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.source_text_normalized == source,
+                TranslationMemoryEntry.norm_version == 1,
+            )
+            if pair != ("", ""):
+                query = query.filter(
+                    TranslationMemoryEntry.source_lang == pair[0],
+                    TranslationMemoryEntry.target_lang == pair[1],
+                )
+            rows = query.all()
+            if not rows:
+                self._finish(session, owned)
+                return False
+            for row in rows:
+                session.delete(row)
+            session.flush()
+            self._finish(session, owned, commit=True)
+            invalidate_owner(client_id)
+            return True
+        except Exception:
+            if owned:
+                session.rollback()
+                session.close()
+            raise
+
+    def get_entries(self, client_id: str = "default", *, db=None) -> list[dict]:
+        if self._is_guest(client_id):
+            return get_entries(client_id)
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            rows = session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.norm_version == 1,
+            ).order_by(TranslationMemoryEntry.source_text_normalized,
+                       TranslationMemoryEntry.source_lang, TranslationMemoryEntry.target_lang).all()
+            return [{
+                "source_text": row.source_text,
+                "translated_text": row.translated_text,
+                "source_lang": row.source_lang or None,
+                "target_lang": row.target_lang or None,
+            } for row in rows]
+        finally:
+            self._finish(session, owned)
+
+    def get_all(self, client_id: str = "default", source_lang: Optional[str] = None,
+                target_lang: Optional[str] = None, *, db=None) -> dict[str, str]:
+        pair = _pair(source_lang, target_lang)
+        result = {}
+        for row in self.get_entries(client_id, db=db):
+            row_pair = (row["source_lang"] or "", row["target_lang"] or "")
+            if pair == ("", "") or row_pair in (pair, ("", "")):
+                result[row["source_text"]] = row["translated_text"]
+        return result
+
+    def count(self, client_id: str = "default", *, db=None) -> int:
+        if self._is_guest(client_id):
+            return count(client_id)
+        from app.db.models import TranslationMemoryEntry
+        session, owned = self._session(db)
+        try:
+            return session.query(TranslationMemoryEntry).filter(
+                TranslationMemoryEntry.owner_id == client_id,
+                TranslationMemoryEntry.norm_version == 1,
+            ).count()
+        finally:
+            self._finish(session, owned)
+
+    def get_glossary_prompt(self, client_id: str = "default") -> str:
+        return ", ".join(self.get_all(client_id))
+
+
+_json_repository = JsonTranslationMemoryRepository()
+_database_repository = DatabaseTranslationMemoryRepository()
 
 
 def get_tm_repository() -> ITranslationMemoryRepository:
-    return _default_repository
+    # Isolated legacy tests and recovery tooling can explicitly redirect the
+    # JSON path. Production always uses the database repository.
+    return _json_repository if os.path.abspath(_TM_FILE) != os.path.abspath(_DEFAULT_TM_FILE) else _database_repository
 
 
-_load()
+def migrate_legacy_json_to_database(db) -> dict:
+    """Import the legacy JSON store once, preserving the source file as a checksum-named backup."""
+    from app.db.models import SystemSetting, TranslationMemoryEntry
+
+    marker_key = "translation_memory_database_migration"
+    marker = db.query(SystemSetting).filter(SystemSetting.key == marker_key).first()
+    if marker is not None:
+        database_entries = db.query(TranslationMemoryEntry).count()
+        try:
+            marked_entries = int(json.loads(marker.value).get("entries", 0))
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+            marked_entries = 0
+        if database_entries:
+            return {"applied": False, "entries": database_entries}
+        if marked_entries:
+            raise RuntimeError(
+                "Translation Memory migration marker exists but the database table is empty; "
+                "restore a verified database or legacy JSON backup"
+            )
+        # A historical empty marker must not permanently block recovery if a
+        # valid legacy backup is restored later.
+    if not os.path.exists(_TM_FILE):
+        return {"applied": False, "entries": 0}
+
+    _load()
+    available_entries = sum(len(entries) for entries in _memory.values())
+    if available_entries == 0:
+        return {"applied": False, "entries": 0}
+    with open(_TM_FILE, "rb") as source:
+        digest = hashlib.sha256(source.read()).hexdigest()
+    backup_path = f"{_TM_FILE}.pre-db-{digest[:12]}.bak"
+    if not os.path.exists(backup_path):
+        shutil.copy2(_TM_FILE, backup_path)
+
+    imported = 0
+    owners = 0
+    for owner, encoded_entries in _memory.items():
+        rows = []
+        for entry_key, translated in encoded_entries.items():
+            source, source_lang, target_lang = _decode(entry_key)
+            rows.append({
+                "source_text": source,
+                "translated_text": translated,
+                "source_lang": source_lang,
+                "target_lang": target_lang,
+            })
+        if rows:
+            imported += _database_repository.add_many(rows, owner, db=db)
+            owners += 1
+    marker_value = json.dumps(
+        {"sha256": digest, "entries": imported, "owners": owners}, separators=(",", ":")
+    )
+    if marker is None:
+        db.add(SystemSetting(
+            key=marker_key,
+            value=marker_value,
+            description="One-time migration of translation_memory.json into translation_memory_entries",
+        ))
+    else:
+        marker.value = marker_value
+        marker.description = "One-time migration of translation_memory.json into translation_memory_entries"
+    db.flush()
+    return {"applied": True, "entries": imported, "owners": owners, "backup": backup_path}
+
+
+# Do not eagerly load the legacy file. A corrupt or missing retired JSON file
+# must not prevent a database-backed backend from starting. The one-time
+# migration loads and validates it explicitly before importing any row.

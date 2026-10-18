@@ -6,7 +6,14 @@ import '../../services/history_storage_service.dart';
 import '../../services/auth_session_service.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  final Future<void> Function()? clearHistory;
+  final bool persistSettings;
+
+  const SettingsScreen({
+    super.key,
+    this.clearHistory,
+    this.persistSettings = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,8 +75,10 @@ class SettingsScreen extends StatelessWidget {
                   options: ['Slow', 'Normal', 'Fast'],
                   selectedValue: settings.voiceSpeed,
                   optionLabel: getSpeedLabel,
-                  onSelected: (val) =>
-                      _update(context, () => settings.setVoiceSpeed(val)),
+                  onSelected: (val) => _update(
+                    context,
+                    () => settings.setVoiceSpeed(val, persist: persistSettings),
+                  ),
                 ),
               ),
               _buildSettingItem(tr('voice_gender'), tr('voice_unavailable')),
@@ -82,8 +91,10 @@ class SettingsScreen extends StatelessWidget {
                   options: ['vi', 'en'],
                   selectedValue: settings.language,
                   optionLabel: getLanguageLabel,
-                  onSelected: (val) =>
-                      _update(context, () => settings.setLanguage(val)),
+                  onSelected: (val) => _update(
+                    context,
+                    () => settings.setLanguage(val, persist: persistSettings),
+                  ),
                 ),
               ),
               _buildSettingItem(
@@ -114,7 +125,10 @@ class SettingsScreen extends StatelessWidget {
                   if (context.mounted) {
                     await _update(
                       context,
-                      () => settings.setHistoryEnabled(value),
+                      () => settings.setHistoryEnabled(
+                        value,
+                        persist: persistSettings,
+                      ),
                     );
                   }
                 },
@@ -130,7 +144,10 @@ class SettingsScreen extends StatelessWidget {
                   optionLabel: (days) => '$days ${tr('days')}',
                   onSelected: (days) => _update(
                     context,
-                    () => settings.setHistoryRetentionDays(days),
+                    () => settings.setHistoryRetentionDays(
+                      days,
+                      persist: persistSettings,
+                    ),
                   ),
                 ),
               ),
@@ -146,7 +163,9 @@ class SettingsScreen extends StatelessWidget {
                   if (agreed && context.mounted) {
                     await _update(
                       context,
-                      HistoryStorageService.instance.clearAllByUser,
+                      clearHistory ??
+                          HistoryStorageService.instance.clearAllByUser,
+                      successKey: 'deleted_success',
                     );
                   }
                 },
@@ -207,8 +226,9 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _update(
     BuildContext context,
-    Future<void> Function() action,
-  ) async {
+    Future<void> Function() action, {
+    String successKey = 'update_success',
+  }) async {
     try {
       await action();
       if (context.mounted) {
@@ -216,7 +236,7 @@ class SettingsScreen extends StatelessWidget {
           ..clearSnackBars()
           ..showSnackBar(
             SnackBar(
-              content: Text(tr('update_success')),
+              content: Text(tr(successKey)),
               duration: const Duration(seconds: 4),
             ),
           );
@@ -241,77 +261,82 @@ class SettingsScreen extends StatelessWidget {
     required List<T> options,
     required T selectedValue,
     required String Function(T) optionLabel,
-    required void Function(T) onSelected,
+    required Future<void> Function(T) onSelected,
   }) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF1E293B),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Option List
-              ...options.map((option) {
-                final isSelected = option == selectedValue;
-                return InkWell(
-                  onTap: () {
-                    onSelected(option);
-                    Navigator.pop(context);
-                  },
-                  borderRadius: BorderRadius.circular(15),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          optionLabel(option),
-                          style: TextStyle(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 16,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        if (isSelected)
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: Colors.blue,
-                            size: 22,
-                          )
-                        else
-                          const Icon(
-                            Icons.radio_button_off_rounded,
-                            color: Colors.grey,
-                            size: 22,
-                          ),
-                      ],
-                    ),
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
-                );
-              }),
-              const SizedBox(height: 12),
-            ],
+                ),
+                const SizedBox(height: 16),
+                // Option List
+                ...options.map((option) {
+                  final isSelected = option == selectedValue;
+                  return InkWell(
+                    onTap: () async {
+                      final navigator = Navigator.of(context);
+                      final update = onSelected(option);
+                      navigator.pop();
+                      await update;
+                    },
+                    borderRadius: BorderRadius.circular(15),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            optionLabel(option),
+                            style: TextStyle(
+                              color: const Color(0xFF1E293B),
+                              fontSize: 16,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.blue,
+                              size: 22,
+                            )
+                          else
+                            const Icon(
+                              Icons.radio_button_off_rounded,
+                              color: Colors.grey,
+                              size: 22,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         );
       },

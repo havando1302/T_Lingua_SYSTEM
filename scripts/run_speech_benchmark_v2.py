@@ -6,6 +6,7 @@ import gc
 import hashlib
 import json
 import math
+import platform
 import statistics
 import sys
 import time
@@ -16,6 +17,7 @@ import numpy as np
 import scipy.io.wavfile
 import scipy.signal
 import torch
+import transformers
 from transformers import AutoTokenizer, VitsModel
 
 
@@ -25,6 +27,8 @@ OUT = ROOT / "docs" / "progress_2026-09-24" / "evidence"
 AUDIO_DIR = OUT / "audio_benchmark_v2"
 DATASET = OUT / "benchmark_v2_500.csv"
 MODELS = {"vi": "facebook/mms-tts-vie", "en": "facebook/mms-tts-eng"}
+WHISPER_MODEL_ID = "openai/whisper-large-v3-turbo"
+WHISPER_REVISION = "41f01f3fe87f28c78e2fbf8b568835947dd65ed9"
 
 
 def normalize_tokens(text: str) -> list[str]:
@@ -90,11 +94,14 @@ def main() -> None:
         if device == "cuda": torch.cuda.empty_cache()
 
     from app.ai.torch_whisper_adapter import TorchWhisperModel
-    recognizer = TorchWhisperModel("openai/whisper-small", device, local_files_only=True)
+    from app.utils.audio_utils import preprocess_audio_numpy
+    recognizer = TorchWhisperModel(
+        WHISPER_MODEL_ID, device, revision=WHISPER_REVISION, local_files_only=True,
+    )
     stt_latencies = []; total_edits = total_words = 0
     for index, row in enumerate(manifest, 1):
         sample_rate, pcm = scipy.io.wavfile.read(ROOT / row["file"])
-        audio = pcm.astype(np.float32) / 32768.0
+        audio = preprocess_audio_numpy(pcm.astype(np.float32) / 32768.0)
         started = time.perf_counter(); segments, _ = recognizer.transcribe(audio, language=row["source_lang"], beam_size=1)
         if device == "cuda": torch.cuda.synchronize()
         latency = (time.perf_counter() - started) * 1000; stt_latencies.append(latency)
@@ -106,6 +113,11 @@ def main() -> None:
     summary = {
         "created_at": datetime.now(timezone.utc).isoformat(), "scope": "synthetic_tts_to_stt_audio_benchmark_v2",
         "samples": len(manifest), "conditions": {"clean": 50, "noisy_15db": 50}, "device": device,
+        "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
+        "python": platform.python_version(), "torch": torch.__version__,
+        "transformers": transformers.__version__,
+        "stt_model_id": WHISPER_MODEL_ID, "stt_model_revision": WHISPER_REVISION,
+        "stt_beam_size": 1, "audio_preprocessing": "production_preprocess_audio_numpy",
         "tts_latency_ms": {"mean": round(statistics.mean(tts_latencies), 3), "p95": round(percentile(tts_latencies, .95), 3)},
         "stt_latency_ms": {"mean": round(statistics.mean(stt_latencies), 3), "p50": round(percentile(stt_latencies, .5), 3), "p95": round(percentile(stt_latencies, .95), 3)},
         "wer": round(total_edits / max(1, total_words), 4),

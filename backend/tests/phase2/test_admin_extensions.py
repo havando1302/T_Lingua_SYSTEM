@@ -27,11 +27,11 @@ with patch.dict(os.environ, TEST_ENV):
     from fastapi.testclient import TestClient
     from app.main import app
     from app.db.database import get_db
-    from app.db.models import ApiKey, AuditLog, AuthSession, Base, ModelDeployment, QualityReview, SystemSetting, TrainingDataset, TrainingJob, TranslationLog, User
+    from app.db.models import ApiKey, AuditLog, AuthSession, Base, ModelDeployment, PipelineMetric, QualityReview, SystemSetting, TrainingDataset, TrainingJob, TranslationLog, User
     from app.core.auth_settings import AuthSettings
     from app.core import security
     from app.core.security import get_password_hash, issue_api_key, issue_user_session
-    from app.services import training_control
+    from app.services import training_control, translation_memory as tm
 
 
 class AdminExtensionTests(unittest.TestCase):
@@ -318,7 +318,7 @@ class AdminExtensionTests(unittest.TestCase):
             "source_text": "xin chào", "translated_text": "hello",
             "source_lang": "vi", "target_lang": "en",
         }]
-        with patch("app.api.admin_routes.tm.get_entries", return_value=rows):
+        with patch.object(tm.get_tm_repository(), "get_entries", return_value=rows):
             response = self.client.get("/admin/dictionary/export", headers=self.headers)
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8-sig")
@@ -452,6 +452,44 @@ class AdminExtensionTests(unittest.TestCase):
         ):
             response = self.client.get(f"/admin/metrics/dashboard?{query}", headers=self.headers)
             self.assertEqual(response.status_code, 422, f"{query}: {response.text}")
+
+    def test_persisted_pipeline_metrics_include_stage_sla_health_and_slow_traces(self):
+        self.db.add_all([
+            PipelineMetric(
+                turn_id="turn-fast", session_id_hash="a" * 64, source_lang="vi", target_lang="en",
+                status="success", queue_wait_ms=20, stt_ms=500, translate_ms=120,
+                tts_first_chunk_ms=400, tts_total_ms=700, end_to_end_ms=1500,
+                created_at=datetime(2026, 1, 2, 2, 0),
+            ),
+            PipelineMetric(
+                turn_id="turn-slow", session_id_hash="b" * 64, source_lang="en", target_lang="vi",
+                status="error", error_stage="tts", error_code="RuntimeError",
+                queue_wait_ms=400, stt_ms=1400, translate_ms=700,
+                tts_first_chunk_ms=1100, end_to_end_ms=4200,
+                created_at=datetime(2026, 1, 2, 3, 0),
+            ),
+        ])
+        self.db.commit()
+
+        response = self.client.get(
+            "/admin/metrics/pipeline?start_date=2026-01-02&end_date=2026-01-02&tz_offset_minutes=-420",
+            headers=self.headers,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        data = response.json()
+        self.assertTrue(data["stage_metrics_available"])
+        self.assertEqual(data["total_completed"], 2)
+        self.assertEqual(data["total_success"], 1)
+        self.assertEqual(data["total_errors"], 1)
+        self.assertEqual(data["success_rate"], 50.0)
+        self.assertEqual(data["latencies_ms"]["stt"]["p50"], 500.0)
+        self.assertEqual(data["latencies_ms"]["stt"]["p90"], 1400.0)
+        self.assertEqual(data["latencies_ms"]["stt"]["breach_count"], 1)
+        self.assertEqual(data["latencies_ms"]["tts_total"]["availability_pct"], 50.0)
+        self.assertEqual(data["bottleneck"], "stt")
+        self.assertEqual(data["error_breakdown"], [{"stage": "tts", "count": 1}])
+        self.assertEqual(data["slowest_turns"][0]["turn_id"], "turn-slow")
+        self.assertEqual(data["stage_timeseries"][0]["date"], "2026-01-02")
 
     def test_model_canary_promote_rollback_and_filtered_audit(self):
         initial = self.client.get("/admin/models/deployments", headers=self.headers)

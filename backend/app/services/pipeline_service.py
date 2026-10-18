@@ -8,6 +8,7 @@ from app.core.config import TARGET_LANG, settings
 from app.services.audio_storage import audio_path as private_audio_path
 from app.core.inference_errors import NoSpeechDetected
 from app.core.telemetry import GLOBAL_TELEMETRY
+from app.services.pipeline_metrics import persist_pipeline_metric
 
 
 
@@ -18,10 +19,13 @@ def run_pipeline(audio_path: str, *, client_id: str, output_path: str | None = N
     try:
         result = _run_pipeline(audio_path, client_id=client_id, output_path=output_path,
                                source_lang=source_lang, target_lang=target_lang, use_cache=use_cache, metric_id=metric_id)
-        GLOBAL_TELEMETRY.complete_turn(metric_id)
+        metric = GLOBAL_TELEMETRY.complete_turn(metric_id)
+        persist_pipeline_metric(metric, status="success")
         return result
     except Exception as error:
-        GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(error).__name__)
+        metric = GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(error).__name__)
+        error_stage = "tts" if metric and metric.t_tts_start else "translate" if metric and metric.t_translate_start else "stt"
+        persist_pipeline_metric(metric, status="error", error_stage=error_stage)
         raise
 
 
@@ -49,6 +53,9 @@ def _run_pipeline(audio_path: str, *, client_id: str, output_path: str | None,
     translated_text: str = str(translation_result.get("translated_text") or "")
     if not translated_text.strip():
         raise RuntimeError("Translation returned no text")
+    metric = GLOBAL_TELEMETRY.get_turn(metric_id)
+    if metric is not None:
+        metric.text_length = len(original_text)
 
     # STEP 3 - TTS
     output_name = f"{uuid.uuid4().hex}.wav"
@@ -60,6 +67,7 @@ def _run_pipeline(audio_path: str, *, client_id: str, output_path: str | None,
         output_path,
         target_lang=target_lang
     )
+    GLOBAL_TELEMETRY.record_stage(metric_id, "tts_chunk_0")
     GLOBAL_TELEMETRY.record_stage(metric_id, "tts_done")
 
     total_end = time.time()

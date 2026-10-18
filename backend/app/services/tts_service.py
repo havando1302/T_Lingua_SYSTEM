@@ -9,6 +9,7 @@ import uuid
 import threading
 
 import torch
+import numpy as np
 import scipy.io.wavfile
 from typing import Tuple, Any
 
@@ -46,6 +47,8 @@ def generate_speech_bytes(text: str, target_lang: str = "eng_Latn") -> bytes:
         with torch.inference_mode():
             output = model(**inputs, speaking_rate=0.85, noise_scale=0.667, noise_scale_dp=0.8).waveform
         audio_data = output.cpu().numpy().squeeze()
+        if not np.isfinite(audio_data).all():
+            raise RuntimeError("TTS produced non-finite audio samples")
 
     # Ghi vào bộ đệm RAM thay vì file
     buf = io.BytesIO()

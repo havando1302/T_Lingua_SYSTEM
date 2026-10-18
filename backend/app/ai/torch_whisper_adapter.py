@@ -6,6 +6,12 @@ import torch
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
 
+def max_decode_tokens(sample_count: int, sample_rate: int = 16000) -> int:
+    """Return a conservative Whisper decode cap for the supplied audio length."""
+    duration_seconds = max(0.0, sample_count / sample_rate)
+    return min(224, max(32, int(duration_seconds * 8) + 16))
+
+
 class TorchWhisperModel:
     def __init__(self, model_id: str, device: str, *, revision: str, local_files_only: bool = False):
         def load_cached_first(loader, **kwargs):
@@ -30,8 +36,14 @@ class TorchWhisperModel:
     def transcribe(self, audio, *, language="vi", beam_size=1, initial_prompt="", **_options):
         features = self.processor(audio, sampling_rate=16000, return_tensors="pt").input_features
         features = features.to(device=self.device, dtype=self.dtype)
+        # Bound decoding to the amount of speech supplied.  Normal utterances
+        # stop at EOS, while this cap prevents noise/hallucinations from running
+        # all the way to the old fixed 224-token limit.  Eight tokens/second is
+        # deliberately generous for both Vietnamese and English.
+        max_new_tokens = max_decode_tokens(len(audio))
         options = {"language": language, "task": "transcribe", "num_beams": beam_size,
-                   "max_new_tokens": 224, "return_timestamps": False}
+                   "max_length": None, "max_new_tokens": max_new_tokens,
+                   "return_timestamps": False}
         if initial_prompt:
             options["prompt_ids"] = self.processor.get_prompt_ids(initial_prompt, return_tensors="pt").to(self.device)
         with torch.inference_mode():

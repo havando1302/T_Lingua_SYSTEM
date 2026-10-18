@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+import transformers
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from run_translation_benchmark import percentile, token_f1
@@ -72,6 +73,20 @@ def main() -> None:
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID, dtype=dtype, local_files_only=True).to(device).eval()
     model.generation_config.max_length = None
     load_seconds = time.perf_counter() - load_started
+    # Measure and report cold-start separately, then benchmark steady-state
+    # latency to match the prewarmed production runtime.
+    warm_case = cases[0]
+    tokenizer.src_lang = LANG[warm_case["source_lang"]]
+    warm_inputs = tokenizer(warm_case["source"], return_tensors="pt").to(device)
+    cold_started = time.perf_counter()
+    with torch.inference_mode():
+        model.generate(
+            **warm_inputs,
+            forced_bos_token_id=tokenizer.convert_tokens_to_ids(LANG[warm_case["target_lang"]]),
+            max_new_tokens=128, num_beams=1, no_repeat_ngram_size=3,
+        )
+    if device == "cuda": torch.cuda.synchronize()
+    cold_start_latency_ms = (time.perf_counter() - cold_started) * 1000
     if device == "cuda": torch.cuda.reset_peak_memory_stats()
     results = []; latencies = []
     for index, case in enumerate(cases, 1):
@@ -101,7 +116,9 @@ def main() -> None:
         "created_at": datetime.now(timezone.utc).isoformat(), "scope": "local_translation_benchmark_v2",
         "model_id": MODEL_ID, "dataset": DATASET.name, "cases": len(results),
         "device": device, "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
-        "python": platform.python_version(), "torch": torch.__version__, "load_seconds": round(load_seconds, 3),
+        "python": platform.python_version(), "torch": torch.__version__,
+        "transformers": transformers.__version__, "load_seconds": round(load_seconds, 3),
+        "cold_start_latency_ms": round(cold_start_latency_ms, 3),
         "latency_ms": {name: round(value, 3) for name, value in {
             "mean": statistics.mean(latencies), "p50": percentile(latencies, .5),
             "p95": percentile(latencies, .95), "p99": percentile(latencies, .99),

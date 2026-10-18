@@ -19,14 +19,26 @@ class Settings(AuthSettings, PolicySettings):
     WHISPER_DEVICE: Literal["auto", "cpu", "cuda"] = "auto"
     WHISPER_CPU_THREADS: int = Field(default=4, ge=1, le=32)
     WHISPER_COMPUTE_TYPE: str = "auto"
-    WHISPER_BEAM_SIZE: int = Field(default=3, ge=1, le=10)
+    # large-v3-turbo is trained for fast greedy decoding.  On the production
+    # benchmark beam=1 was both more accurate and about 20% faster than beam=3.
+    WHISPER_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
     NLLB_MODEL: str = "facebook/nllb-200-distilled-1.3B"
     NLLB_REVISION: str = "7be3e24664b38ce1cac29b8aeed6911aa0cf0576"
     TRANSLATION_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
+    # NLLB can stop after the first sentence when a multi-sentence utterance is
+    # decoded as one sequence. Translate bounded sentence batches together so
+    # content stays complete without paying one GPU launch per sentence.
+    TRANSLATION_SENTENCE_BATCH_SIZE: int = Field(default=4, ge=1, le=8)
     TTS_MODEL_ENG: str = "facebook/mms-tts-eng"
     TTS_MODEL_ENG_REVISION: str = "c71de0fe7204c83f1c10820a7d696d0b450048ba"
     TTS_MODEL_VIE: str = "facebook/mms-tts-vie"
     TTS_MODEL_VIE_REVISION: str = "b58928d033932a49aa8e3d6cf11625b25fe928d2"
+    # Auto keeps VITS on CPU on GPUs below 8 GB so Whisper and NLLB retain
+    # enough CUDA workspace for predictable interactive latency.
+    TTS_DEVICE: Literal["auto", "cpu", "cuda"] = "auto"
+    # MMS/VITS can produce NaN/Inf samples in FP16 on longer Vietnamese text.
+    # FP32 is still small enough for the supported 6 GB trial GPU.
+    TTS_DTYPE: Literal["auto", "float32", "float16"] = "float32"
     HF_TOKEN: str = ""
     # DeepFilterNet 0.5.x requires the retired torchaudio stack. Keep it off in
     # the hardened runtime; Whisper remains robust to ordinary ambient noise.

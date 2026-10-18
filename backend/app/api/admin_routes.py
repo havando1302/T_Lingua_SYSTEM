@@ -26,7 +26,7 @@ from datetime import datetime, timedelta, timezone
 from app.db.database import get_db
 from app.db.models import (
     User, TranslationLog, ApiKey, SystemSetting, QualityReview, AuditLog,
-    ModelDeployment, TrainingAudioAsset,
+    ModelDeployment, TrainingAudioAsset, PipelineMetric,
 )
 from app.services import translation_memory as tm
 from app.services.training_audio_storage import (
@@ -418,6 +418,137 @@ def _nearest_rank(values: list[float], percentile: float) -> float:
     ordered = sorted(values)
     index = max(0, min(math.ceil(percentile * len(ordered)) - 1, len(ordered) - 1))
     return ordered[index]
+
+
+PIPELINE_SLO_MS = {
+    "queue_wait": 250.0,
+    "stt": 1200.0,
+    "translate": 500.0,
+    "tts_first_chunk": 900.0,
+    "tts_total": 2000.0,
+    "end_to_end": 3000.0,
+}
+
+PIPELINE_STAGE_COLUMNS = {
+    "queue_wait": "queue_wait_ms",
+    "stt": "stt_ms",
+    "translate": "translate_ms",
+    "tts_first_chunk": "tts_first_chunk_ms",
+    "tts_total": "tts_total_ms",
+    "end_to_end": "end_to_end_ms",
+}
+
+
+def _pipeline_stage_summary(rows: list[PipelineMetric], stage: str) -> dict[str, float | int]:
+    values = [float(value) for row in rows
+              if (value := getattr(row, PIPELINE_STAGE_COLUMNS[stage], None)) is not None and value > 0]
+    total = len(rows)
+    slo_ms = PIPELINE_SLO_MS[stage]
+    if not values:
+        return {
+            "p50": 0.0, "p90": 0.0, "p99": 0.0, "avg": 0.0,
+            "min": 0.0, "max": 0.0, "count": 0, "missing_count": total,
+            "availability_pct": 0.0, "slo_ms": slo_ms,
+            "breach_count": 0, "breach_rate": 0.0,
+        }
+    breach_count = sum(value > slo_ms for value in values)
+    return {
+        "p50": round(_nearest_rank(values, .50), 1),
+        "p90": round(_nearest_rank(values, .90), 1),
+        "p99": round(_nearest_rank(values, .99), 1),
+        "avg": round(sum(values) / len(values), 1),
+        "min": round(min(values), 1),
+        "max": round(max(values), 1),
+        "count": len(values),
+        "missing_count": total - len(values),
+        "availability_pct": round(len(values) / total * 100, 1) if total else 0.0,
+        "slo_ms": slo_ms,
+        "breach_count": breach_count,
+        "breach_rate": round(breach_count / len(values) * 100, 1),
+    }
+
+
+def _pipeline_local_day(value: datetime, tz_offset_minutes: int) -> str:
+    return (value - timedelta(minutes=_metrics_timezone_offset(tz_offset_minutes))).date().isoformat()
+
+
+def _persisted_pipeline_summary(rows: list[PipelineMetric], tz_offset_minutes: int) -> dict[str, Any]:
+    latencies = {stage: _pipeline_stage_summary(rows, stage) for stage in PIPELINE_STAGE_COLUMNS}
+    success_count = sum(row.status == "success" for row in rows)
+    error_count = sum(row.status == "error" for row in rows)
+    cancelled_count = sum(row.status == "cancelled" for row in rows)
+    total = len(rows)
+
+    stage_candidates = ["queue_wait", "stt", "translate", "tts_first_chunk"]
+    measured = [stage for stage in stage_candidates if latencies[stage]["count"]]
+    bottleneck = max(measured, key=lambda stage: float(latencies[stage]["avg"])) if measured else None
+
+    errors: dict[str, int] = {}
+    for row in rows:
+        if row.status == "error":
+            stage = row.error_stage or "unknown"
+            errors[stage] = errors.get(stage, 0) + 1
+
+    daily: dict[str, list[PipelineMetric]] = {}
+    for row in rows:
+        daily.setdefault(_pipeline_local_day(row.created_at, tz_offset_minutes), []).append(row)
+    stage_timeseries = []
+    for day, samples in sorted(daily.items()):
+        item: dict[str, Any] = {"date": day, "requests": len(samples)}
+        for stage in ("stt", "translate", "tts_first_chunk", "end_to_end"):
+            stats = _pipeline_stage_summary(samples, stage)
+            item[f"{stage}_p90"] = stats["p90"]
+            item[f"{stage}_avg"] = stats["avg"]
+        stage_timeseries.append(item)
+
+    slowest = sorted(
+        (row for row in rows if row.end_to_end_ms is not None),
+        key=lambda row: float(row.end_to_end_ms or 0), reverse=True,
+    )[:10]
+    slowest_turns = []
+    for row in slowest:
+        stage_values = {
+            "queue_wait": row.queue_wait_ms or 0,
+            "stt": row.stt_ms or 0,
+            "translate": row.translate_ms or 0,
+            "tts_first_chunk": row.tts_first_chunk_ms or 0,
+        }
+        slowest_turns.append({
+            "turn_id": row.turn_id,
+            "created_at": row.created_at.isoformat() + "Z",
+            "source_lang": row.source_lang,
+            "target_lang": row.target_lang,
+            "status": row.status,
+            "bottleneck": max(stage_values, key=stage_values.get) if any(stage_values.values()) else None,
+            "queue_wait_ms": round(row.queue_wait_ms or 0, 1),
+            "stt_ms": round(row.stt_ms or 0, 1),
+            "translate_ms": round(row.translate_ms or 0, 1),
+            "tts_first_chunk_ms": round(row.tts_first_chunk_ms or 0, 1),
+            "tts_total_ms": round(row.tts_total_ms or 0, 1),
+            "end_to_end_ms": round(row.end_to_end_ms or 0, 1),
+        })
+
+    duration_s = 0.0
+    if len(rows) > 1:
+        duration_s = max(0.0, (max(row.created_at for row in rows) - min(row.created_at for row in rows)).total_seconds())
+    live = GLOBAL_TELEMETRY.get_summary()
+    return {
+        "active_turns": live.get("active_turns", 0),
+        "total_completed": total,
+        "total_success": success_count,
+        "total_errors": error_count,
+        "total_cancelled": cancelled_count,
+        "success_rate": round(success_count / total * 100, 1) if total else 0.0,
+        "error_rate": round(error_count / total * 100, 1) if total else 0.0,
+        "throughput_turns_per_sec": round(total / duration_s, 3) if duration_s > 0 else 0.0,
+        "scope": "persisted",
+        "stage_metrics_available": any(latencies[stage]["count"] for stage in ("stt", "translate", "tts_first_chunk")),
+        "latencies_ms": latencies,
+        "bottleneck": bottleneck,
+        "error_breakdown": [{"stage": stage, "count": count} for stage, count in sorted(errors.items(), key=lambda item: -item[1])],
+        "stage_timeseries": stage_timeseries,
+        "slowest_turns": slowest_turns,
+    }
 
 
 # --- DASHBOARD / METRICS ---
@@ -1044,6 +1175,19 @@ def get_metrics_pipeline(
 ):
     """Số đo hiệu năng toàn pipeline (P50/P90/P99 latency, queue wait, throughput) hỗ trợ bộ lọc thời gian."""
     has_filter = _is_valid_str(time_range) or _is_valid_str(start_date) or _is_valid_str(end_date)
+
+    persisted_q = db.query(PipelineMetric)
+    start_utc, end_utc = _metrics_time_bounds(
+        time_range if has_filter else "all", start_date, end_date, tz_offset_minutes,
+    )
+    if start_utc:
+        persisted_q = persisted_q.filter(PipelineMetric.created_at >= start_utc)
+    if end_utc:
+        persisted_q = persisted_q.filter(PipelineMetric.created_at < end_utc)
+    persisted_rows = persisted_q.order_by(PipelineMetric.created_at.asc()).all()
+    if persisted_rows:
+        return _persisted_pipeline_summary(persisted_rows, tz_offset_minutes)
+
     if not has_filter:
         summary = GLOBAL_TELEMETRY.get_summary()
         if summary["total_completed"] > 0:
@@ -1424,8 +1568,8 @@ def get_dictionary(skip: int = Query(default=0, ge=0, le=100000), limit: int = Q
                    query: str | None = Query(default=None, max_length=200),
                    source_lang: str | None = Query(default=None),
                    target_lang: str | None = Query(default=None),
-                   user: User = Depends(require_dictionary_reader)):
-    rows = tm.get_entries(APPROVED_DICTIONARY)
+                   db: Session = Depends(get_db), user: User = Depends(require_dictionary_reader)):
+    rows = tm.get_tm_repository().get_entries(APPROVED_DICTIONARY, db=db)
     needle = (search or query or "").strip().casefold()
     if needle:
         rows = [row for row in rows if needle in row["source_text"].casefold() or needle in row["translated_text"].casefold()]
@@ -1442,11 +1586,11 @@ def get_dictionary(skip: int = Query(default=0, ge=0, le=100000), limit: int = Q
 @router.get("/dictionary/export")
 def export_dictionary(source_lang: str | None = Query(default=None),
                       target_lang: str | None = Query(default=None),
-                      user: User = Depends(require_dictionary_reader)):
+                      db: Session = Depends(get_db), user: User = Depends(require_dictionary_reader)):
     output = io.StringIO(newline="")
     writer = csv.writer(output)
     writer.writerow(["source_text", "translated_text", "source_lang", "target_lang"])
-    rows = tm.get_entries(APPROVED_DICTIONARY)
+    rows = tm.get_tm_repository().get_entries(APPROVED_DICTIONARY, db=db)
     if source_lang:
         src_canonical = canonical_language(source_lang)
         rows = [row for row in rows if canonical_language(row.get("source_lang") or "vi") == src_canonical]
@@ -1469,9 +1613,9 @@ def export_dictionary(source_lang: str | None = Query(default=None),
 def add_dictionary_item(item: DictionaryItem, db: Session = Depends(get_db), user: User = Depends(require_superadmin)):
     source, target = _validated_pair(item.source_text, item.translated_text, db)
     try:
-        success = tm.add(
+        success = tm.get_tm_repository().add(
             source, target, client_id=APPROVED_DICTIONARY,
-            source_lang=item.source_lang, target_lang=item.target_lang,
+            source_lang=item.source_lang, target_lang=item.target_lang, db=db,
         )
     except ValueError:
         raise HTTPException(422, "Invalid dictionary language pair") from None
@@ -1506,8 +1650,10 @@ def upload_dictionary_csv(file: UploadFile = File(...),
         if not pairs:
             raise HTTPException(422, "Dictionary upload contains no entries")
         try:
-            added = tm.add_many([{"source_text": source, "translated_text": target} for source, target in pairs],
-                                client_id=APPROVED_DICTIONARY, source_lang=source_lang, target_lang=target_lang)
+            added = tm.get_tm_repository().add_many(
+                [{"source_text": source, "translated_text": target} for source, target in pairs],
+                client_id=APPROVED_DICTIONARY, source_lang=source_lang, target_lang=target_lang, db=db,
+            )
         except ValueError:
             raise HTTPException(422, "Invalid dictionary entries or language pair") from None
         except OSError:
@@ -1623,8 +1769,10 @@ class DictionaryDelete(BaseModel):
 def delete_dictionary_entry(item: DictionaryDelete, db: Session = Depends(get_db), user: User = Depends(require_superadmin)):
     source = validate_text(item.source_text, db)
     try:
-        success = tm.delete(source, client_id=APPROVED_DICTIONARY,
-                            source_lang=item.source_lang, target_lang=item.target_lang)
+        success = tm.get_tm_repository().delete(
+            source, client_id=APPROVED_DICTIONARY,
+            source_lang=item.source_lang, target_lang=item.target_lang, db=db,
+        )
     except ValueError:
         raise HTTPException(422, "Invalid dictionary language pair") from None
     except OSError:

@@ -6,6 +6,7 @@ import csv
 import gc
 import io
 import json
+import platform
 import pstats
 import statistics
 import sys
@@ -16,6 +17,7 @@ from pathlib import Path
 import numpy as np
 import scipy.io.wavfile
 import torch
+import transformers
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, VitsModel
 
 
@@ -23,6 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 OUT = ROOT / "docs" / "progress_2026-09-24" / "evidence"
 LANG = {"vi": "vie_Latn", "en": "eng_Latn"}
+WHISPER_MODEL_ID = "openai/whisper-large-v3-turbo"
+WHISPER_REVISION = "41f01f3fe87f28c78e2fbf8b568835947dd65ed9"
 
 
 def percentile(values: list[float], ratio: float) -> float:
@@ -43,7 +47,10 @@ def main() -> None:
     cases = clean_vi + clean_en
     device = "cuda" if torch.cuda.is_available() else "cpu"; dtype = torch.float16 if device == "cuda" else torch.float32
     from app.ai.torch_whisper_adapter import TorchWhisperModel
-    whisper = TorchWhisperModel("openai/whisper-small", device, local_files_only=True)
+    from app.utils.audio_utils import preprocess_audio_numpy
+    whisper = TorchWhisperModel(
+        WHISPER_MODEL_ID, device, revision=WHISPER_REVISION, local_files_only=True,
+    )
     nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-1.3B", local_files_only=True)
     nllb = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-1.3B", dtype=dtype, local_files_only=True).to(device).eval()
     nllb.generation_config.max_length = None
@@ -53,7 +60,8 @@ def main() -> None:
     if device == "cuda": torch.cuda.reset_peak_memory_stats()
 
     def run(case: dict) -> dict:
-        _, pcm = scipy.io.wavfile.read(ROOT / case["file"]); audio = pcm.astype(np.float32) / 32768.0
+        _, pcm = scipy.io.wavfile.read(ROOT / case["file"])
+        audio = preprocess_audio_numpy(pcm.astype(np.float32) / 32768.0)
         started = time.perf_counter(); segments, _ = whisper.transcribe(audio, language=case["source_lang"], beam_size=1)
         if device == "cuda": torch.cuda.synchronize()
         stt_done = time.perf_counter(); transcript = " ".join(segment.text for segment in segments).strip()
@@ -82,6 +90,9 @@ def main() -> None:
     summary = {
         "created_at": datetime.now(timezone.utc).isoformat(), "scope": "warm_local_stt_nllb_tts",
         "cases": len(measured), "device": device,
+        "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
+        "python": platform.python_version(), "torch": torch.__version__,
+        "transformers": transformers.__version__, "stt_model_id": WHISPER_MODEL_ID,
         "latency_ms": {stage: stats([row[stage + "_ms"] for row in measured]) for stage in ("stt", "translation", "tts", "end_to_end")},
         "throughput_sequential_turns_per_second": round(1000 / statistics.mean(row["end_to_end_ms"] for row in measured), 3),
         "gpu_peak_memory_mb": round(torch.cuda.max_memory_allocated() / 1024 ** 2, 2) if device == "cuda" else None,

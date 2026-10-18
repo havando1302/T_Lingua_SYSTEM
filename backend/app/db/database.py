@@ -3,7 +3,8 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-# Đường dẫn file SQLite lưu tại thư mục data (cùng chỗ với translation_memory.json)
+# SQLite và toàn bộ dữ liệu nghiệp vụ có cấu trúc, gồm Translation Memory,
+# được lưu bền vững trong thư mục data.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)

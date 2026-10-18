@@ -15,6 +15,7 @@ from app.services.translation_service import translate_text
 from app.core.gpu_manager import GPU_MANAGER
 from app.core.telemetry import GLOBAL_TELEMETRY
 from app.workers.runtime import finish_work
+from app.services.pipeline_metrics import persist_pipeline_metric
 
 _translation_semaphore = asyncio.Semaphore(TRANSLATION_CONCURRENCY)
 _NLLB_MAP = {
@@ -118,6 +119,9 @@ async def translation_worker(worker_id: int = 0):
             )
 
             GLOBAL_TELEMETRY.record_stage(metric_id, "translate_done")
+            metric = GLOBAL_TELEMETRY.get_turn(metric_id)
+            if metric is not None:
+                metric.text_length = len(text)
 
             if turn and hasattr(session, "is_turn_active") and not session.is_turn_active(turn.turn_id):
                 continue
@@ -164,7 +168,8 @@ async def translation_worker(worker_id: int = 0):
         except (WebSocketDisconnect, ConnectionClosedError):
             continue
         except Exception as e:
-            GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(e).__name__)
+            metric = GLOBAL_TELEMETRY.discard_turn(metric_id, error=type(e).__name__)
+            await asyncio.to_thread(persist_pipeline_metric, metric, status="error", error_stage="translate")
             logger.error("translation_failed error_type=%s", type(e).__name__)
             if session and session.is_running:
                 payload = {"type": "error", "code": "translation_unavailable",
