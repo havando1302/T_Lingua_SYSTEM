@@ -17,7 +17,7 @@ with patch.dict(os.environ, _TEST_ENV):
     from app.utils.dictionary import refine_text_rule_based
     from app.services.whisper_service import clean_stt_text, _is_hallucination
     from app.utils.text_utils import split_text_for_streaming
-    from app.services.deepfilter_service import denoise_numpy
+    from app.services.deepfilter_service import denoise_numpy, estimate_frame_snr_db
     from app.db.models import TranslationMemoryEntry, Base
 
 
@@ -173,6 +173,18 @@ class TranslationQualityTests(unittest.TestCase):
                 command, input_sr=16000, min_duration_seconds=3.0,
             )
         self.assertIs(output, command)
+
+    def test_clean_audio_bypasses_optional_neural_denoising(self):
+        silence = np.zeros(4000, dtype=np.float32)
+        speech = 0.2 * np.sin(
+            2 * np.pi * 440 * np.arange(8000, dtype=np.float32) / 16000
+        )
+        clean = np.concatenate((silence, speech, silence))
+        self.assertGreater(estimate_frame_snr_db(clean), 18.0)
+        with patch("app.services.deepfilter_service._get_deepfilter",
+                   side_effect=AssertionError("Clean audio must bypass DeepFilter")):
+            output = denoise_numpy(clean, auto_bypass_snr_db=18.0)
+        self.assertIs(output, clean)
 
     def test_translation_memory_entry_db_schema(self):
         table = Base.metadata.tables.get("translation_memory_entries")

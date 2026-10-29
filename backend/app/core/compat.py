@@ -43,21 +43,20 @@ def apply_torch_patches() -> None:
     info_module.AudioMetaData = MockAudioMetaData
     sys.modules["torchaudio.info"] = info_module
 
-    # Guard against Windows Application Control blocking torchaudio.lib._torchaudio
-    try:
-        import torchaudio.lib._torchaudio
-    except (ImportError, OSError):
-        dummy_ext = types.ModuleType("torchaudio.lib._torchaudio")
-        sys.modules["torchaudio.lib._torchaudio"] = dummy_ext
-        try:
-            import transformers.utils.import_utils as _tf_utils
-            _tf_utils.is_torchaudio_available = lambda: False
-        except Exception:
-            pass
-
+    # TorchAudio 2.11 loads its native library through torch.ops.load_library.
+    # Importing ``torchaudio.lib._torchaudio`` directly treats the DLL as a
+    # CPython extension and raises ``PyInit__torchaudio`` even when the regular
+    # package and its native ops are healthy.  Probe the public package only.
     try:
         import torchaudio
+    except (ImportError, OSError):
+        # DeepFilter is optional and disabled in the constrained runtime.  Do
+        # not import Transformers here: doing so scans its model tree during
+        # process bootstrap and made a recoverable audio failure look like a
+        # backend hang.
+        return
 
+    try:
         # Ensure torchaudio.backend.common exists
         if not hasattr(torchaudio, "backend"):
             torchaudio.backend = types.ModuleType("torchaudio.backend")

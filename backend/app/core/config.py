@@ -22,6 +22,10 @@ class Settings(AuthSettings, PolicySettings):
     # large-v3-turbo is trained for fast greedy decoding.  On the production
     # benchmark beam=1 was both more accurate and about 20% faster than beam=3.
     WHISPER_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
+    # Realtime requests always use the latency-tested decode profile.  Keep
+    # WHISPER_BEAM_SIZE for offline/diagnostic callers that deliberately need
+    # a wider search without making the HTTP/WebSocket pipeline slower.
+    WHISPER_REALTIME_BEAM_SIZE: int = Field(default=1, ge=1, le=3)
     NLLB_MODEL: str = "facebook/nllb-200-distilled-1.3B"
     NLLB_REVISION: str = "7be3e24664b38ce1cac29b8aeed6911aa0cf0576"
     TRANSLATION_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
@@ -43,8 +47,15 @@ class Settings(AuthSettings, PolicySettings):
     # DeepFilterNet 0.5.x requires the retired torchaudio stack. Keep it off in
     # the hardened runtime; Whisper remains robust to ordinary ambient noise.
     ENABLE_DEEPFILTER: bool = False
+    # Keep optional denoising off the constrained 6 GB inference GPU.  Auto
+    # selects CUDA only when at least 8 GB is available.
+    DENOISE_DEVICE: Literal["auto", "cpu", "cuda"] = "auto"
     DENOISE_ATTENUATION_DB: float = Field(default=12.0, ge=0.0, le=60.0)
     DENOISE_MIN_AUDIO_SECONDS: float = Field(default=3.0, ge=0.0, le=10.0)
+    # Clean microphone/VITS audio does not benefit from a costly 16k -> 48k ->
+    # 16k neural denoise round trip.  Only run DeepFilter below this estimated
+    # frame-SNR threshold; set to 100 to effectively disable auto bypass.
+    DENOISE_AUTO_BYPASS_SNR_DB: float = Field(default=18.0, ge=0.0, le=100.0)
     PREWARM_MODELS: bool = True
     STT_WORKER_POOL_SIZE: int = Field(default=2, ge=1, le=8)
     TRANSLATION_WORKER_POOL_SIZE: int = Field(default=2, ge=1, le=8)

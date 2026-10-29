@@ -1,0 +1,464 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1380" viewBox="0 0 1640 1380">
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px 20px;
+  }
+  .diagram-container {
+    width: 1560px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    padding: 28px 36px 36px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  
+  /* HEADER */
+  .diagram-header {
+    text-align: center;
+    border-bottom: 2px solid #E2E8F0;
+    padding-bottom: 16px;
+  }
+  .diagram-header h1 {
+    font-size: 23px;
+    font-weight: 800;
+    color: #1B365D; /* Phenikaa Navy */
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .diagram-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0284C7;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+  
+  /* LAYER BOX */
+  .layer-box {
+    border-radius: 8px;
+    border: 1.5px solid #CBD5E1;
+    background: #F8FAFC;
+    padding: 12px 18px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .layer-title-badge {
+    align-self: flex-start;
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  /* COLORS PER LAYER */
+  .layer-1 { border-color: #38BDF8; background: #F0F9FF; }
+  .layer-1 .layer-title-badge { background: #0284C7; }
+  
+  .layer-2 { border-color: #A78BFA; background: #F5F3FF; }
+  .layer-2 .layer-title-badge { background: #7C3AED; }
+  
+  .layer-3 { border-color: #34D399; background: #ECFDF5; }
+  .layer-3 .layer-title-badge { background: #059669; }
+  
+  .layer-4 { border-color: #FBBF24; background: #FFFBEB; }
+  .layer-4 .layer-title-badge { background: #D97706; }
+  
+  .layer-5 { border-color: #94A3B8; background: #F1F5F9; }
+  .layer-5 .layer-title-badge { background: #1B365D; }
+  
+  /* GRID LAYOUTS */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  
+  /* SUB-PACKAGE CARD */
+  .sub-package {
+    background: #FFFFFF;
+    border: 1.2px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sub-package-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px dashed #E2E8F0;
+    padding-bottom: 5px;
+  }
+  .sub-package-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F172A;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sub-package-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #F1F5F9;
+    color: #475569;
+    font-family: Consolas, monospace;
+  }
+  
+  .class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .class-item {
+    font-size: 11.5px;
+    color: #334155;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.35;
+  }
+  .class-item .dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #3B82F6;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .class-item strong {
+    color: #0F172A;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+  }
+  
+  /* PROTOCOL CONNECTOR BARS */
+  .connector-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    padding: 2px 0;
+  }
+  .protocol-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+  }
+  .protocol-rest {
+    background: #E0F2FE;
+    color: #0369A1;
+    border: 1px solid #7DD3FC;
+  }
+  .protocol-ws {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+  }
+  .protocol-arrow {
+    font-size: 13px;
+    font-weight: 900;
+  }
+  
+  /* FOOTER CAPTION */
+  .diagram-caption {
+    text-align: center;
+    border-top: 1.5px solid #E2E8F0;
+    padding-top: 12px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-style: italic;
+    color: #1B365D;
+  }
+</style>
+</head>
+<body>
+
+<div class="diagram-container">
+  
+  <!-- HEADER -->
+  <div class="diagram-header">
+    <h1>Hệ Thống Dịch Thuật Song Phương Thời Gian Thực T-Lingua</h1>
+    <h2>Kiến Trúc Phân Tầng Các Gói Lớp (Layered Package Architecture)</h2>
+  </div>
+
+  <!-- TẦNG 1: TRÌNH DIỄN & CLIENT -->
+  <div class="layer-box layer-1">
+    <div class="layer-title-badge">
+      <span>TẦNG 1: TẦNG TRÌNH DIỄN & GIAO DIỆN MÁY KHÁCH (CLIENT & PRESENTATION LAYER)</span>
+    </div>
+    <div class="grid-2">
+      <!-- Flutter Mobile -->
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">📱 Gói Ứng Dụng Di Động T-Lingua Mobile</span>
+          <span class="sub-package-tag">frontend/lib (Flutter & Dart)</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>RealtimeVoiceScreen:</strong> Giao diện dịch giọng nói 1 chiều tức thời kèm sóng âm Waveform.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>BilingualConversationScreen:</strong> Đối thoại song phương mặt-đối-mặt với thanh micrô kép <strong>DualMicBar</strong>.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>AudioStreamer & AudioPlayer:</strong> Bộ thu luồng PCM Mono 16kHz & phát âm thanh câu dịch.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>HistoryScreen & SettingsController:</strong> Tra cứu lịch sử, gắn cờ lỗi và tinh chỉnh tốc độ đọc TTS.</span></div>
+        </div>
+      </div>
+      <!-- React Admin -->
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">💻 Gói Cổng Quản Trị Web Admin</span>
+          <span class="sub-package-tag">admin_web/src (React 18 & TypeScript)</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>Dashboard & LiveTelemetry:</strong> Giám sát phân vị độ trễ P50/P90/P99 theo thời gian thực (ECharts).</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>QAQueueReviewer:</strong> Hàng đợi thẩm định chất lượng, nghe audio gốc, sửa câu dịch theo chuẩn MQM.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>GlossaryManagement:</strong> Quản trị danh mục thuật ngữ & câu mẫu Bộ nhớ dịch (Translation Memory).</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>TrainingCenter & CanaryDeploy:</strong> Khởi tạo LoRA training, vẽ Loss realtime, Canary 10% & Rollback.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTOR BAR 1 -> 2 -->
+  <div class="connector-bar">
+    <div class="protocol-pill protocol-rest">
+      <span>🌐 Giao Thức RESTful API (HTTPS / JSON / JWT Bearer Tokens)</span>
+      <span class="protocol-arrow">⬇</span>
+    </div>
+    <div class="protocol-pill protocol-ws">
+      <span>⚡ Giao Thức WebSocket (Binary PCM 16kHz Stream & JSON Control)</span>
+      <span class="protocol-arrow">⬇</span>
+    </div>
+  </div>
+
+  <!-- TẦNG 2: GIAO TIẾP & BẢO VỆ MẠNG -->
+  <div class="layer-box layer-2">
+    <div class="layer-title-badge">
+      <span>TẦNG 2: TẦNG ĐIỀU PHỐI GIAO TIẾP & BẢO MẬT API (TRANSPORT & SECURITY GATEWAY LAYER)</span>
+    </div>
+    <div class="grid-3">
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🔌 WebSocket Router</span>
+          <span class="sub-package-tag">FastAPI WebSocket</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>/ws/translate:</strong> Điểm tiếp nhận luồng audio nhị phân hai chiều.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>/ws/telemetry:</strong> Phát luồng số liệu đo kiểm độ trễ từng giây.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>ConnectionManager:</strong> Bắt tay (Handshake), ngắt phiên & dọn dẹp RAM.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🛡️ REST API Routers</span>
+          <span class="sub-package-tag">FastAPI APIRouter</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>/api/v1/auth:</strong> Xác thực 2 bước (Mật khẩu băm + TOTP MFA).</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>/api/v1/qa, /dictionary:</strong> API thẩm định chất lượng & từ vựng.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>/api/v1/training, /deployments:</strong> Điều phối tiến trình MLOps.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🔒 Bảo Mật & Ràng Buộc</span>
+          <span class="sub-package-tag">Middleware & Guards</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>Argon2id & RFC 6238 TOTP:</strong> Băm mật mã và mã xác thực thời gian.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>RBAC Guard & Token Bucket:</strong> Phân quyền vai trò và Rate Limiter.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>Pydantic v2 Models:</strong> Ràng buộc chặt chẽ kiểu dữ liệu đầu vào.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TẦNG 3: XỬ LÝ THỜI GIAN THỰC & SUY LUẬN AI -->
+  <div class="layer-box layer-3">
+    <div class="layer-title-badge">
+      <span>TẦNG 3: TẦNG XỬ LÝ LUỒNG THỜI GIAN THỰC & SUY LUẬN AI (REALTIME ACTOR & AI PIPELINE LAYER)</span>
+    </div>
+    <div class="grid-2">
+      <!-- Actor System -->
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">⚙️ Phân Hệ Tác Tử Điều Phối Phiên (Actor Model)</span>
+          <span class="sub-package-tag">backend/app/realtime (Asyncio)</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>SessionActor:</strong> Quản lý trạng thái độc lập của từng phiên, cô lập hoàn toàn tài nguyên tránh xung đột.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>MicMutex Lock:</strong> Khóa hàng rào loại trừ tương hỗ, chống xung đột khi 2 bên cùng nhấn nói.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>WebRtcVadStream:</strong> Bộ phát hiện tiếng nói WebRTC VAD 16kHz, cắt đoạn câu nói (Silence Cutoff 500ms).</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>PipelineQueues:</strong> Hệ thống hàng đợi bất đồng bộ chuyển tiếp audio_q ➜ stt_q ➜ nmt_q ➜ tts_q.</span></div>
+        </div>
+      </div>
+      <!-- AI Engine -->
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🧠 Phân Hệ Cấp Phát & Phục Vụ Mô Hình AI</span>
+          <span class="sub-package-tag">backend/app/ai (PyTorch & HuggingFace)</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>ModelManager (Singleton):</strong> Quản lý VRAM GPU, nạp trước mô hình, hoán đổi Canary không tắt máy chủ.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>Whisper ASR Adapter:</strong> Nhận dạng tiếng nói đa ngữ thành văn bản với độ chính xác cao.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>NLLB-200 NMT Adapter + LoRA:</strong> Mô hình dịch máy thần kinh 200 ngôn ngữ kèm bộ chuyển đổi LoRA.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>MMS VITS TTS Adapter:</strong> Tổng hợp giọng đọc âm thanh bản ngữ tự nhiên (vi_VN, en_US).</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>CanaryTrafficRouter:</strong> Phân bổ ngẫu nhiên 90% lưu lượng sang Active Model, 10% sang Canary Model.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TẦNG 4: NGHIỆP VỤ BỘ NHỚ DỊCH, QA & MLOPS -->
+  <div class="layer-box layer-4">
+    <div class="layer-title-badge">
+      <span>TẦNG 4: TẦNG NGHIỆP VỤ BỘ NHỚ DỊCH, KIỂM ĐỊNH QA & MLOPs (CORE BUSINESS & MLOPS LIFECYCLE LAYER)</span>
+    </div>
+    <div class="grid-3">
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">📚 Bộ Nhớ Dịch & Thuật Ngữ (TM)</span>
+          <span class="sub-package-tag">Translation Memory</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>TranslationMemoryService:</strong> So khớp cụm từ chuyên ngành chính xác cao.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>TextNormalizer:</strong> Chuẩn hóa câu chữ, loại bỏ khoảng trắng và ký tự thừa.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>GlossaryIntervention:</strong> Can thiệp cưỡng bức từ điển trước khi dịch máy.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">✅ Kiểm Định Chất Lượng (QA)</span>
+          <span class="sub-package-tag">Human-in-the-Loop</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>QualityReviewService:</strong> Quản lý hàng đợi câu dịch bị nghi ngờ có lỗi.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>MQMEvaluator:</strong> Phân loại lỗi (Accuracy, Fluency, Terminology) & chấm điểm.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>DatasetCorpusExtractor:</strong> Đẩy câu dịch đã sửa vào kho mẫu sạch huấn luyện.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🚀 Trung Tâm MLOps & Huấn Luyện</span>
+          <span class="sub-package-tag">Training Center</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>DatasetManager:</strong> Đóng băng tập dữ liệu (Dataset Freeze) kèm băm SHA-256.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>TrainingWorker:</strong> Tiến trình huấn luyện LoRA PEFT nền trên GPU PyTorch.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>DeploymentManager:</strong> Quản lý gói Artifact, kích hoạt Canary & Rollback 1-click.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TẦNG 5: LƯU TRỮ DỮ LIỆU BỀN VỮNG -->
+  <div class="layer-box layer-5">
+    <div class="layer-title-badge">
+      <span>TẦNG 5: TẦNG DỮ LIỆU BỀN VỮNG & LƯU TRỮ VẬT LÝ (DATA PERSISTENCE & STORAGE LAYER)</span>
+    </div>
+    <div class="grid-4">
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🔑 Xác Thực & Bảo Mật</span>
+          <span class="sub-package-tag">SQLAlchemy ORM</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>users:</strong> Tài khoản, băm mật khẩu, role, mfa.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>auth_sessions:</strong> Phiên đăng nhập & token.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>api_keys:</strong> Khóa API đối tác & quota RPM.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>audit_logs:</strong> Vết kiểm toán an ninh bất biến.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>system_settings:</strong> Cấu hình hệ thống động.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">📊 Dịch Thuật & Đo Kiểm</span>
+          <span class="sub-package-tag">SQLAlchemy ORM</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>translation_logs:</strong> Lịch sử chi tiết các câu dịch.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>pipeline_metrics:</strong> Độ trễ vi mô VAD, STT, NMT, TTS.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>audio_assets:</strong> Siêu dữ liệu các tệp âm thanh ghi.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">📖 Bộ Nhớ Dịch & QA</span>
+          <span class="sub-package-tag">SQLAlchemy ORM</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>tm_entries:</strong> Cặp câu chuẩn hóa bộ nhớ dịch.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>quality_reviews:</strong> Phiếu thẩm định của chuyên gia.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>training_audio:</strong> Đoạn âm thanh sạch đã gán nhãn.</span></div>
+        </div>
+      </div>
+      <div class="sub-package">
+        <div class="sub-package-header">
+          <span class="sub-package-title">🧪 MLOps & Lưu Trữ Vật Lý</span>
+          <span class="sub-package-tag">Models & File System</span>
+        </div>
+        <div class="class-list">
+          <div class="class-item"><span class="dot"></span><span><strong>training_datasets & jobs:</strong> Tập dữ liệu & tiến trình.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>model_artifacts & deploys:</strong> Trọng số LoRA & Canary.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>Kho tệp vật lý:</strong> Thư mục WAV Audio & File Trọng số GPU.</span></div>
+          <div class="class-item"><span class="dot"></span><span><strong>Cơ sở dữ liệu RDBMS:</strong> PostgreSQL / SQLite Database.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPTION -->
+  <div class="diagram-caption">
+    Hình 3.1: Kiến trúc phân tầng các gói lớp trong hệ thống T-Lingua
+  </div>
+
+</div>
+
+</body>
+</html>
+
+    </div>
+  </foreignObject>
+</svg>

@@ -80,3 +80,34 @@ def test_token_budget_ignores_padding():
     inputs = _Inputs(["one", "one two three four five six"])
     budget = service._translation_token_budget(inputs.input_ids, inputs.attention_mask)
     assert budget == 24
+
+
+def test_numeric_and_alphanumeric_entities_are_protected_and_restored():
+    protected, entities = service._protect_translation_entities(
+        "Room C34 opens at 08:30 and release 4.0 uses 15%."
+    )
+    assert "C34" not in protected
+    assert "08:30" not in protected
+    assert "4.0" not in protected
+    assert "15%" not in protected
+    assert [value for _, value in entities] == ["C34", "08:30", "4.0", "15%"]
+
+    translated = protected.lower()
+    assert service._restore_translation_entities(translated, entities) == (
+        "Room C34 opens at 08:30 and release 4.0 uses 15%.".lower()
+        .replace("c34", "C34")
+    )
+
+
+def test_nllb_round_trip_preserves_codes_without_increasing_global_beam():
+    tokenizer, model = _Tokenizer(), _Model()
+    with patch.object(service, "_get_nllb", return_value=(model, tokenizer)), \
+         patch.object(service.settings, "TRANSLATION_BEAM_SIZE", 1):
+        translated = service._translate_nllb(
+            "Building H3 recorded 18 kWh.", "eng_Latn", "vie_Latn"
+        )
+
+    assert "H3" in translated
+    assert "18" in translated
+    assert model.calls[0]["num_beams"] == 1
+    assert model.calls[0]["use_cache"] is True

@@ -8,10 +8,30 @@ import torch
 from scipy.signal import resample_poly
 import logging
 import threading
+import math
 from typing import Any, Callable, cast
 
 logger = logging.getLogger(__name__)
 _inference_lock = threading.RLock()
+
+
+def estimate_frame_snr_db(audio_np: np.ndarray, input_sr: int = 16000) -> float:
+    """Estimate SNR from robust low/high frame-energy percentiles.
+
+    The estimate is intentionally cheap.  It is only a gate for optional
+    neural denoising, not a user-facing audio-quality measurement.
+    """
+    if audio_np is None or len(audio_np) < max(1, input_sr // 10):
+        return 0.0
+    frame_size = max(1, int(input_sr * 0.02))
+    usable = len(audio_np) - (len(audio_np) % frame_size)
+    if usable < frame_size:
+        return 0.0
+    frames = np.asarray(audio_np[:usable], dtype=np.float32).reshape(-1, frame_size)
+    rms = np.sqrt(np.mean(np.square(frames), axis=1) + 1e-12)
+    noise_floor = float(np.percentile(rms, 20))
+    speech_level = float(np.percentile(rms, 90))
+    return 20.0 * math.log10((speech_level + 1e-6) / (noise_floor + 1e-6))
 
 
 def _get_deepfilter():
@@ -36,7 +56,8 @@ def _get_df_sample_rate(df_state: Any) -> int:
 
 def denoise_numpy(audio_np: np.ndarray, input_sr: int = 16000,
                   atten_lim_db: float | None = 12.0,
-                  min_duration_seconds: float = 0.0) -> np.ndarray:
+                   min_duration_seconds: float = 0.0,
+                   auto_bypass_snr_db: float | None = None) -> np.ndarray:
     """
     Loại bỏ nhiễu nền bằng DeepFilterNet.
     Tự động thích ứng tần số lấy mẫu (16kHz STT <-> 48kHz DeepFilterNet).
@@ -49,13 +70,18 @@ def denoise_numpy(audio_np: np.ndarray, input_sr: int = 16000,
     # reserve neural denoising for longer utterances where it is more useful.
     if len(audio_np) < int(input_sr * min_duration_seconds):
         return audio_np
+    if (
+        auto_bypass_snr_db is not None
+        and estimate_frame_snr_db(audio_np, input_sr) >= auto_bypass_snr_db
+    ):
+        return audio_np
 
     model, df_state = _get_deepfilter()
     if model is None or df_state is None:
         return audio_np
 
     try:
-        from df.enhance import enhance
+        from df.enhance import enhance  # type: ignore[import-not-found,import-untyped]
 
         df_sr = _get_df_sample_rate(df_state)
 

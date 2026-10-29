@@ -14,6 +14,14 @@ from app.services.translation_cache import GLOBAL_TRANSLATION_CACHE
 _inference_lock = threading.RLock()
 _NLLB_LANGUAGES = {"vi": "vie_Latn", "en": "eng_Latn"}
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
+# NLLB is good at preserving neutral ASCII placeholders, but can translate or
+# omit identifiers such as H3, RX11, 4.0 and 08:30 when they are left in the
+# sentence.  Protect only tokens that contain digits; ordinary words and names
+# still receive normal grammatical translation.
+_PROTECTED_ENTITY = re.compile(
+    r"(?<!\w)[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*(?!\w)", re.IGNORECASE
+)
+_PLACEHOLDER_PREFIX = "ZXQTLENTITY"
 
 
 def _get_nllb() -> Tuple[Any, Any]:
@@ -40,6 +48,27 @@ def _split_translation_segments(text: str) -> list[str]:
     return segments or [text]
 
 
+def _protect_translation_entities(text: str) -> tuple[str, list[tuple[str, str]]]:
+    """Replace number/code tokens with stable neutral placeholders."""
+    protected: list[tuple[str, str]] = []
+
+    def replace(match: re.Match[str]) -> str:
+        marker = f"{_PLACEHOLDER_PREFIX}{len(protected)}Q"
+        protected.append((marker, match.group(0)))
+        return marker
+
+    return _PROTECTED_ENTITY.sub(replace, text), protected
+
+
+def _restore_translation_entities(
+    translated: str, protected: list[tuple[str, str]],
+) -> str:
+    restored = translated
+    for marker, original in protected:
+        restored = re.sub(re.escape(marker), lambda _match: original, restored, flags=re.IGNORECASE)
+    return restored
+
+
 def _translation_token_budget(input_ids: Any, attention_mask: Any = None) -> int:
     """Bound decoding to the longest unpadded input in the current batch."""
     if input_ids is None:
@@ -60,7 +89,8 @@ def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
         target_token_id = tokenizer.convert_tokens_to_ids(target_lang)
         if target_token_id is None or target_token_id == getattr(tokenizer, "unk_token_id", None):
             raise ValueError(f"Invalid target language: {target_lang}")
-        segments = _split_translation_segments(text)
+        protected_text, protected_entities = _protect_translation_entities(text)
+        segments = _split_translation_segments(protected_text)
         batch_size = getattr(settings, "TRANSLATION_SENTENCE_BATCH_SIZE", 4)
         translated_segments: list[str] = []
         for start in range(0, len(segments), batch_size):
@@ -79,12 +109,13 @@ def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
                     max_length=None,
                     max_new_tokens=token_budget,
                     num_beams=settings.TRANSLATION_BEAM_SIZE,
+                    use_cache=True,
                 )
             decoded = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
             translated_segments.extend(part.lstrip("- ").strip() for part in decoded if part.strip())
         if len(translated_segments) != len(segments):
             raise RuntimeError("NLLB returned an incomplete sentence batch")
-        return " ".join(translated_segments)
+        return _restore_translation_entities(" ".join(translated_segments), protected_entities)
 
 
 def translate_text(

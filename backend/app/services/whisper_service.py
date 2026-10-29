@@ -21,10 +21,16 @@ class TranscribeResult(TypedDict):
 
 # Prompt mồi đơn giản để hướng dẫn Whisper sử dụng dấu câu và ngôn ngữ,
 # Tránh liệt kê các câu cụ thể vì Whisper sẽ "ảo giác" lặp lại các câu đó khi có tiếng ồn.
-INITIAL_PROMPT = "Đây là văn bản tiếng Việt có dấu câu."
+INITIAL_PROMPT = (
+    "Đây là lời nói tiếng Việt. Chép chính xác tên riêng, chữ số, đơn vị "
+    "và mã gồm chữ cái kèm số."
+)
 
 # Prompt mồi cho tiếng Anh
-INITIAL_PROMPT_EN = "This is an English text with punctuation."
+INITIAL_PROMPT_EN = (
+    "This is English speech. Transcribe names, numbers, units, and "
+    "alphanumeric codes exactly."
+)
 
 # Prompt conditioning can dominate very short clips.  In practice this makes
 # Whisper turn one or two Vietnamese words into memorised phrases (for example
@@ -191,7 +197,8 @@ def transcribe_audio(
         from app.core.config import settings
         audio = denoise_numpy(preprocess_audio_numpy(audio),
                               atten_lim_db=settings.DENOISE_ATTENUATION_DB,
-                              min_duration_seconds=getattr(settings, "DENOISE_MIN_AUDIO_SECONDS", 3.0))
+                              min_duration_seconds=getattr(settings, "DENOISE_MIN_AUDIO_SECONDS", 3.0),
+                              auto_bypass_snr_db=getattr(settings, "DENOISE_AUTO_BYPASS_SNR_DB", 18.0))
     if not should_process_audio(audio):
         return {"text": "", "language": lang_code, "latency": 0.0}
     model = _get_whisper_model()

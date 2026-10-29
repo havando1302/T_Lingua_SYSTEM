@@ -155,7 +155,7 @@ async def stt_worker(worker_id: int = 0):
                     final_result = await asyncio.to_thread(
                         transcribe_audio,
                         audio_np,
-                        beam_size=settings.WHISPER_BEAM_SIZE,
+                        beam_size=getattr(settings, "WHISPER_REALTIME_BEAM_SIZE", 1),
                         temperature=0.0,
                         condition_on_previous_text=False,
                         use_vad=False,

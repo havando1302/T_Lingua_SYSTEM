@@ -34,6 +34,7 @@ class ModelManager:
         self._whisper_fallback: bool = False
         self._tts_device: str = "not_loaded"
         self._tts_dtype: str = "not_loaded"
+        self._denoise_device: str = "disabled"
         self._load_seconds: float = 0.0
 
     # ── Helpers ─────────────────────────────────────────────
@@ -133,20 +134,24 @@ class ModelManager:
         t0 = time.time()
         print(f"  Loading NLLB ({s.NLLB_MODEL}) ...", end=" ", flush=True)
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        from app.ai.torch_whisper_adapter import load_cached_first
         import os
 
-        self.nllb_tokenizer = AutoTokenizer.from_pretrained(
+        self.nllb_tokenizer = load_cached_first(
+            AutoTokenizer,
             s.NLLB_MODEL, revision=s.NLLB_REVISION,
         )
 
         use_int8 = os.getenv("NLLB_INT8", "0") == "1"
         if use_int8:
-            self.nllb_model = AutoModelForSeq2SeqLM.from_pretrained(
+            self.nllb_model = load_cached_first(
+                AutoModelForSeq2SeqLM,
                 s.NLLB_MODEL, revision=s.NLLB_REVISION, load_in_8bit=True, device_map="auto"
             )
         else:
             torch_dtype = torch.float16 if self._device == "cuda" else None
-            self.nllb_model = AutoModelForSeq2SeqLM.from_pretrained(
+            self.nllb_model = load_cached_first(
+                AutoModelForSeq2SeqLM,
                 s.NLLB_MODEL, revision=s.NLLB_REVISION, dtype=torch_dtype
             ).to(self._device)
 
@@ -202,18 +207,22 @@ class ModelManager:
             tts_dtype = torch.float32
         self._tts_device = tts_device
         self._tts_dtype = str(tts_dtype).removeprefix("torch.")
-        self.tts_model_eng = VitsModel.from_pretrained(
+        self.tts_model_eng = load_cached_first(
+            VitsModel,
             s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
             dtype=tts_dtype,
         ).to(tts_device).eval()
-        self.tts_tokenizer_eng = VitsTokenizer.from_pretrained(
+        self.tts_tokenizer_eng = load_cached_first(
+            VitsTokenizer,
             s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
         )
-        self.tts_model_vie = VitsModel.from_pretrained(
+        self.tts_model_vie = load_cached_first(
+            VitsModel,
             s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
             dtype=tts_dtype,
         ).to(tts_device).eval()
-        self.tts_tokenizer_vie = VitsTokenizer.from_pretrained(
+        self.tts_tokenizer_vie = load_cached_first(
+            VitsTokenizer,
             s.TTS_MODEL_VIE, revision=s.TTS_MODEL_VIE_REVISION,
         )
         print(f"OK ({time.time() - t0:.1f}s)")
@@ -225,16 +234,38 @@ class ModelManager:
             try:
                 from app.core.compat import apply_torch_patches
                 apply_torch_patches()
-                from df.enhance import init_df
-                # The pretrained cache may be readable but not writable (for
-                # example inside a sandbox or a shared model volume). DeepFilter
-                # only needs the checkpoint; its default enhance.log is optional.
-                self.deepfilter_model, self.deepfilter_state, _ = init_df(log_file=None)
+                configured_denoise_device = getattr(s, "DENOISE_DEVICE", "auto")
+                if configured_denoise_device == "auto":
+                    if self._device == "cuda" and torch.cuda.is_available():
+                        vram_gb = torch.cuda.get_device_properties(0).total_memory / 1024**3
+                        denoise_device = "cuda" if vram_gb >= 8 else "cpu"
+                    else:
+                        denoise_device = "cpu"
+                else:
+                    denoise_device = configured_denoise_device
+                # DeepFilterNet reads DEVICE from its own global config.  Set
+                # it only for initialization; the application model settings
+                # were already resolved by Pydantic above.
+                previous_device = os.environ.get("DEVICE")
+                os.environ["DEVICE"] = denoise_device
+                try:
+                    from df.enhance import init_df  # type: ignore[import-not-found,import-untyped]
+                    # The pretrained cache may be readable but not writable (for
+                    # example inside a sandbox or a shared model volume). DeepFilter
+                    # only needs the checkpoint; its default enhance.log is optional.
+                    self.deepfilter_model, self.deepfilter_state, _ = init_df(log_file=None)
+                finally:
+                    if previous_device is None:
+                        os.environ.pop("DEVICE", None)
+                    else:
+                        os.environ["DEVICE"] = previous_device
+                self._denoise_device = denoise_device
                 print(f"OK ({time.time() - t0:.1f}s)")
             except Exception as e:
                 print(f"SKIP ({e})")
                 self.deepfilter_model = None
                 self.deepfilter_state = None
+                self._denoise_device = "unavailable"
         else:
             print("  DeepFilterNet : DISABLED")
 
@@ -249,7 +280,7 @@ class ModelManager:
                     self.whisper_model.transcribe(
                         np.zeros(16000, dtype=np.float32), language="vi", beam_size=1)
                 if self.deepfilter_model is not None and self.deepfilter_state is not None:
-                    from df.enhance import enhance
+                    from df.enhance import enhance  # type: ignore[import-not-found,import-untyped]
                     with torch.inference_mode():
                         enhance(self.deepfilter_model, self.deepfilter_state,
                                 torch.zeros(1, 48000),
@@ -309,6 +340,7 @@ class ModelManager:
                 "whisper_compute_type": self._whisper_compute_type,
                 "tts_device": self._tts_device,
                 "tts_dtype": self._tts_dtype,
+                "denoise_device": self._denoise_device,
                 "whisper_cpu_fallback": self._whisper_fallback,
                 "model_load_seconds": round(self._load_seconds, 3)}
 

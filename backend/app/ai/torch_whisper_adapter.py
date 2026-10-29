@@ -1,8 +1,10 @@
 """GPU Whisper adapter with the small interface used by whisper_service."""
 
+from json import JSONDecodeError
 from types import SimpleNamespace
 
 import torch
+from safetensors import SafetensorError
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
 
@@ -12,20 +14,34 @@ def max_decode_tokens(sample_count: int, sample_rate: int = 16000) -> int:
     return min(224, max(32, int(duration_seconds * 8) + 16))
 
 
+def load_cached_first(loader, model_id: str, *, local_files_only: bool = False, **kwargs):
+    """Prefer the cache, then replace a missing or corrupt cached artifact."""
+    try:
+        return loader.from_pretrained(model_id, local_files_only=True, **kwargs)
+    except (OSError, SafetensorError, JSONDecodeError, UnicodeDecodeError):
+        if local_files_only:
+            raise
+        return loader.from_pretrained(
+            model_id,
+            local_files_only=False,
+            force_download=True,
+            **kwargs,
+        )
+
+
 class TorchWhisperModel:
     def __init__(self, model_id: str, device: str, *, revision: str, local_files_only: bool = False):
-        def load_cached_first(loader, **kwargs):
-            try:
-                return loader.from_pretrained(model_id, local_files_only=True, **kwargs)
-            except OSError:
-                if local_files_only:
-                    raise
-                return loader.from_pretrained(model_id, local_files_only=False, **kwargs)
-
-        self.processor = load_cached_first(WhisperProcessor, revision=revision)
+        self.processor = load_cached_first(
+            WhisperProcessor,
+            model_id,
+            local_files_only=local_files_only,
+            revision=revision,
+        )
         dtype = torch.float16 if device == "cuda" else torch.float32
         self.model = load_cached_first(
             WhisperForConditionalGeneration,
+            model_id,
+            local_files_only=local_files_only,
             revision=revision,
             dtype=dtype,
         ).to(device).eval()
