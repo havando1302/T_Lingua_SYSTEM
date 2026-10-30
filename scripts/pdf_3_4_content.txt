@@ -1,0 +1,304 @@
+
+==================== PAGE 187 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+178
+Hình 3.18. Biểu đồ tuần tự Shipper thực hiện giao hàng trên Mobile App
+==================== PAGE 188 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+179
+Hình 3.19. Biểu đồ tuần tự AI tư vấn và đề xuất bó hoa
+3.4 Cơ sở dữ liệu
+3.4.1 Sơ đồ cơ sở dữ liệu tổng thể RoseShop
+SơđồcơsởdữliệutổngthểcủahệthốngRoseShopđượcxâydựngtrêncơsởkế
+thừavàpháttriểnmôhìnhdữliệutừĐồáncơsở.TronggiaiđoạnĐồánliên
+ngành,cấutrúccơsởdữliệutiếptụcđượcmởrộngvàhoànthiệnnhằmđápứng
+yêucầuxâydựnghệthốngbánhoatrựctuyếnđanềntảngtíchhợptrítuệnhân
+tạo.Sơđồthểhiệncácthựcthểdữliệuchínhvàmốiquanhệgiữachúng,phục
+vụquátrìnhquảnlýngườidùng,sảnphẩm,nhậphàng,tồnkho,đặthàng,thanh
+toán,giaonhậnvàhỗtrợtưvấnkháchhàng.
+Trongđó,thựcthểNguoiDungđóngvaitròquảnlýthôngtintàikhoản,xácthực
+vàphânquyềntruycậphệthống,liênkếtvớihaithựcthểKhachHangvà
+NhanVien.ThựcthểKhachHangquảnlýthôngtinkháchhàngvàliênkếtvới
+HoaDonđểghinhậncácđơnđặthàng.ThựcthểNhanVienlưutrữthôngtin
+nhânsự,baogồmnhânviênquảnlývànhânviêngiaohàng(Shipper),hỗtrợcác
+nghiệpvụnhậphàng,xửlýđơnhàngvàgiaonhận.Mỗihóađơnđượcliênkết
+==================== PAGE 189 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+180
+vớiChiTietHoaDonnhằmquảnlýdanhsáchsảnphẩm,bóhoa,sốlượngvàgiá
+bántạithờiđiểmđặthàng.
+Đốivớinghiệpvụquảnlýnhậphàngvàtồnkho,cácthựcthểNhaCungCap,
+PhieuNhap,ChiTietNhapvàSanPhamđượctổchứcnhằmquảnlýthôngtinnhà
+cungcấp,quátrìnhnhậpnguyênvậtliệuvàsốlượnghànghóatrongkho.Trong
+đó,ChiTietNhaplưutrữsốlượngtồntheotừnglô,hỗtrợquảnlýhạnsửdụngvà
+xuấtkhotheonguyêntắcFIFO.Bêncạnhđó,thựcthểInventoryReservationsghi
+nhậnlượnghàngđượcgiữchỗkhikháchhàngđặthàng,giúpkiểmsoátsốlượng
+tồnkhokhảdụngvàhạnchếtìnhtrạngđặthàngvượtquásốlượnghiệncó.
+Đốivớinghiệpvụthiếtkếvàkinhdoanhbóhoa,cácthựcthểMauBoHoa,
+ChiTietMauBoHoa,BoHoavàChiTietBoHoađượcsửdụngđểquảnlýmẫuthiết
+kế,địnhmứcnguyênvậtliệuvàthànhphầncủatừngbóhoathựctế.Hệthốnghỗ
+trợcảbóhoacósẵnvàbóhoadokháchhàngtựthiếtkếthôngquachứcnăng
+CustomMix.ThựcthểCustomMixImageslưutrữhìnhảnhthamkhảodokhách
+hàngcungcấp,trongkhiPhuPhiBoHoaquảnlýcácmứcphụphítheokíchthước
+vàkiểudángbóhoa.
+Đốivớihoạtđộnggiaonhận,hệthốngsửdụngcácthựcthểHoaDon,
+GiaoHangThatBai,ViPhamKhachHangvàPhatShipperđểghinhậnquátrình
+giaohàng,xửlýcáctrườnghợpgiaohàngkhôngthànhcông,quảnlýviphạm
+củakháchhàngvàcáckhoảnphạtphátsinhđốivớinhânviêngiaohàng.Các
+thựcthểnàygópphầnhỗtrợcôngtácgiámsát,xửlýsựcốvànângcaohiệuquả
+vậnhànhcủahệthống.
+Ngoàira,RoseShoptíchhợpchứcnăngtưvấnkháchhàngbằngtrítuệnhântạo
+thôngquathựcthểBotKnowledge.Đâylàcơsởtrithứclưutrữthôngtinvềsản
+phẩm,mẫubóhoa,chínhsáchcửahàngvàcáccâuhỏithườnggặp,phụcvụquá
+trìnhtruyxuấtdữliệucủaAIChatbotRoseBotnhằmhỗtrợtưvấnvàđềxuấtbó
+hoaphùhợpvớinhucầukháchhàng.
+Nhìnchung,sơđồcơsởdữliệutổngthểRoseShopthểhiệnsựkếthừavàphát
+triểncấutrúcdữliệutừĐồáncơsở,đồngthờiphảnánhcácnghiệpvụtrọngtâm
+củahệthốngtronggiaiđoạnĐồánliênngành.Việctổchứccácthựcthểvàxác
+địnhmốiquanhệgiữachúngtạonềntảngchoquátrìnhlưutrữ,khaithácvà
+quảnlýdữliệu,gópphầnbảođảmtínhnhấtquán,khảnăngmởrộngvàhỗtrợ
+vậnhànhhệthốngbánhoatrựctuyếnđanềntảng.
+==================== PAGE 190 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+181
+Hình 3.20. Sơ đồ cơ sở dữ liệu tổng thể RoseShop
+3.4.2. Nhóm tài khoản, người dùng và phân quyền
+Nhómbảngnàylưutrữthôngtinngườidùng,kháchhàng,nhânviên,địachỉgiao
+hàng,yêucầuđặtlạimậtkhẩuvàlịchsửviphạmCOD.Đâylànhómnềntảng
+phụcvụquảnlýtàikhoản,xácthựcvàphânquyềnngườidùng.
+Hình 3.21. Nhóm bảng tài khoản, người dùng và phân quyền
+Mô tả:
+Nhómnàyphụcvụđăngký,đăngnhập,quảnlýtàikhoảnvàphânbiệtkhách
+hàngvớinhânviên.Bảngnguoi_dunglưuthôngtintàikhoảnchung,khach_hang
+vànhan_vienlưuthôngtintheotừngloạingườidùng,dia_chi_khach_hangquản
+==================== PAGE 191 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+182
+lýđịachỉgiaohàng,lich_su_vi_pham_codghinhậnviphạmCOD,còn
+yeu_cau_dat_lai_mat_khauhỗtrợkhôiphụcmậtkhẩu.
+3.4.3 Nhóm sản phẩm, mẫu bó hoa, BOM và Custom Mix
+Hình 3.22. Nhóm sản phẩm, mẫu bó hoa, BOM và Custom Mix
+Mô tả:
+Nhómnàyquảnlýsảnphẩm,nguyênvậtliệunhậpkho,địnhmứcnguyênvật
+liệu(BOM),giávốnvàbóhoatựphối(CustomMix).Bảngsan_phamlưudanh
+mụcnguyênvậtliệuvàsảnphẩm.Bảngphieu_nhapvàchi_tiet_nhapghinhận
+hàngnhậptheotừnglô,kèmgiánhập,sốlượngcònlạivàngàyhếthạn,làmcơ
+sởxuấtkhotheonguyêntắcFIFO.Bảngmau_bo_hoavàchi_tiet_mau_bo_hoa
+lưumẫubóhoathiếtkếsẵncùngcôngthứcthànhphần(BOMchuẩn).Bảng
+bo_hoalưubóhoathựctế,trongđógia_vonđượctínhtừcácnguyênvậtliệucấu
+thành.Bảngchi_tiet_bo_hoalưuBOMthựctếcủatừngbóhoa,gắnvớisản
+phẩmvàlônhậpcụthểđểđốichiếuxuấtkhoFIFOkhisảnxuất.Bảng
+inventory_reservationgiữchỗtồnkhochođơnhàng,bóhoahoặcflashsaleđể
+tránhbánvượtsốlượngthựccó.Vớibóhoatựphối,custom_mix_imagelưu
+hìnhảnhkháchđínhkèm,cònphu_phi_bo_hoalưucácloạiphụphíápdụngcho
+bóhoa.
+==================== PAGE 192 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+183
+3.4.4 Nhóm nhà cung cấp, phiếu nhập, lô hàng và tồn kho
+Hình 3.23. Sơ đồ CSDL nhà cung cấp, phiếu nhập, lô hàng và tồn kho
+Mô tả:
+Sơđồcơsởdữliệunhàcungcấp,phiếunhập,lôhàngvàtồnkhocủaRoseShop
+đượckếthừavàpháttriểntừĐồáncơsở,nhằmhỗtrợquảnlýnhậphàng,kiểm
+soátchấtlượngvàtheodõitồnkho.
+CácthựcthểchínhgồmNhaCungCap,NhanVien,PhieuNhap,ChiTietNhap,
+SanPham,DanhGiaLoHang,BaoCaoHangHong,InventoryReservationsvà
+HoaDon.Trongđó,hệthốngquảnlýtồnkhotheotừnglônhập,ápdụngnguyên
+tắcFIFOvàsửdụngcơchếReservationđểgiữhàngkhikháchđặtđơn,hạnchế
+tìnhtrạngvượtquásốlượngtồnkhokhảdụng.
+Sơđồthểhiệnmốiquanhệgiữacácthựcthể,gópphầnbảođảmtínhnhấtquán
+dữliệuvànângcaohiệuquảquảnlýkhocủahệthốngRoseShop.
+3.4.5. Nhóm giỏ hàng, đơn hàng và thanh toán
+Nhómbảngnàylưutrữthôngtinđơnhàng,sảnphẩm,bóhoa,chitiếthóađơnvà
+dữliệugiữtồnkho.Đâylànhómdữliệuquantrọngphụcvụquátrìnhđặthàng,
+quảnlýđơnhàngvàkiểmsoátnguyênliệutronghệthốngRoseShop.
+==================== PAGE 193 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+184
+Hình 3.24. Nhóm bảng giỏ hàng, đơn hàng và thanh toán
+Mô tả:
+Nhómnàyphụcvụquảnlýđơnhàng,chitiếtsảnphẩmvàtồnkhokhiđặtmua
+hoa.Bảnghoa_donlưuthôngtinđơnhàng,chi_tiet_hoa_donlưucácmặthàng
+đượcđặtmua,san_phamquảnlýsảnphẩmbánlẻ,bo_hoalưuthôngtinbóhoa,
+chi_tiet_bo_hoaquảnlýnguyênliệucấuthànhbóhoa,còn
+inventory_reservationsghinhậnsốlượngtồnkhođượcgiữchođơnhàng.Các
+bảngkhach_hangvànhan_vienliênkếtvớihóađơnđểxácđịnhkháchhàngđặt
+muavànhânviêngiaohàng.
+3.4.6. Nhóm giao hàng, Shipper, COD và hoa hoàn về
+Nhómbảngnàylưutrữthôngtingiaohàng,nhânviêngiaohàng(Shipper),các
+trườnghợpgiaohàngthấtbại,hànghoànvềvàviphạmthanhtoánCOD.Đâylà
+nhómdữliệuphụcvụquảnlýquátrìnhgiaonhận,xửlýsựcốvàkiểmsoáttrách
+nhiệmcủaShippervàkháchhàng.
+==================== PAGE 194 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+185
+Hình 3.25. Nhóm bảng giao hàng, Shipper, COD và hoa hoàn về
+Mô tả:
+Nhómnàyphụcvụphâncônggiaohàng,ghinhậngiaohàngthấtbại,xửlýhàng
+hoànvàviphạmCOD.Bảngnhan_vienquảnlýthôngtinShipper,hoa_donlưu
+đơnhàngđượcgiao,giao_hang_that_baighinhậnsựcốgiaohàng,hang_hoanvà
+chi_tiet_hang_hoanquảnlýhoahoànvề,cònphat_shipperlưucáckhoảnphạt
+==================== PAGE 195 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+186
+nhânviêngiaohàng.Bảngvi_pham_khach_hangghinhậnviphạmCOD,
+thanh_toan_vi_pham_khach_hangquảnlýkhoảnthanhtoánviphạm,thong_bao
+lưuthôngbáogửingườidùngvàflash_salesquảnlýsảnphẩmhoađượcđưavào
+chươngtrìnhbángiảmgiá.
+3.5 Thiết kế giao diện người dùng ( UI/ UX)
+3.5.1 Một số giao diện Website bán hàng
+Hình 3.26. Giao diện Custom Mix - Thông tin cơ bản và lựa chọn hoa
+Mô tả:
+Giaodiệnchophépkháchhàngnhậptênbóhoa,lựachọnchủđề,kiểudáng,
+kíchthướcvàsốlượngbóhoacầnthiếtkế.Kháchhàngcóthểlựachọnhoa
+chínhvàhoatrangtrítheođịnhmứcquyđịnh.Hệthốngđồngthờihiểnthịthông
+tincấuhình,kiểmtratồnkhovàtạmtínhgiábóhoa.
+Giaodiệnhỗtrợkháchhàngtìmkiếmvàlựachọncácloạihoatrangtríbổsung
+chobóhoa.Mỗiloạihoahiểnthịgiábánvàsốlượngcòntrongkho.Khuvực
+tómtắtbênphảicậpnhậttrạngtháicấuhình,sốlượngnguyênliệuvàtổngchi
+phídựkiến,giúpkháchhàngtheodõiquátrìnhthiếtkế.
+==================== PAGE 196 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+187
+Hình 3.27. Giao diện Custom Mix - Lựa chọn vật liệu và phụ kiện bó hoa
+Mô tả:
+Giaodiệnchophépkháchhànglựachọngiấygói,ruybăng,xốpcắmhoavàcác
+phụkiệntrangtrítheokíchthướcbóhoa.Hệthốngkiểmtrađịnhmứcnguyên
+liệu,sốlượngtồnkhovàgiớihạnphụkiệnđượcphéplựachọn,đồngthờicập
+nhậtchiphítươngứngvàophầntómtắtbóhoa.
+Hình 3.28. Giao diện Custom Mix - Tải ảnh mẫu tham khảo
+Mô tả:
+Giaodiệnchophépkháchhàngtảilêntốiđa3hìnhảnhmẫuđểcửahàngtham
+khảophongcáchvàcáchphốihoamongmuốn.Hệthốnghỗtrợcácđịnhdạng
+JPG,JPEG,PNGvàWEBPvớidunglượngtốiđa5MBmỗiảnh.Saukhihoàn
+tấtcấuhìnhhợplệ,kháchhàngcóthểxemtrướcvàtiếptụcquátrìnhđặthàng.
+==================== PAGE 197 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+188
+Hình 3.29. Giao diện vi phạm và thanh toán COD
+Mô tả:
+GiaodiệnviphạmvàthanhtoánCODchophépkháchhàngtheodõicáckhoản
+viphạmphátsinhtrongquátrìnhnhậnhàngvàthựchiệnthanhtoánđểkhôi
+phụcquyềnmuahàngCOD.
+Giaodiệnhiểnthịdanhsáchcáckhoảnviphạmcủakháchhàng,baogồmmã
+hóađơn,lýdoviphạm,sốtiềncầnthanhtoánvàtrạngtháixửlý.Kháchhàngcó
+thểlựachọnchứcnăngthanhtoánđểhoàntấtnghĩavụviphạm,từđóđượcxem
+xétkhôiphụcquyềnsửdụngphươngthứcthanhtoánkhinhậnhàng(COD).
+3.5.2 Một số giao diện Web Admin
+Hình 3.30. Giao diện quản lý mẫu bó hoa
+Mô tả:
+Giaodiệnquảnlýmẫubóhoachophépquảntrịviênthiếtlậpphụphítheokích
+thước,kiểudángvàquảnlýdanhsáchmẫubóhoatronghệthốngRoseShop.
+==================== PAGE 198 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+189
+Giaodiệnhỗtrợquảntrịviêncấuhình,cậpnhậtphụphítheokíchthướcvàkiểu
+dángbóhoa.Hệthốnghiểnthịdanhsáchmẫuvớicácthôngtinnhưtênmẫu,
+kíchthước,kiểudáng,chủđề,thờihạnsửdụng,giávốn,giábándựkiếnvàtrạng
+tháihiểnthị.Quảntrịviêncóthểtìmkiếm,lọc,tạomẫumới,ẩn,bậthiểnthị
+hoặcxóamẫubóhoa.
+Hình 3.31. Giao diện tạo mẫu bó hoa
+Mô tả:
+Giaodiệntạomẫubóhoachophépquảntrịviênthiếtlậpthôngtinmẫuvàlựa
+chọncácnguyênvậtliệucấuthànhbóhoatheođịnhmứcquyđịnhtronghệ
+thốngRoseShop.Giaodiệnhỗtrợquảntrịviênnhậptênmẫu,lựachọnkiểudáng,
+kíchthước,phongcáchthiếtkế,thờihạnsửdụnghoatươivàtảiảnhmẫu.Hệ
+thốngchophéplựachọnhoachính,hoatrangtrí,giấygói,ruybăng,phụkiệnvà
+mútxốp.Đồngthời,hệthốngkiểmtrađịnhmứcnguyênliệu,khảdụngkhovà
+tínhtoángiávốn,giábándựkiếntrướckhilưumẫubóhoa.
+==================== PAGE 199 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+190
+Hình 3.32. Giao diện quản lý nhà cung cấp
+Mô tả:
+Giaodiệnquảnlýnhàcungcấpchophépquảntrịviêntheodõivàquảnlýthông
+tincácđốitáccungứnghoatươi,nguyênvậtliệuvàphụkiệntronghệthống
+RoseShop.Giaodiệnhiểnthịtổngsốnhàcungcấp,sốlượngđanghợptácvà
+ngừnghợptác.Hệthốnghỗtrợtìmkiếm,lọctheotrạngtháivàsắpxếpdanh
+sáchnhàcungcấp.Quảntrịviêncóthểxemthôngtinliênhệ,địachỉ,sốlần
+nhậphàng,đồngthờithựchiệnthêmmới,chỉnhsửahoặcthayđổitrạngtháihợp
+táccủanhàcungcấp.
+Hình 3.33. Giao diện quản lý lô hàng
+Mô tả:
+Giaodiệnquảnlýlôhàngchophépquảntrịviêntheodõicáclônguyênvậtliệu
+nhậpkho,kiểmsoátsốlượngtồn,hạnsửdụngvàđánhgiáchấtlượngnguồn
+hàngtronghệthốngRoseShop.Giaodiệnhiểnthịdanhsáchlôhàngvớicác
+==================== PAGE 200 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+191
+thôngtinnhưmãlô,mặthàng,phiếunhập,nhàcungcấp,sốlượngnhập,số
+lượngcònlại,giánhập,hạnsửdụngvàtrạngtháichấtlượng.Hệthốnghỗtrợ
+tìmkiếm,lọctheonhàcungcấp,kếtquảđánhgiáchấtlượngvàtìnhtrạngtồn
+kho.Quảntrịviêncóthểxemchitiếtlôhàng,thựchiệnkiểmtrachấtlượng
+(QC),theodõihaohụtvàsốlượngđãtrừhỏng,đồngthờitạophiếunhậphàng
+mới.
+Hình 3.34. Giao diện quản lý nguyên vật liệu
+Mô tả:
+Giaodiệnquảnlýnguyênvậtliệuchophépquảntrịviêntheodõivàkiểmsoát
+cácnguyênvậtliệuphụcvụthiếtkếbóhoanhưgiấygói,ruybăng,phụkiện
+trangtrí,thiệpvàmútxốptronghệthốngRoseShop.Giaodiệnhiểnthịdanh
+sáchnguyênvậtliệuvớicácthôngtinnhưmã,tên,loại,đơnvịtính,giánhập
+theolô,giáhiệntại,sốlượngtồnkho,tổnggiávốnvàtrạngtháikinhdoanh.Hệ
+thốnghỗtrợtìmkiếm,lọctheoloạinguyênvậtliệuvàcảnhbáokhihếthàng.
+Quảntrịviêncóthểthêmmới,chỉnhsửa,xemchitiết,cậpnhậttrạngtháikinh
+doanhvàthựchiệncácthaotácquảnlýtồnkhonguyênvậtliệu.
+==================== PAGE 201 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+192
+3.5.3 Một số giao diện Mobile App giao hàng
+Hình 3.35. Giao diện đăng nhập ứng dụng Shipper
+Mô tả:
+Giao diện đăng nhập cho phép nhân viên giao hàng truy cập vào ứng dụng
+Shipper của RoseShop bằng tên đăng nhập và mật khẩu được cửa hàng cấp. Hệ
+thống hỗ trợ hiển thị hoặc ẩn mật khẩu và cung cấp chức năng quên mật khẩu,
+giúpnhânviênxácthựctàikhoảntrướckhisửdụngcácchứcnănggiaohàng.
+==================== PAGE 202 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+193
+Hình 3.36. Giao diện trang chủ ứng dụng Shipper
+Mô tả:
+Giao diện trang chủ hiển thị thông tin nhân viên giao hàng, trạng thái hoạt động
+và các chỉ số tổng quan như số đơn đang xử lý, giới hạn đơn có thể nhận và số
+tiền COD cần nộp. Nhân viên có thể chuyển đổi trạng thái Online để sẵn sàng
+nhậnđơnmới,đồngthờitruycậpnhanhcácchứcnăngquảnlýđơnhàng,lịchsử
+giaohàngvàhồsơcánhân.
+==================== PAGE 203 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+194
+Hình 3.37. Giao diện danh sách đơn hàng Shipper
+Mô tả:
+Giao diện danh sách đơn hàng cho phép nhân viên giao hàng theo dõi các đơn
+được phân công và tình trạng xử lý. Hệ thống hiển thị mã đơn hàng, thông tin
+khách hàng, địa chỉ giao hàng, số điện thoại, số tiền cần thu và trạng thái đơn
+hàng. Nhân viên có thể lọc đơn theo trạng thái chờ lấy hoặc đang giao và lựa
+chọntừngđơnđểxemchitiết.
+==================== PAGE 204 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+195
+Hình 3.38. Giao diện lịch sử giao hàng Shipper
+Mô tả:
+Giao diện lịch sử giao hàng cho phép nhân viên theo dõi các đơn hàng đã giao
+hoặc đã hủy. Hệ thống hỗ trợ tìm kiếm theo mã đơn, lọc theo ngày, tuần, tháng
+hoặc khoảng thời gian tùy chọn. Mỗi đơn hàng hiển thị mã hóa đơn, thông tin
+khách hàng, thời gian xử lý, lý do hủy và số tiền liên quan, giúp nhân viên tra
+cứulịchsửgiaohàng.
+==================== PAGE 205 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+196
+Hình 3.39. Giao diện hồ sơ cá nhân Shipper
+Mô tả:
+Giaodiệnhồsơcánhânhiểnthịthôngtintàikhoảncủanhânviêngiaohàng,bao
+gồm họ tên, mã nhân viên và vai trò Shipper. Hệ thống cho phép nhân viên truy
+cập và chỉnh sửa thông tin cá nhân, quản lý tài khoản, lựa chọn ngôn ngữ, thay
+đổigiaodiệnhiểnthịvàđăngxuấtkhỏiứngdụng.
+==================== PAGE 206 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+197
+Hình 3.40. Giao diện chi tiết đơn hàng và tiến trình giao hàng
+Mô tả:
+Giao diện chi tiết đơn hàng cho phép nhân viên giao hàng theo dõi tiến trình xử
+lý đơn qua các bước xác nhận, vận chuyển, đến điểm giao và hoàn thành. Hệ
+thống hiển thị thông tin khách hàng, số điện thoại, địa chỉ nhận hàng, thời gian
+đặt, mã hóa đơn và tổng tiền cần thu. Nhân viên có thể thực hiện thao tác nhận
+hàngvàbắtđầugiao, đồngthờicậpnhậttiếntrìnhgiaohàng theotrạngtháithực
+tế.

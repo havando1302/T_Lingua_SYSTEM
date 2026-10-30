@@ -10,6 +10,9 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
+print("[*] Đang khởi động T-Lingua Backend...")
+print("[*] Đang nạp các thư viện AI (PyTorch, Whisper, NLLB), vui lòng đợi trong giây lát (~10-15s)...")
+
 # Apply torch ecosystem patches before any AI imports.
 from app.core.compat import apply_torch_patches
 apply_torch_patches()
@@ -43,6 +46,8 @@ if __name__ == "__main__":
         except Exception:
             pass
 
+    print(f"[*] Backend sẵn sàng! Đang lắng nghe tại: http://{settings.API_HOST}:{settings.API_PORT}")
+    print(f"[*] Tài liệu Swagger UI: http://{settings.API_HOST}:{settings.API_PORT}/docs")
     uvicorn.run(
         "app.main:app",
         host=settings.API_HOST,

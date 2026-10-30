@@ -141,7 +141,7 @@ def build_section_3_5(doc):
 +-----------------------------------------------------------+
 """
     )
-    add_caption(doc, "Hình 3.9: Wireframe bố cục màn hình Dịch một chiều tức thời trên Flutter Mobile", is_table=False)
+    add_caption(doc, "Hình 3.34: Wireframe bố cục màn hình Dịch một chiều tức thời trên Flutter Mobile", is_table=False)
 
     home_components = [
         ("1", "StatusBadge", "Container / Badge", "Xanh lá: Online / Đỏ: Offline", "Hiển thị trạng thái kết nối WebSocket tới máy chủ FastAPI."),
@@ -164,7 +164,7 @@ def build_section_3_5(doc):
         p_img.paragraph_format.space_after = Pt(2)
         run_img = p_img.add_run()
         run_img.add_picture(img_frontend_path, width=Inches(3.2))
-        add_caption(doc, "Hình 3.10: Giao diện thực tế ứng dụng di động T-Lingua trong chế độ dịch tức thời", is_table=False)
+        add_caption(doc, "Hình 3.35: Giao diện thực tế ứng dụng di động T-Lingua trong chế độ dịch tức thời", is_table=False)
 
     # Screen 2: Conversation DualMic
     add_paragraph(doc, "2. Màn hình Đối thoại song phương hai chiều (Conversation DualMic Screen):", bold=True, font_size=12, color=PRIMARY_COLOR)
@@ -209,7 +209,7 @@ def build_section_3_5(doc):
 +-----------------------------------------------------------+
 """
     )
-    add_caption(doc, "Hình 3.11: Wireframe màn hình Đối thoại song phương với thanh điều khiển DualMicBar", is_table=False)
+    add_caption(doc, "Hình 3.36: Wireframe màn hình Đối thoại song phương với thanh điều khiển DualMicBar", is_table=False)
 
     conv_components = [
         ("1", "ChatBubblePartner", "ChatBubbleWidget", "Bên trái / Xám nhạt", "Hiển thị câu nói và câu dịch của người nước ngoài hướng về phía trên."),
@@ -303,7 +303,7 @@ def build_section_3_5(doc):
                 run.font.size = Pt(8.5)
             else:
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    add_caption(doc, "Bảng 3.4: Danh mục các màn hình Web Admin và ma trận phân quyền RBAC")
+    add_caption(doc, "Bảng 3.39: Danh mục các màn hình Web Admin và ma trận phân quyền RBAC")
 
     # Chi tiết 4 màn hình tiêu biểu của Web Admin
     # 1. Login & MFA
@@ -342,7 +342,7 @@ def build_section_3_5(doc):
 +--------------------+------------------------------------------------------------------------------+
 """
     )
-    add_caption(doc, "Hình 3.12: Wireframe bố cục Bảng điều khiển Tổng quan Web Admin", is_table=False)
+    add_caption(doc, "Hình 3.37: Wireframe bố cục Bảng điều khiển Tổng quan Web Admin", is_table=False)
 
     # 3. QA Review Queue
     add_paragraph(doc, "Màn hình 5: Hàng đợi Thẩm định chất lượng (QA Review Queue - /qa-queue):", bold=True, font_size=12, color=PRIMARY_COLOR)
@@ -360,7 +360,7 @@ def build_section_3_5(doc):
         p_qa.paragraph_format.space_after = Pt(2)
         run_qa = p_qa.add_run()
         run_qa.add_picture(img_qa_path, width=Inches(6.0))
-        add_caption(doc, "Hình 3.13: Giao diện thực tế Hàng đợi thẩm định chất lượng QA Reviewer trên Web Admin", is_table=False)
+        add_caption(doc, "Hình 3.38: Giao diện thực tế Hàng đợi thẩm định chất lượng QA Reviewer trên Web Admin", is_table=False)
 
     # 4. Training Center & MLOps
     add_paragraph(doc, "Màn hình 9: Trung tâm Huấn luyện & Vòng đời MLOps (Training Center - /training):", bold=True, font_size=12, color=PRIMARY_COLOR)
@@ -391,7 +391,7 @@ def build_section_3_5(doc):
 +--------------------+------------------------------------------------------------------------------+
 """
     )
-    add_caption(doc, "Hình 3.14: Wireframe bảng điều khiển Trung tâm Huấn luyện LoRA và Triển khai Canary MLOps", is_table=False)
+    add_caption(doc, "Hình 3.39: Wireframe bảng điều khiển Trung tâm Huấn luyện LoRA và Triển khai Canary MLOps", is_table=False)
 
     training_components = [
         ("1", "BaseModelSelect", "Select (Dropdown)", "NLLB-200 / Whisper", "Lựa chọn mô hình AI nền tảng cần huấn luyện thích ứng LoRA."),

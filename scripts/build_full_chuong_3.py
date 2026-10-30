@@ -126,7 +126,7 @@ def build_section_3_6(doc):
     )
     add_bullet(doc, "Đã đặc tả đầy đủ 18 ca sử dụng nghiệp vụ theo định dạng bảng chuẩn mực, cung cấp bức tranh chi tiết về luồng hoạt động chính, luồng thay thế và các kịch bản ngoại lệ xử lý lỗi mạng hay lỗi quá tải AI.")
     add_bullet(doc, "Đã thiết kế mô hình lớp phân tầng vững chắc, trong đó làm rõ các phương thức, thuộc tính và liên kết bản số của toàn bộ các thực thể bền vững cũng như các lớp tác tử luồng âm thanh thời gian thực (SessionActor, WebRtcVadStream, ModelManager).")
-    add_bullet(doc, "Đã trực quan hóa 5 kịch bản tương tác tuần tự tiêu biểu, giải quyết triệt để bài toán đồng bộ hóa micrô song ngữ, kiểm soát an ninh đa tầng với TOTP MFA và tự động hóa quy trình MLOps khép kín.")
+    add_bullet(doc, "Đã trực quan hóa toàn diện 20 biểu đồ tuần tự tương ứng 1:1 với 20 ca sử dụng nghiệp vụ chốt tại Mục 2.1.4, giải quyết triệt để bài toán đồng bộ hóa micrô song ngữ, tương tác kết quả dịch, đánh giá QA MQM, kiểm soát an ninh đa tầng với TOTP MFA và tự động hóa quy trình MLOps khép kín.")
     add_bullet(doc, "Đã chuẩn hóa cơ sở dữ liệu quan hệ gồm 17 bảng với lược đồ ERD logic và từ điển dữ liệu chi tiết đến từng trường, kiểu dữ liệu, khóa chính, khóa ngoại, giá trị mặc định và các ràng buộc toàn vẹn.")
     add_bullet(doc, "Đã xây dựng đặc tả giao diện người dùng khoa học, thẩm mỹ cho 4 màn hình ứng dụng di động Flutter và 10 phân hệ màn hình Cổng quản trị Web Admin React, đảm bảo trải nghiệm người dùng mượt mà và kiểm soát quyền hạn nghiêm ngặt.")
     add_paragraph(
@@ -167,18 +167,21 @@ def main():
     
     output_dir = os.path.join(WORKSPACE_ROOT, "docs")
     os.makedirs(output_dir, exist_ok=True)
+    cap_nhat_path = os.path.join(output_dir, "CHƯƠNG_3_THIET_KE_GIAI_PHAP_T-LINGUA_BAN_CAP_NHAT.docx")
     primary_path = os.path.join(output_dir, "CHƯƠNG_3_THIET_KE_GIAI_PHAP_T-LINGUA.docx")
     updated_path = os.path.join(output_dir, "CHƯƠNG_3_THIET_KE_GIAI_PHAP_T-LINGUA_18_UC.docx")
+    fallback_path = os.path.join(output_dir, f"CHƯƠNG_3_THIET_KE_GIAI_PHAP_T-LINGUA_{int(time.time())}.docx")
     
-    saved_path = primary_path
-    try:
-        print(f"Đang lưu tài liệu Word vào: {primary_path}...")
-        doc.save(primary_path)
-    except PermissionError:
-        print(f"[CẢNH BÁO] Tệp {primary_path} đang được mở bởi ứng dụng khác (Word/WPS).")
-        print(f"Đang lưu bản cập nhật đầy đủ vào: {updated_path}...")
-        doc.save(updated_path)
-        saved_path = updated_path
+    saved_paths = []
+    for candidate in [cap_nhat_path, primary_path, updated_path, fallback_path]:
+        try:
+            print(f"Đang lưu tài liệu Word vào: {candidate}...")
+            doc.save(candidate)
+            saved_paths.append(candidate)
+        except PermissionError:
+            print(f"[CẢNH BÁO] Tệp {candidate} đang được mở bởi Word. Bỏ qua tệp này...")
+            continue
+    saved_path = saved_paths[0] if saved_paths else fallback_path
     
     elapsed = time.time() - start_time
     file_size_kb = os.path.getsize(saved_path) / 1024

@@ -1,0 +1,94 @@
+
+==================== PAGE 7 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+vi
+3.4.6.Nhómgiaohàng,Shipper,CODvàhoahoànvề......................184
+3.5Thiếtkếgiaodiệnngườidùng(UI/UX)......................................................186
+3.5.1MộtsốgiaodiệnWebsitebánhàng...........................................186
+3.5.2MộtsốgiaodiệnWebAdmin....................................................188
+3.5.3MộtsốgiaodiệnMobileAppgiaohàng...................................192
+CHƯƠNG 4. THIẾT KẾ VÀ TRIỂN KHAI ..................................................198
+4.1Kiếntrúchệthống.........................................................................................198
+4.2Triểnkhaichứcnăng.....................................................................................202
+4.2.1.TriểnkhaiứngdụngdiđộngShipper.......................................................202
+4.2.2.TriểnkhaiWebsitekháchhàngvàquảntrị..............................203
+4.2.3.TriểnkhaiBackendAPI............................................................203
+4.2.4.TriểnkhaiAIChatbotRoseBot................................................204
+4.2.5.Triểnkhaicơsởdữliệu.............................................................204
+4.3.1.ThuậttoánFIFOvàcơchếInventoryReservation..................205
+4.3.2.ThuậttoánBOMvàđịnhgiábóhoaCustomMix...................205
+4.3.3.CơchếtruyhồitrithứcvàxửlýcâuhỏicủaRoseBot.............205
+4.3.4.BảomậtthanhtoánVNPaybằngHMAC-SHA512.................206
+4.3.5.Cơchếxácthựcvàphânquyền................................................206
+4.3.6.Cáccơchếbảomậtvàđảmbảotoànvẹndữliệu.....................206
+CHƯƠNG 5. MỘT SỐ THÀNH PHẦN KHÁC CỦA ĐỒ ÁN .....................208
+5.1Kếhoạchdựán..............................................................................................208
+5.2.Cácvấnđềvềđạođứcvàlàmviệcchuyênnghiệp.....................................213
+5.3.Tácđộngxãhội............................................................................................214
+5.4.Kếhoạchchokiếnthứcmớivàchiếnlượchọctập.....................................216
+TÀI LIỆU THAM KHẢO .................................................................................219
+==================== PAGE 207 ====================
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+198
+CHƯƠNG 4. THIẾT KẾ VÀ TRIỂN KHAI
+4.1 Kiến trúc hệ thống
+HệthốngRoseShopđượcthiếtkếtheokiếntrúcđatầngnhằmtáchbiệtrõràng
+giữatầnggiaodiệnngườidùng,tầngxửlýnghiệpvụ,tầnglưutrữdữliệuvàcác
+dịchvụbênngoài.Cáchthiếtkếnàygiúphệthốngdễbảotrì,dễmởrộngvàphù
+hợpvớiđặcthùcủamộtwebsitethươngmạiđiệntửbánhoatươi.Cácnghiệpvụ
+nhưquảnlýtồnkhotheolô,giữchỗtồnkhokhiđặthàng,thanhtoántrựctuyến,
+giaohàng,xửlýhànghoànvàtưvấntựđộngcầnđượcxửlýnhấtquán,đồng
+thờiphảikiểmsoátchặthạnsửdụngcủahoatươi.
+Vềtổngthể,hệthốnggồmcácthànhphầnchính:giaodiệnWebkháchhàng,
+giaodiệnWebquảntrị,BackendLaravel,BackendgiaohàngNode.js
+(shipper_be),cơsởdữliệuMySQLshop_hoa,chatbotRoseBotvàcácdịchvụ
+tíchhợp(VNPay,Email).BackendLaravelđóngvaitròtrungtâmđiềuphối:tiếp
+nhậnyêucầutừkháchhàngvànhânviên,xửlýnghiệpvụ,kiểmtraphânquyền,
+truyxuấtdữliệuvàkếtnốicácdịchvụbênngoài.
+Bảng4.1Bảngthànhphầncáccôngnghệsửdụngtrongdựán
+Thành
+phần
+Công nghệ sử
+dụng
+Vai trò trong hệ thống Lý do sử dụng
+Web
+khách
+hàng
+Laravel(giao
+diệnweb)
+Xemsảnphẩm,bóhoa
+mẫu,tựphốibóhoa
+(CustomMix),giỏhàng,
+đặthàng,thanhtoán,theo
+dõiđơn,nhậnthôngbáo,
+tròchuyệnvớiRoseBot
+Cùngnềntảngvới
+Backendnêngiảmđộ
+phứctạptriểnkhaivà
+thốngnhấtxácthực,
+phânquyền
+Web
+quảntrị
+Laravel(giao
+diệnweb)
+Quảnlýsảnphẩm,nhập
+kho,bóhoa,đơnhàng,
+nhânviên,shipper,hàng
+hoàn,flashsale,viphạm
+COD,tintức
+Dànhriêngchonhân
+viênvàquảntrịviên,
+phânquyềntheovai
+trò
+Backend
+chính
+Laravel(PHP),
+EloquentORM
+Xửlýnghiệpvụtrung
+tâm:xácthực,phân
+quyền,đặthàng,giữtồn
+kho,thanhtoán,hoàn
+CấutrúcMVCrõ
+ràng,hỗtrợORM,
+migration,sessionvà
+gửiemail

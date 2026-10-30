@@ -1,0 +1,529 @@
+=== PAGE 207 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+198
+CHƯƠNG 4. THIẾT KẾ VÀ TRIỂN KHAI
+4.1 Kiến trúc hệ thống
+HệthốngRoseShopđượcthiếtkếtheokiếntrúcđatầngnhằmtáchbiệtrõràng
+giữatầnggiaodiệnngườidùng,tầngxửlýnghiệpvụ,tầnglưutrữdữliệuvàcác
+dịchvụbênngoài.Cáchthiếtkếnàygiúphệthốngdễbảotrì,dễmởrộngvàphù
+hợpvớiđặcthùcủamộtwebsitethươngmạiđiệntửbánhoatươi.Cácnghiệpvụ
+nhưquảnlýtồnkhotheolô,giữchỗtồnkhokhiđặthàng,thanhtoántrựctuyến,
+giaohàng,xửlýhànghoànvàtưvấntựđộngcầnđượcxửlýnhấtquán,đồng
+thờiphảikiểmsoátchặthạnsửdụngcủahoatươi.
+Vềtổngthể,hệthốnggồmcácthànhphầnchính:giaodiệnWebkháchhàng,
+giaodiệnWebquảntrị,BackendLaravel,BackendgiaohàngNode.js
+(shipper_be),cơsởdữliệuMySQLshop_hoa,chatbotRoseBotvàcácdịchvụ
+tíchhợp(VNPay,Email).BackendLaravelđóngvaitròtrungtâmđiềuphối:tiếp
+nhậnyêucầutừkháchhàngvànhânviên,xửlýnghiệpvụ,kiểmtraphânquyền,
+truyxuấtdữliệuvàkếtnốicácdịchvụbênngoài.
+Bảng4.1Bảngthànhphầncáccôngnghệsửdụngtrongdựán
+Thành
+phần
+Công nghệ sử
+dụng
+Vai trò trong hệ thống Lý do sử dụng
+Web
+khách
+hàng
+Laravel(giao
+diệnweb)
+Xemsảnphẩm,bóhoa
+mẫu,tựphốibóhoa
+(CustomMix),giỏhàng,
+đặthàng,thanhtoán,theo
+dõiđơn,nhậnthôngbáo,
+tròchuyệnvớiRoseBot
+Cùngnềntảngvới
+Backendnêngiảmđộ
+phứctạptriểnkhaivà
+thốngnhấtxácthực,
+phânquyền
+Web
+quảntrị
+Laravel(giao
+diệnweb)
+Quảnlýsảnphẩm,nhập
+kho,bóhoa,đơnhàng,
+nhânviên,shipper,hàng
+hoàn,flashsale,viphạm
+COD,tintức
+Dànhriêngchonhân
+viênvàquảntrịviên,
+phânquyềntheovai
+trò
+Backend
+chính
+Laravel(PHP),
+EloquentORM
+Xửlýnghiệpvụtrung
+tâm:xácthực,phân
+quyền,đặthàng,giữtồn
+kho,thanhtoán,hoàn
+CấutrúcMVCrõ
+ràng,hỗtrợORM,
+migration,sessionvà
+gửiemail
+
+=== PAGE 208 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+199
+hàng,xửphạt,thôngbáo
+Backend
+giaohàng
+Node.js
+(shipper_be)
+Phụcvụphânhệshipper:
+nhậnđơn,cậpnhậttrạng
+tháigiao,báogiaothất
+bại
+Táchriêngphânhệ
+giaohàng,dùng
+chungCSDLnhưng
+độclậpvềmãnguồn
+Cơsởdữ
+liệu
+MySQL
+(shop_hoa)
+Lưungườidùng,sản
+phẩm,lôhàng,bóhoa,
+đơnhàng,hànghoàn,vi
+phạm,thôngbáo,trithức
+chatbot
+Môhìnhquanhệ,
+ràngbuộckhóangoại
+vàgiaodịchphùhợp
+vớinghiệpvụtồn
+kho,đơnhàng
+Chatbot
+AI
+RoseBot,bảng
+bot_knowledge
+Tưvấnsảnphẩmvàgiải
+đápcâuhỏithườnggặp
+dựatrênkhotrithức
+Táchkhotrithức
+thànhdữliệuriêng,
+dễcậpnhậtmà
+khôngsửamãnguồn
+Thanh
+toán
+VNPay Thanhtoántrựctuyến
+chođơnhàngvàkhoản
+phạtviphạm
+Cổngthanhtoánphổ
+biếntạiViệtNam,hỗ
+trợnhiềungânhàng
+Email SMTP GửimãOTPvàliênkết
+đặtlạimậtkhẩu
+Xácminhngười
+dùngkhiquênmật
+khẩu
+Quảnlý
+schema
+Laravel
+Migration
+Quảnlýthayđổicấutrúc
+CSDLquacácphiênbản
+Đồngnhấtcấutrúc
+CSDLgiữacácmôi
+trường
+Trongkiếntrúcnày,WebkháchhàngvàWebquảntrịđóngvaitròlàtầngtrình
+bày.Haithànhphầnnàykhôngthaotáctrựctiếpvớicơsởdữliệumàgửiyêu
+cầuđếnBackendthôngquaHTTP/HTTPS.Việctáchgiaodiệnkhỏitầngdữliệu
+giúphạnchếtruycậptráiphépvàodatabase,đồngthờiđểBackendkiểmsoáttập
+trungcácquytắcnghiệpvụ,xácthựcvàphânquyền.
+Webkháchhàngphụcvụngườimuahoa.Tạiđây,ngườidùngđăngkývàđăng
+nhậptàikhoản,quảnlýsổđịachỉnhậnhàng,xemsảnphẩmvàbóhoamẫu,tự
+
+=== PAGE 209 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+200
+phốibóhoatheoýmuốnkèmảnhthamkhảo,đặthàngtheohìnhthứcCODhoặc
+thanhtoántrựctuyến,theodõitrạngtháiđơnvànhậnthôngbáo.Giỏhàngđược
+lưutrongSessionvàđồngbộsangtrườngdu_lieu_gio_hangcủahồsơkhách
+hàng,giúpgiữgiỏhàngkhingườidùngđăngnhậplại.
+Webquảntrịphụcvụnhânviênvàquảntrịviên.Thànhphầnnàytậptrungvào
+cácnghiệpvụvậnhànhnhưquảnlýsảnphẩmvànguyênvậtliệu,lậpphiếunhập
+kho,đánhgiáchấtlượnglôhàng,quảnlýmẫubóhoavàđịnhmứcnguyênliệu,
+duyệtvàtheodõiđơnhàng,phâncôngshipper,kiểmđịnhhànghoàn,tổchức
+flashsalethanhlý,xửlýviphạmcủakháchhàngvàđăngtintức.
+BackendLaravellàthànhphầntrungtâmcủahệthống.Backendchịutrách
+nhiệmtiếpnhậnrequest,kiểmtradữliệuđầuvào,xácthựcphiênđăngnhập,
+kiểmtraquyềntruycập,xửlýnghiệpvụvàtrảkếtquảvềchoclient.Cácnghiệp
+vụquantrọngnhưtạođơn,giữtồnkho,trừkhotheolô,xácnhậnthanhtoán,xử
+lýhànghoànhoặcxửphạtshipperđềuđượcthựchiệntạitầngBackendđểđảm
+bảotínhnhấtquán.TruyxuấtdữliệuđượcthựchiệnquaEloquentORMtheomô
+hìnhphânlớpController,Model.
+BackendgiaohàngNode.js(shipper_be)phụcvụriêngphânhệshipper.Thành
+phầnnàykếtnốicùngcơsởdữliệushop_hoavàánhxạvào18bảnghiệncó,
+khôngtạothêmbảngđộclập.Shipperđượclưutrongbảngnhan_vienvớichức
+vụSHIPPER,cùngcáctrườngquảnlýtrạngtháihoạtđộng,khảnăngnhậnđơn,
+sốđơnđanggiaovàtiềnphạt.Cáchtáchnàygiúpphânhệgiaohàngpháttriển
+vàtriểnkhaiđộclập,nhưngvẫndùngchungmộtnguồndữliệuduynhấtnên
+khôngphátsinhsailệchgiữahaibackend.
+Đốivớibảomật,hệthốngphânquyềntheovaitrò(KHACH_HANG,
+NHAN_VIEN,ADMIN,SHIPPER)lưutạibảngnguoi_dung,kèmtrạngtháitài
+khoảnđểkhóahoặcchophéphoạtđộng.Mậtkhẩukhôngđượclưutrựctiếpmà
+đượcbămbằngbcrypttrướckhilưutrữ.Chứcnăngquênmậtkhẩusửdụngmã
+OTP6sốvàtokencóthờihạn,đượclưutrongbảngyeu_cau_dat_lai_mat_khau
+vàgửiquaemail.Vớithanhtoántrựctuyến,hệthốnglưumãgiaodịch,mãphản
+hồicủaVNPayvàbảnchụpgiỏhàng(vnpay_cart_snapshot)đểđốisoát.Ngoài
+ra,hệthốngkiểmsoátrủirobomhàngbằngcơchếquyềnCODvàcácmứchạn
+chếgồmcảnhbáo,cấmCODvàtạmkhóamuahàng.
+CơsởdữliệucủahệthốngsửdụngMySQLvớitênshop_hoa,gồm41bảng:31
+bảngnghiệpvụvà10bảnghệthốnghoặcbảngcũ(8bảnglõicủaLaravelcùng
+usersvàcart_items).Dữliệunghiệpvụđượcchiathànhsáunhóm:tàikhoản,sản
+phẩmvàkho,bóhoavàCustomMix,đơnhàng,hoànhàngvàviphạm,nộidung
+
+=== PAGE 210 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+201
+vàAI.Lượcđồcó56khóangoạivậtlývà7quanhệlogicởtầngứngdụng.Một
+sốthiếtkếđặcthùcầnđảmbảotínhtoànvẹndữliệu:
+● Tồnkhotheolô(FIFO):bảngchi_tiet_nhaplưusốlượngcònlại,giánhập
+vàhạnsửdụngcủatừnglôhoa,kếthợptổngtồntrongsan_pham.
+● Giữchỗtồnkho:bảnginventory_reservationsghinhậntrạngtháigiữchỗ
+(RESERVED),đãxuấtkho(CONSUMED)hoặcgiảiphóng
+(RELEASED),tránhbánvượtsốlượngkhinhiềuđơnđặtcùnglúc.
+● Chốtgiátheothờiđiểm:chi_tiet_hoa_donlưugiánhậpvàgiábántạithời
+điểmtạođơnđểbáocáolãilỗkhôngbịảnhhưởngkhigiáthayđổi.
+ViệcquảnlýthayđổicấutrúccơsởdữliệuđượcthựchiệnthôngquaLaravel
+Migration.Mỗithayđổischemanhưthêmbảng,thêmcộthoặctạochỉmụcđều
+đượclưuthànhfilemigrationcóthứtựthờigian,giúpnhómpháttriểnkiểmsoát
+lịchsửthayđổivàtránhlệchcấutrúcgiữacácmôitrường.
+RoseBotlàchatbottưvấncủahệthống.Thayvìcốđịnhnộidungtrongmã
+nguồn,cáckhốikiếnthức,câuhỏithườnggặp,ngữcảnhsảnphẩmvàtừkhóa
+đượclưutrongbảngbot_knowledge.Khikháchhàngđặtcâuhỏi,RoseBottra
+cứukhotrithứcnàyđểtrảlời.Cáchtổchứcnàychophépquảntrịviênbổsung
+hoặcchỉnhsửakiếnthứcmàkhôngcầntriểnkhailạihệthống.
+VNPayđượctíchhợplàmcổngthanhtoántrựctuyến,phụcvụcảthanhtoánđơn
+hàngvànộpphạtviphạmđểgỡhạnchếtàikhoản.DịchvụEmailđượcdùngđể
+gửimãOTPđặtlạimậtkhẩu.Việcdùngdịchvụbênngoàichocácchứcnăng
+nàygiúpBackendkhôngphảitựxâydựngcơchếthanhtoánvàgửithư.
+LuồngxửlýtổngquátcủahệthốngRoseShopđượcmôtảnhưsau:
+1. KháchhàngthaotáctrênWebkháchhàng,hoặcnhânviênthaotáctrên
+Webquảntrị.
+2. ỨngdụnggửirequestđếnBackendLaravelthôngquaHTTP/HTTPS.
+3. Backendkiểmtraphiênđăngnhập,xácthựcngườidùngvàphânquyền
+theovaitrò.
+4. Backendkiểmtradữliệuđầuvàovàxửlýnghiệpvụtươngứng,vídụ:
+thêmvàogiỏhàng,đặthàng,nhậpkhohoặcduyệtđơn.
+5. Khiđặthàng,Backendghinhậnhóađơn,chọnlôhàngtheonguyêntắc
+FIFOvàtạobảnghigiữchỗtồnkho.
+6. Nếukháchchọnthanhtoántrựctuyến,Backendchuyểnhướngsang
+VNPayvànhậnkếtquảphảnhồiđểcậpnhậttrạngtháithanhtoán.
+7. Saukhiđơnđượcxácnhận,shippernhậnđơnvàcậpnhậttrạngtháigiao
+hàngthôngquashipper_be.Giaothànhcôngthìđơnhoàntất;giaothấtbại
+
+=== PAGE 211 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+202
+thìhệthốngghinhậnsựcốvàđếmngược10phúttrướckhichuyểnsang
+quytrìnhhoànhàng.
+8. Hànghoànvềkhođượckiểmđịnh.Phầncònbánđượccóthểđưavào
+flashsale,phầnhỏngđượctínhthiệthạivàphânđịnhtráchnhiệmgiữahệ
+thốngvàshipper.Trườnghợpkháchviphạm,hệthốngghinhậnvàáp
+dụngchếtàitươngứng.
+9. BackendghinhậndữliệuvàoMySQL,tạothôngbáochongườidùngvà
+trảkếtquảvềgiaodiệnđểhiểnthị.
+Hình4.1trìnhbàykiếntrúctổngquancủahệthốngRoseShop,trongđóBackend
+LaravelđóngvaitròtrungtâmkếtnốigiữaWebkháchhàng,Webquảntrị,
+MySQL,VNPayvàdịchvụEmail,cònBackendNode.jsphụcvụphânhệ
+shippertrêncùngcơsởdữliệu.Cáchtổchứcnàygiúphệthốngtáchbiệtrõtrách
+nhiệmgiữacácthànhphần,tăngtínhantoànchodữliệu,thuậntiệntrongbảotrì
+vàphùhợpvớiđặcthùbánhoatươicótồnkhotheolôvàhạnsửdụngngắn.
+Hình 4.1. Sơ đồ kiến trúc hệ thống
+4.2 Triển khai chức năng
+4.2.1. Triển khai ứng dụng di động Shipper
+ỨngdụngdiđộngShippercủaRoseShopđượcxâydựngbằngFlutter(Dart),
+phụcvụhoạtđộnggiaonhậnhoavàquảnlýcôngviệccủanhânviêngiaohàng.
+ỨngdụngkếtnốivớiBackendNode.jsthôngquaRESTfulAPI,chophép
+Shippertruycậpvàcậpnhậtthôngtinđơnhàng.
+
+=== PAGE 212 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+203
+Cácchứcnăngchínhbaogồmđăngnhập,quảnlýtrạngtháihoạtđộng,xemdanh
+sáchđơnđượcphâncông,xácnhậnnhậnhàngtạicửahàngvàcậpnhậttiếnđộ
+giaohàng.Khiđếnđịachỉnhận,Shippercóthểthôngbáođãđếnnơivàtheodõi
+thờigianchờ10phúttrướckhixửlýtrườnghợpgiaohàngkhôngthànhcông.
+Ngoàira,ứngdụnghỗtrợghinhậnnguyênnhângiaohàngthấtbại,xácnhận
+giaohàngthànhcông,theodõitiềnthuhộCOD,lịchsửgiaohàngvàcáckhoản
+phạtphátsinh.ThôngtinđượccậpnhậtthôngquaBackendShippervàlưutrữ
+trongcơsởdữliệudùngchungcủahệthống.
+4.2.2. Triển khai Website khách hàng và quản trị
+WebsiteRoseShopđượcpháttriểntrênnềntảngLaravel,Blade,TailwindCSS
+vàJavaScript,phụcvụhainhómngườidùngchínhlàkháchhàngvànhânviên
+quảntrịcửahàng.
+- Website khách hàng
+Websitekháchhàngcungcấpcácchứcnăngtìmkiếm,xemthôngtinsảnphẩm,
+lựachọnmẫubóhoa,quảnlýgiỏhàngvàđặthàngtrựctuyến.Hệthốnghỗtrợ
+haiphươngthứcthanhtoánlàCODvàVNPay,đồngthờichophépkháchhàng
+theodõitrạngtháiđơnhàngvàquảnlýđịachỉnhậnhàng.
+MộttrongnhữngchứcnăngnổibậtlàCustomMix,chophépkháchhàngtựthiết
+kếbóhoabằngcáchlựachọnnguyênvậtliệu,kiểudáng,kíchthướcvàcácphụ
+kiệnđikèm.Giábánđượctínhtoándựatrênthànhphầnnguyênvậtliệuvàcác
+mứcphụphítươngứng.
+Bêncạnhđó,websitetíchhợpAIChatbotRoseBot,hỗtrợtưvấnlựachọnhoa,
+đềxuấtmẫubóphùhợpvàgiảiđápcáccâuhỏiliênquanđếnsảnphẩm,chính
+sáchcửahàngvàđơnhàng.
+- Website quản trị
+Websitequảntrịhỗtrợnhânviênvàquảntrịviêntheodõihoạtđộngkinhdoanh,
+quảnlýsảnphẩm,nhàcungcấp,phiếunhậpvàtồnkho.
+Hệthốngchophépquảnlýnguyênvậtliệutheotừnglônhập,theodõihạnsử
+dụng,đánhgiáchấtlượnghànghóavàghinhậnhànghưhỏng.Đốivớibóhoa,
+nhânviêncóthểthiếtlậpmẫuthiếtkế,địnhmứcnguyênvậtliệu(BOM)vàphụ
+phítheokíchthước,kiểudáng.
+Ngoàira,phânhệquảntrịhỗtrợxácnhậnđơnhàng,phâncôngShipper,tiếp
+nhậnhànghoàn,xửlýviphạmgiaohàngvàtổchứcFlashSaleđốivớinhững
+sảnphẩmhoànvềcònđủđiềukiệnkinhdoanh.
+4.2.3. Triển khai Backend API
+
+=== PAGE 213 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+204
+RoseShopsửdụngkiếntrúcBackendkếthợpgiữaLaravel(PHP)và
+Node.js/Express,trongđómỗithànhphầnđảmnhiệmmộtnhómnghiệpvụriêng.
+LaravelBackendlàthànhphầnxửlýchínhcủahệthốngthươngmạiđiệntử,bao
+gồmquảnlýngườidùng,sảnphẩm,bóhoa,nhậpkho,đặthàng,thanhtoánvàAI
+Chatbot.CácnghiệpvụquảnlýtồnkhođượcxửlýthôngquacơchếFIFOvà
+InventoryReservation,nhằmkiểmsoátsốlượnghàngkhảdụngtrongquátrình
+đặthàng.
+Node.js/ExpressBackendcungcấpRESTfulAPIdànhchoứngdụngFlutter
+Shipper.ThànhphầnnàythựchiệnxácthựcbằngJWT,cungcấpthôngtinđơn
+giao,cậpnhậttiếnđộvậnchuyển,ghinhậngiaohàngthấtbạivàxửlýcác
+nghiệpvụliênquanđếnCOD.
+CảhaiBackendsửdụngchungcơsởdữliệuMySQL,tạođiềukiệnchiasẻthông
+tinđơnhàngvàtrạngtháigiaonhậngiữaWebsiteRoseShopvàứngdụngdi
+độngShipper.
+4.2.4. Triển khai AI Chatbot RoseBot
+RoseBotlàchứcnăngtưvấnkháchhàngbằngtrítuệnhântạo,đượctíchhợp
+trựctiếpvàoWebsiteRoseShop.
+Khikháchhànggửicâuhỏi,hệthốngtiếpnhậnyêucầuthôngqua
+ChatbotControllervàchuyểnđếnChatbotServiceđểxửlý.RoseBotsửdụngcơ
+chếtruyhồitrithứctừbảngbot_knowledge,lựachọnnhữngnộidungphùhợp
+vềsảnphẩm,mẫubóhoa,chínhsáchcửahàngvàcâuhỏithườnggặp.
+Đốivớiyêucầutracứuđơnhàng,hệthốngkiểmtrathôngtinđăngnhậpvà
+quyềnsởhữuđơntrướckhitruyxuấtdữliệuliênquan.Sauđó,cácthôngtin
+đượctổnghợpthànhngữcảnhgửiđếnAPImôhìnhngônngữlớnđểtạocâutrả
+lời.
+Việckếthợpdữliệuthựctếcủacửahàngvớikhảnăngxửlýngônngữtựnhiên
+giúpRoseBothỗtrợkháchhànglựachọnsảnphẩmvàtiếpcậnthôngtinthuận
+tiệnhơn.
+4.2.5. Triển khai cơ sở dữ liệu
+HệthốngRoseShopsửdụngMySQLđểlưutrữvàquảnlýdữliệu,vớicấutrúc
+đượctổchứctheocácnhómnghiệpvụnhưtàikhoản,sảnphẩm,nhàcungcấp,
+nhậpkho,bóhoa,đơnhàng,thanhtoánvàgiaonhận.
+Cácbảngdữliệuđượcliênkếtbằngkhóangoạinhằmhỗtrợtínhtoànvẹnvà
+nhấtquántrongquátrìnhxửlýnghiệpvụ.LaravelMigrationđượcsửdụngđể
+quảnlýnhữngthayđổivềcấutrúccơsởdữliệu.
+
+=== PAGE 214 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+205
+Bêncạnhcácbảngphụcvụhoạtđộngkinhdoanh,hệthốngcònsửdụngbảng
+inventory_reservationsđểquảnlýlượnghànggiữchỗvàbảngbot_knowledgeđể
+lưutrữtrithứcchoAIChatbotRoseBot.
+4.3. Các thuật toán và cơ chế bảo mật
+4.3.1. Thuật toán FIFO và cơ chế Inventory Reservation
+RoseShopápdụngthuậttoánFIFO(FirstIn,FirstOut)đểquảnlýviệcphânbổ
+nguyênvậtliệutheotừnglônhập,ưutiêncáclôđượcnhậptrướcvàcònđủđiều
+kiệnsửdụng.
+Khikháchhàngđặthàng,hệthốngkiểmtrasốlượngtồnkhokhảdụngtheocông
+thức:Tồnkhokhảdụng=max(0,Tồnkhothựctế-Sốlượngđanggiữ)
+CơchếInventoryReservationquảnlýbatrạngtháichính:
+- RESERVED:Giữsốlượnghàngchođơnđặt,chưatrừtồnkhothựctế.
+- CONSUMED:Xácnhậnsửdụnghàngvàthựchiệntrừtồnkhokhiđơn
+đượcduyệt.
+- RELEASED:Giảiphóngsốlượngđãgiữkhiđơnbịhủyhoặcthanhtoán
+khôngthànhcông.
+ViệckếthợpFIFOvàReservationgiúpRoseShopquảnlýnguyênvậtliệutheo
+từnglô,hạnchếđặthàngvượttồnkhovàbảođảmquátrìnhxuấtkhođượckiểm
+soát.
+4.3.2. Thuật toán BOM và định giá bó hoa Custom Mix
+RoseShopsửdụngBOM(BillofMaterials)đểxácđịnhthànhphầnvàsốlượng
+nguyênvậtliệucầnthiếtchomộtbóhoa.
+ĐốivớichứcnăngCustomMix,kháchhàngcóthểtựlựachọnhoa,phụkiện,
+kíchthướcvàkiểudáng.Hệthốngtínhgiábándựatrêntổnggiánguyênvậtliệu
+vàcáckhoảnphụphítươngứng.
+Côngthứctínhgiátổngquát:Giábánbóhoa=Giánguyênvậtliệu+Phụphíquy
+cách+Giáphụkiện
+Trongđó,phụphíquycáchđượcxácđịnhdựatrênkíchthướcvàkiểudángbó
+hoatừbảngcấuhìnhphu_phi_bo_hoa.
+Cơchếnàyhỗtrợtínhgiálinhhoạt,đồngthờigiúpcửahàngquảnlýđịnhmức
+nguyênliệuvàgiávốncủacácsảnphẩmbóhoa.
+4.3.3. Cơ chế truy hồi tri thức và xử lý câu hỏi của RoseBot
+AIChatbotRoseBotkếthợpkhảnăngxửlýngônngữtựnhiênvớidữliệuthựctếcủa
+cửahàng.
+Khitiếpnhậncâuhỏi,hệthốngphântíchnộidung,lựachọncáckhốitrithứcphùhợp
+trongbảngbot_knowledgebằngcơchếchấmđiểmdựatrêntừkhóa,tiêuđềvànộidung.
+
+=== PAGE 215 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+206
+NhữngthôngtincóđộphùhợpcaođượcbổsungvàongữcảnhđểgửiđếnAPImôhình
+ngônngữlớn.Đốivớiyêucầutracứuđơnhàng,RoseBotthựchiệnkiểmtraquyềntruy
+cậptrướckhilấydữliệutừcơsởdữliệu.
+QuátrìnhxửlýgiúpchatbotđưaraphảnhồicócăncứtừthôngtincủaRoseShop,đồng
+thờihạnchếviệccungcấpdữliệukhôngphùhợphoặctiếtlộthôngtinđơnhàngcủa
+ngườidùngkhác.
+4.3.4. Bảo mật thanh toán VNPay bằng HMAC-SHA512
+RoseShoptíchhợpcổngthanhtoántrựctuyếnVNPayvàsửdụngthuậttoán
+HMAC-SHA512đểtạovàxácminhchữkýcủadữliệugiaodịch.
+Khikháchhàngthựchiệnthanhtoán,hệthốngtổnghợpcácthamsốgiaodịch,
+sắpxếptheoquyđịnhvàtạochữkýbằngkhóabímậtđượccấuhìnhtrênmáy
+chủ.
+KhinhậnphảnhồitừVNPay,hệthốngtínhtoánlạichữkývàđốichiếuvớidữ
+liệunhậnđượcnhằmkiểmtratínhtoànvẹncủagiaodịch.
+Ngoàira,việcsửdụnggiaodịchcơsởdữliệuvàkiểmtratrạngtháithanhtoán
+giúphạnchếnguycơmộtgiaodịchbịxửlýnhiềulầnkhinhậncácyêucầuphản
+hồitrùnglặp.
+4.3.5. Cơ chế xác thực và phân quyền
+RoseShopápdụngcáccơchếxácthựcphùhợpvớitừngnềntảngsửdụng.
+ĐốivớiWebsite,hệthốngsửdụngLaravelSessionđểduytrìphiênđăngnhập,
+kếthợpCSRFTokennhằmbảovệcácyêucầuthayđổidữliệu.Quyềntruycập
+đượckiểmsoáttheovaitròngườidùngnhưkháchhàng,nhânviênvàquảntrị
+viên.
+ĐốivớiứngdụngFlutterShipper,BackendNode.jssửdụngJWT(JSONWeb
+Token)đểxácthựccácyêucầuAPI.Saukhiđăngnhậpthànhcông,Shippersử
+dụngAccessTokenđểtruycậpnhữngchứcnăngđượccấpquyền.
+ViệcphântáchcơchếxácthựcgiữaWebsitevàứngdụngdiđộnggiúphệthống
+quảnlýtruycậpphùhợpvớiđặcđiểmcủatừngnềntảng.
+4.3.6. Các cơ chế bảo mật và đảm bảo toàn vẹn dữ liệu
+Bêncạnhxácthựcvàphânquyền,RoseShopápdụngmộtsốcơchếnhằmtăng
+cườngantoàndữliệutrongquátrìnhvậnhành.
+MậtkhẩungườidùngđượclưutrữdướidạnggiátrịbămbằngBCrypt,hạnchế
+nguycơlộmậtkhẩugốckhidữliệubịtruycậptráiphép.
+Cácnghiệpvụliênquanđếntồnkho,đặthàngvàthanhtoánsửdụngDatabase
+TransactionkếthợpcơchếkhóabảnghilockForUpdate()đểhạnchếxungđột
+khinhiềuyêucầucùngthaotáctrênmộtlượnghàngtồnkho.
+
+=== PAGE 216 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+207
+HệthốngcũnghỗtrợxácthựcđặtlạimậtkhẩubằngOTPvàtokencóthờihạn;
+quảnlýviphạmgiaohàngCODđểápdụngcácbiệnpháphạnchếphùhợpđối
+vớikháchhàng.
+Nhữngcơchếtrêngópphầnnângcaotínhbảomật,tínhnhấtquánvàđộtincậy
+tronghoạtđộngcủahệthốngRoseShop.
+
+=== PAGE 217 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+208
+CHƯƠNG 5. MỘT SỐ THÀNH PHẦN KHÁC CỦA ĐỒ ÁN
+5.1 Kế hoạch dự án
+DựánRoseShopđượctriểnkhaitheokếhoạchgồmnhiềugiaiđoạn,bắtđầutừ
+phântíchvàthiếtkếhệthống,đặctảUseCase,thiếtkếgiaodiện,pháttriểncác
+chứcnăng,kiểmthửhệthống,đónggói,triểnkhaivàtổngkếtdựán.Việclậpkế
+hoạchgiúpnhómkiểmsoáttiếnđộ,phânchiacôngviệchợplývàđảmbảocác
+thànhviênphốihợphiệuquảtrongquátrìnhxâydựnghệthốngthươngmạiđiện
+tửbánhoatrựctuyến.
+KếhoạchdựánđượcxâydựngdựatrênbiểuđồGantt,vớithờigianthựchiệntừ
+ngày13/09/2026đếnngày28/10/2026,gồm7hạngmụccôngviệcchính.Mỗi
+côngviệcđượcxácđịnhrõthờigianbắtđầu,thờigiankếtthúcvàsốngàythực
+hiện.Cácgiaiđoạnđượcsắpxếptheotrìnhtựtừphântíchđếntriểnkhai,đồng
+thờimộtsốcôngviệcnhưthiếtkếgiaodiện,pháttriểnsảnphẩmvàkiểmthửhệ
+thốngđượcthựchiệnsongsongnhằmtốiưuthờigian,đảmbảotiếnđộvàchất
+lượngdựán.
+Hình 5.1. Biểu đồ Grantt Chart
+Bảng5.1.Bảngphâncôngcôngviệcchitiết
+Nhóm công
+việc
+Người phụ
+trách Nội dung chi tiết
+Trạng
+thái /
+Ghi chú
+1.Phântích
+vàthiếtkế
+hệthống
+Nguyễn
+ThịKiều
+Trinh
+Phântíchyêucầuhệthống,xâydựng
+môhìnhkiếntrúctổngthể,thiếtkếcơ
+sởdữliệuchung;phântíchcácphânhệ
+nhậpkho,lôhàng,tồnkho,Checkout,
+AIChatbotvàCustomMix.
+Hoàn
+thành
+Nguyễn
+KiềuTrang
+Phântíchyêucầunghiệpvụ,xácđịnh
+Actor,xâydựngdanhsáchUseCase
+vàsơđồUseCasetổngthể;phântích
+hệthốngtàikhoản,nhânsự,khách
+hàng,đơnhàngvàgiaonhận.
+Hoàn
+thành
+
+=== PAGE 218 ===
+BM.CNTT.01.07(01-…/…/2025)-BL:5năm
+209
+Dương
+Hùng
+Mạnh
+PhântíchkiếntrúcLaravel,Node.js,
+FluttervàMySQL;thiếtkếnghiệpvụ
+nguyênvậtliệu,BOM,FIFO,thanh
+toánVNPay,điềuphốiShippervàgiao
+hàng.
+Hoàn
+thành
+2.Đặctả
+UseCase
+Nguyễn
+ThịKiều
+Trinh
+Đặctảcácchứcnăngxácthực,quảnlý
+danhmục,nhậphàng,tồnkho,
+Checkout,giữtồnkhoReservation,AI
+tưvấnvàđềxuấtbóhoa.
+Hoàn
+thành
+Nguyễn
+KiềuTrang
+Xâydựngvàchuẩnhóatàiliệuđặctả
+UseCase;đặctảquảnlýnhânviên,
+kháchhàng,CustomMixBuilder,giỏ
+hàng,xửlýđơnhàng,hànghoànvà
+báocáothốngkê.
+Hoàn
+thành
+Dương
+Hùng
+Mạnh
+Đặctảquảnlýnguyênvậtliệu,mẫubó
+hoa,BOM,giávốnFIFO,thanhtoán
+trựctuyến,phâncôngShipper,giao
+hàng,CODvàxửlýgiaohàngthấtbại.
+Hoàn
+thành
+3.Thiếtkế
+giaodiện
+Nguyễn
+ThịKiều
+Trinh
+Thiếtkếgiaodiệnquảnlýnhàcung
+cấp,phiếunhập,lôhàng,tồnkho;giao
+diệnCheckoutvàcửasổAIChatbot
+RoseBot.
+Hoàn
+thành
+Nguyễn
+KiềuTrang
+Thiếtkếgiaodiệnquảnlýtàikhoản,
+nhânsự,kháchhàng,CustomMix
+Builder,giỏhàng,đơnhàng,hànghoàn
+vàDashboardthốngkê.
+Hoàn
+thành
+Dương
+Hùng
+Mạnh
+Thiếtkếgiaodiệnquảnlýnguyênvật
+liệu,mẫubóhoa,cấuhìnhBOM,giá
+vốnvàứngdụngFlutterShipper.
+Hoàn
+thành
+
