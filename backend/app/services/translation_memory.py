@@ -364,22 +364,22 @@ class ITranslationMemoryRepository:
     def lookup(self, text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> Optional[str]:
         raise NotImplementedError
 
-    def add(self, source_text: str, translated_text: str, client_id: str = "default", *, volatile: bool = False, source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> bool:
+    def add(self, source_text: str, translated_text: str, client_id: str = "default", *, volatile: bool = False, source_lang: Optional[str] = None, target_lang: Optional[str] = None, db=None) -> bool:
         raise NotImplementedError
 
     def lookup_fuzzy(self, text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None, *, threshold: float = 0.92) -> Optional[str]:
         raise NotImplementedError
 
-    def delete(self, source_text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None) -> bool:
+    def delete(self, source_text: str, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None, *, db=None) -> bool:
         raise NotImplementedError
 
-    def get_all(self, client_id: str = "default") -> dict[str, str]:
+    def get_all(self, client_id: str = "default", source_lang: Optional[str] = None, target_lang: Optional[str] = None, *, db=None) -> dict[str, str]:
         raise NotImplementedError
 
-    def count(self, client_id: str = "default") -> int:
+    def count(self, client_id: str = "default", *, db=None) -> int:
         raise NotImplementedError
 
-    def get_entries(self, client_id: str = "default") -> list[dict]:
+    def get_entries(self, client_id: str = "default", *, db=None, **kwargs) -> list[dict]:
         raise NotImplementedError
 
     def add_many(self, entries: list[dict], client_id: str = "default", **kwargs) -> int:
