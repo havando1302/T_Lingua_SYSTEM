@@ -92,10 +92,17 @@ function normalizeSystemStatus(value: unknown): SystemStatus {
   };
 }
 
+let cachedDashboard: {
+  metrics: DashboardMetrics;
+  sysStatus: SystemStatus;
+  timeSeries: TimeSeriesMetric[];
+  updatedAt: Date | null;
+} | null = null;
+
 const Dashboard = () => {
   const user = useAuthUser();
   const canViewSystemStatus = user?.role !== 'employee';
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
+  const [metrics, setMetrics] = useState<DashboardMetrics>(() => cachedDashboard?.metrics || {
     total_translations: 0,
     flagged_translations: 0,
     avg_latency: 0.0,
@@ -104,7 +111,7 @@ const Dashboard = () => {
     sample_limit: 1000
   });
 
-  const [sysStatus, setSysStatus] = useState<SystemStatus>({
+  const [sysStatus, setSysStatus] = useState<SystemStatus>(() => cachedDashboard?.sysStatus || {
     cpu_usage: 0,
     ram_usage: 0,
     ram_total: 0,
@@ -113,13 +120,13 @@ const Dashboard = () => {
     inference_runtime: null
   });
 
-  const [timeSeries, setTimeSeries] = useState<TimeSeriesMetric[]>([]);
+  const [timeSeries, setTimeSeries] = useState<TimeSeriesMetric[]>(() => cachedDashboard?.timeSeries || []);
   const [timeRange, setTimeRange] = useState<'all' | 'today'>('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !cachedDashboard);
 
   const [error, setError] = useTimedMessage('');
   const [systemError, setSystemError] = useState('');
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(() => cachedDashboard?.updatedAt || null);
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
@@ -145,15 +152,26 @@ const Dashboard = () => {
         if (metricsResult.status === 'rejected') throw metricsResult.reason;
         if (seriesResult.status === 'rejected') throw seriesResult.reason;
         setError('');
-        setUpdatedAt(new Date());
-        setMetrics(normalizeDashboardMetrics(metricsResult.value.data));
-        setTimeSeries(normalizeTimeSeries(seriesResult.value.data));
+        const now = new Date();
+        const nextMetrics = normalizeDashboardMetrics(metricsResult.value.data);
+        const nextSeries = normalizeTimeSeries(seriesResult.value.data);
+        let nextSys = sysStatus;
+        setUpdatedAt(now);
+        setMetrics(nextMetrics);
+        setTimeSeries(nextSeries);
         if (systemResult.status === 'fulfilled' && systemResult.value) {
-          setSysStatus(normalizeSystemStatus(systemResult.value.data));
+          nextSys = normalizeSystemStatus(systemResult.value.data);
+          setSysStatus(nextSys);
           setSystemError('');
         } else if (systemResult.status === 'rejected') {
           setSystemError(apiErrorMessage(systemResult.reason));
         }
+        cachedDashboard = {
+          metrics: nextMetrics,
+          sysStatus: nextSys,
+          timeSeries: nextSeries,
+          updatedAt: now,
+        };
       } catch (err) {
         if (!controller.signal.aborted) setError(apiErrorMessage(err));
       } finally {

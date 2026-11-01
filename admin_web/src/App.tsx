@@ -64,6 +64,28 @@ function App() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (sessionReady) {
+      const prefetch = () => {
+        import('./pages/Dashboard');
+        import('./pages/Analytics');
+        import('./pages/History');
+        import('./pages/Dictionary');
+        import('./pages/QA');
+        import('./pages/Users');
+        import('./pages/ApiKeys');
+        import('./pages/Settings');
+        import('./pages/TrainingCenter');
+        import('./pages/Account');
+      };
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(prefetch);
+      } else {
+        setTimeout(prefetch, 800);
+      }
+    }
+  }, [sessionReady]);
+
   if (!sessionReady) {
     return <div className="flex min-h-screen items-center justify-center bg-background text-text" role="status">Đang khôi phục phiên đăng nhập…</div>;
   }

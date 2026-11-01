@@ -269,11 +269,18 @@ function LatencyCard({ title, metric, icon, color }: {
   );
 }
 
+let cachedAnalytics: {
+  timeSeries: TimeSeriesMetric[];
+  languageData: LanguageMetric[];
+  pipelineMetrics: PipelineMetrics | null;
+  updatedAt: Date | null;
+} | null = null;
+
 const Analytics = () => {
-  const [timeSeries, setTimeSeries] = useState<TimeSeriesMetric[]>([]);
-  const [languageData, setLanguageData] = useState<LanguageMetric[]>([]);
-  const [pipelineMetrics, setPipelineMetrics] = useState<PipelineMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [timeSeries, setTimeSeries] = useState<TimeSeriesMetric[]>(() => cachedAnalytics?.timeSeries || []);
+  const [languageData, setLanguageData] = useState<LanguageMetric[]>(() => cachedAnalytics?.languageData || []);
+  const [pipelineMetrics, setPipelineMetrics] = useState<PipelineMetrics | null>(() => cachedAnalytics?.pipelineMetrics || null);
+  const [loading, setLoading] = useState(() => !cachedAnalytics);
 
   // Time range filters
   const [timeRange, setTimeRange] = useState<TimeFilterPreset>('all');
@@ -283,7 +290,7 @@ const Analytics = () => {
   const [customError, setCustomError] = useState('');
 
   const [error, setError] = useTimedMessage('');
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(() => cachedAnalytics?.updatedAt || null);
   const [reload, setReload] = useState(0);
 
   const applyCustomRange = () => {
@@ -329,10 +336,20 @@ const Analytics = () => {
         ]);
         if (controller.signal.aborted) return;
         setError('');
-        setUpdatedAt(new Date());
-        setTimeSeries(normalizeTimeSeries(tsRes.data));
-        setLanguageData(normalizeLanguages(langRes.data));
-        setPipelineMetrics(normalizePipeline(pipeRes.data));
+        const now = new Date();
+        const nextTs = normalizeTimeSeries(tsRes.data);
+        const nextLang = normalizeLanguages(langRes.data);
+        const nextPipe = normalizePipeline(pipeRes.data);
+        setUpdatedAt(now);
+        setTimeSeries(nextTs);
+        setLanguageData(nextLang);
+        setPipelineMetrics(nextPipe);
+        cachedAnalytics = {
+          timeSeries: nextTs,
+          languageData: nextLang,
+          pipelineMetrics: nextPipe,
+          updatedAt: now,
+        };
       } catch (err) {
         if (!controller.signal.aborted) setError(apiErrorMessage(err));
       } finally {
