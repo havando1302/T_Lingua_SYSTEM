@@ -113,6 +113,85 @@ class AdminExtensionTests(unittest.TestCase):
         self.assertEqual(issue["loc"][-1], "password")
         self.assertEqual(issue["type"], "string_too_short")
 
+    def test_password_complexity_rules_enforced(self):
+        # Missing lowercase
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "test_pwd_1", "password": "ALLUPPERCASE123!@#", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("chữ thường", res.text)
+
+        # Missing uppercase
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "test_pwd_2", "password": "alllowercase123!@#", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("chữ hoa", res.text)
+
+        # Missing digit
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "test_pwd_3", "password": "NoDigitPassword!@#", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("chữ số", res.text)
+
+        # Missing special character
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "test_pwd_4", "password": "NoSpecialChar123456", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("ký tự đặc biệt", res.text)
+
+        # Valid password creates successfully
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "test_pwd_valid", "password": "ValidPassword@123", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 200)
+
+    def test_password_history_24_months_prevents_reuse(self):
+        # 1. Create a user with password A
+        res = self.client.post(
+            "/admin/users", headers=self.headers,
+            json={"username": "history_user", "password": "PasswordA@123456", "role": "employee"},
+        )
+        self.assertEqual(res.status_code, 200)
+        user_id = res.json()["id"]
+
+        # 2. Try to update to the same password A -> rejected
+        res = self.client.patch(
+            f"/admin/users/{user_id}", headers=self.headers,
+            json={"password": "PasswordA@123456"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("24 tháng", res.json()["detail"])
+
+        # 3. Update to new password B -> success
+        res = self.client.patch(
+            f"/admin/users/{user_id}", headers=self.headers,
+            json={"password": "PasswordB@123456"},
+        )
+        self.assertEqual(res.status_code, 200)
+
+        # 4. Try to reuse password A -> rejected by 24-month history
+        res = self.client.patch(
+            f"/admin/users/{user_id}", headers=self.headers,
+            json={"password": "PasswordA@123456"},
+        )
+        self.assertEqual(res.status_code, 422)
+        self.assertIn("24 tháng", res.json()["detail"])
+
+        # 5. Update to password C -> success
+        res = self.client.patch(
+            f"/admin/users/{user_id}", headers=self.headers,
+            json={"password": "PasswordC@123456"},
+        )
+        self.assertEqual(res.status_code, 200)
+
         missing = self.client.patch(
             "/admin/users/999999", headers=self.headers,
             json={"role": "employee"},

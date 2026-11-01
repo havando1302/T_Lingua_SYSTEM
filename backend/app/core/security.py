@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import uuid
 
@@ -18,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth_settings import get_auth_settings
 from app.db.database import get_db
-from app.db.models import ApiKey, AuthSession, User
+from app.db.models import ApiKey, AuthSession, User, PasswordHistory
 
 
 RESOURCE_SCOPES = frozenset({"translate", "tm:read", "tm:write", "flag", "audio"})
@@ -63,6 +64,76 @@ def hash_api_key(raw_key: str) -> str:
     return hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
 
 
+PASSWORD_MIN_LENGTH = 12
+PASSWORD_MAX_BYTES = 72
+PASSWORD_HISTORY_DAYS = 730  # 24 tháng
+
+
+def validate_password_complexity(password: str) -> None:
+    """Validate password against strict policy:
+    - At least 12 characters
+    - At most 72 UTF-8 bytes (bcrypt safe boundary)
+    - At least 1 lowercase letter (a-z)
+    - At least 1 uppercase letter (A-Z)
+    - At least 1 digit (0-9)
+    - At least 1 special character (!, @, #, $, ...)
+    """
+    if len(password) < PASSWORD_MIN_LENGTH:
+        raise ValueError("Mật khẩu phải có ít nhất 12 ký tự")
+    if len(password.encode("utf-8")) > PASSWORD_MAX_BYTES:
+        raise ValueError("Mật khẩu không được vượt quá 72 byte UTF-8")
+    if not re.search(r"[a-z]", password):
+        raise ValueError("Mật khẩu phải chứa ít nhất 1 chữ thường (a-z)")
+    if not re.search(r"[A-Z]", password):
+        raise ValueError("Mật khẩu phải chứa ít nhất 1 chữ hoa (A-Z)")
+    if not re.search(r"\d", password):
+        raise ValueError("Mật khẩu phải chứa ít nhất 1 chữ số (0-9)")
+    if not re.search(r"[^\w\s]|_", password):
+        raise ValueError("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (!, @, #, $...)")
+
+
+def check_password_history(
+    user_id: int | None,
+    new_password: str,
+    current_hash: str | None,
+    db: Session,
+) -> None:
+    """Ensure the new password does not match any password used by the user within the last 24 months."""
+    if current_hash and verify_password(new_password, current_hash):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Mật khẩu mới không được trùng với mật khẩu cũ trong vòng 24 tháng qua",
+        )
+    if user_id is not None:
+        cutoff = datetime.utcnow() - timedelta(days=PASSWORD_HISTORY_DAYS)
+        histories = (
+            db.query(PasswordHistory)
+            .filter(
+                PasswordHistory.user_id == user_id,
+                PasswordHistory.created_at >= cutoff,
+            )
+            .order_by(PasswordHistory.created_at.desc())
+            .all()
+        )
+        for h in histories:
+            if verify_password(new_password, h.password_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Mật khẩu mới không được trùng với mật khẩu cũ trong vòng 24 tháng qua",
+                )
+
+
+def record_password_history(user_id: int, password_hash: str, db: Session) -> None:
+    """Record a password hash into password history."""
+    db.add(
+        PasswordHistory(
+            user_id=user_id,
+            password_hash=password_hash,
+            created_at=datetime.utcnow(),
+        )
+    )
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         encoded = plain_password.encode("utf-8")
@@ -74,8 +145,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_password_hash(password: str) -> str:
-    if len(password) < 12 or len(password.encode("utf-8")) > 72:
-        raise ValueError("Password must contain at least 12 characters and at most 72 UTF-8 bytes")
+    validate_password_complexity(password)
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("ascii")
 
 

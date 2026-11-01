@@ -40,6 +40,9 @@ from app.services.training_control import (
 from app.core.security import (
     verify_password,
     get_password_hash,
+    validate_password_complexity,
+    check_password_history,
+    record_password_history,
     get_current_user,
     require_admin,
     require_dictionary_reader,
@@ -82,8 +85,7 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must not exceed 72 UTF-8 bytes")
+        validate_password_complexity(value)
         return value
 
 class UserResponse(BaseModel):
@@ -107,8 +109,8 @@ class UserUpdate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_optional_password(cls, value: str | None) -> str | None:
-        if value is not None and len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must not exceed 72 UTF-8 bytes")
+        if value is not None:
+            validate_password_complexity(value)
         return value
 
 class Token(BaseModel):
@@ -272,6 +274,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db), admin: User = D
     db.add(db_user)
     try:
         db.flush()
+        record_password_history(db_user.id, hashed_password, db)
         _audit(db, admin, "user.create", "user", db_user.id, {"role": user.role})
         db.commit()
     except IntegrityError:
@@ -314,7 +317,10 @@ def update_user(user_id: int, req: UserUpdate, db: Session = Depends(get_db),
         changed["is_active"] = {"from": user.is_active, "to": req.is_active}
         user.is_active = req.is_active
     if req.password is not None:
-        user.password_hash = get_password_hash(req.password)
+        check_password_history(user.id, req.password, user.password_hash, db)
+        new_hash = get_password_hash(req.password)
+        user.password_hash = new_hash
+        record_password_history(user.id, new_hash, db)
         changed["password_reset"] = True
     if not changed:
         return user

@@ -9,6 +9,28 @@ import { Pencil, RefreshCw, Save, Trash2, UserPlus, X } from 'lucide-react';
 import { usePaginatedList } from '../lib/usePaginatedList';
 import { ListSearch, ListStatus, ListPagination } from '../components/ListControls';
 
+const validatePasswordComplexity = (pwd: string): string | null => {
+  if (pwd.length < 12) {
+    return 'Mật khẩu phải có ít nhất 12 ký tự.';
+  }
+  if (new TextEncoder().encode(pwd).length > 72) {
+    return 'Mật khẩu tối đa 72 byte UTF-8. Ký tự có dấu có thể chiếm nhiều byte.';
+  }
+  if (!/[a-z]/.test(pwd)) {
+    return 'Mật khẩu phải chứa ít nhất 1 chữ thường (a-z).';
+  }
+  if (!/[A-Z]/.test(pwd)) {
+    return 'Mật khẩu phải chứa ít nhất 1 chữ hoa (A-Z).';
+  }
+  if (!/[0-9]/.test(pwd)) {
+    return 'Mật khẩu phải chứa ít nhất 1 chữ số (0-9).';
+  }
+  if (!/[^a-zA-Z0-9\s]|_/.test(pwd)) {
+    return 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (!, @, #, $, %...).';
+  }
+  return null;
+};
+
 const Users = () => {
   const list = usePaginatedList<any>('/users');
   const users = list.items;
@@ -30,8 +52,8 @@ const Users = () => {
     if (loading) return;
     if (username.trim().length < 3 || /\s/.test(username.trim())) { setError('Tên đăng nhập cần ít nhất 3 ký tự, không chứa khoảng trắng.'); return; }
     if (username.trim().length > 100) { setError('Tên đăng nhập tối đa 100 ký tự.'); return; }
-    if (password.length < 12) { setError('Mật khẩu phải có ít nhất 12 ký tự.'); return; }
-    if (new TextEncoder().encode(password).length > 72) { setError('Mật khẩu tối đa 72 byte UTF-8. Ký tự có dấu có thể chiếm nhiều byte.'); return; }
+    const pwdErr = validatePasswordComplexity(password);
+    if (pwdErr) { setError(pwdErr); return; }
     setError('');
     setLoading(true);
     try {
@@ -81,13 +103,12 @@ const Users = () => {
 
   const handleUpdate = async (id: number) => {
     if (updating) return;
-    if (editPassword && editPassword.length < 12) {
-      setError('Mật khẩu mới phải có ít nhất 12 ký tự.');
-      return;
-    }
-    if (editPassword && new TextEncoder().encode(editPassword).length > 72) {
-      setError('Mật khẩu tối đa 72 byte UTF-8.');
-      return;
+    if (editPassword) {
+      const pwdErr = validatePasswordComplexity(editPassword);
+      if (pwdErr) {
+        setError(pwdErr);
+        return;
+      }
     }
     setUpdating(true); setError('');
     try {
@@ -122,6 +143,7 @@ const Users = () => {
             </div>
             <div className="flex-1">
               <Input type="password" label="Mật khẩu (ít nhất 12 ký tự)" minLength={12} maxLength={72} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <p className="text-xs text-text-muted mt-1">Yêu cầu: ≥12 ký tự, gồm chữ thường, chữ hoa, số và ký tự đặc biệt (!, @, #...).</p>
             </div>
             <div className="flex-1">
               <label htmlFor="new-user-role" className="block text-sm font-medium text-text-muted mb-1">Chức vụ (Quyền)</label>
@@ -199,7 +221,10 @@ const Users = () => {
                           <option value="employee">Nhân viên</option><option value="admin">Quản trị viên</option>
                         </select>
                       </div>
-                      <Input type="password" label={`Mật khẩu mới của ${u.username} (để trống nếu giữ nguyên)`} minLength={12} maxLength={72} autoComplete="new-password" value={editPassword} onChange={(event) => setEditPassword(event.target.value)} disabled={updating} />
+                      <div>
+                        <Input type="password" label={`Mật khẩu mới của ${u.username} (để trống nếu giữ nguyên)`} minLength={12} maxLength={72} autoComplete="new-password" value={editPassword} onChange={(event) => setEditPassword(event.target.value)} disabled={updating} />
+                        <p className="text-xs text-text-muted mt-1">Không trùng mật khẩu trong vòng 24 tháng.</p>
+                      </div>
                       <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" checked={editActive} onChange={(event) => setEditActive(event.target.checked)} disabled={updating} /> Tài khoản hoạt động</label>
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => handleUpdate(u.id)} isLoading={updating}><Save size={16} className="mr-1" />Lưu</Button>

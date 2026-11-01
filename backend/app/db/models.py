@@ -19,6 +19,14 @@ class User(Base):
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     mfa_last_counter: Mapped[int] = mapped_column(Integer, nullable=False, default=-1)
 
+class PasswordHistory(Base):
+    __tablename__ = "password_histories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
 class TranslationLog(Base):
     __tablename__ = "translation_logs"
 
