@@ -103,6 +103,7 @@ function createClient(path: string) {
     const token = getAccessToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     else delete config.headers.Authorization;
+    config.headers['ngrok-skip-browser-warning'] = 'true';
     return config;
   });
   client.interceptors.response.use((response) => response, async (error: unknown) => {
@@ -149,7 +150,11 @@ export function refreshSession(): Promise<boolean> {
   pendingRefresh = axios.post<LoginResponse>(
     `${backendOrigin}/api/session/refresh`,
     undefined,
-    { timeout: 15000, withCredentials: true },
+    {
+      timeout: 15000,
+      withCredentials: true,
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+    },
   ).then((response) => {
     setSession(response.data);
     return true;

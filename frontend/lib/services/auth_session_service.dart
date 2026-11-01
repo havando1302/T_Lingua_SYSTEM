@@ -78,7 +78,8 @@ class AuthSessionService extends ChangeNotifier {
   }) async {
     final request = http.Request(method, _config.endpoint(path))
       ..followRedirects = false
-      ..headers['Accept'] = 'application/json';
+      ..headers['Accept'] = 'application/json'
+      ..headers['ngrok-skip-browser-warning'] = 'true';
     if (token != null) request.headers['Authorization'] = 'Bearer $token';
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
