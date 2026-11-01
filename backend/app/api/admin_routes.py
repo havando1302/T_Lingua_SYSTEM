@@ -1728,8 +1728,8 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
                 if row[0].strip().lower() in {"source_text", "source", "từ gốc", "từ khóa"} and row[1].strip().lower() in {"translated_text", "target", "bản dịch", "nghĩa"}:
                     continue
                 rows.append((row[0], row[1]))
-                if len(rows) > 500:
-                    raise HTTPException(413, "Dictionary upload must not exceed 500 rows")
+                if len(rows) > 5000:
+                    raise HTTPException(413, "Dictionary upload must not exceed 5000 rows")
         except (UnicodeError, csv.Error):
             raise HTTPException(400, "File CSV phải có định dạng UTF-8 và cấu trúc hợp lệ")
     else:
@@ -1740,16 +1740,18 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
             worksheet = workbook.active
             if worksheet is None:
                 raise HTTPException(422, "Excel workbook contains no active worksheet")
-            if worksheet.max_row is not None and worksheet.max_row > 500:
-                raise HTTPException(413, "Dictionary upload must not exceed 500 rows")
-            for index, row in enumerate(worksheet.iter_rows(max_row=501, max_col=2), start=1):
+            if worksheet.max_row is not None and worksheet.max_row > 5000:
+                raise HTTPException(413, "Dictionary upload must not exceed 5000 rows")
+            for index, row in enumerate(worksheet.iter_rows(max_row=5001, max_col=2), start=1):
                 values = [cell.value for cell in row]
                 if all(value is None or str(value).strip() == "" for value in values):
                     continue
-                if index > 500:
-                    raise HTTPException(413, "Dictionary upload must not exceed 500 rows")
+                if index > 5000:
+                    raise HTTPException(413, "Dictionary upload must not exceed 5000 rows")
                 if any(cell.data_type == "f" for cell in row):
                     raise HTTPException(422, "Excel formulas are not supported in dictionary entries")
+                if str(values[0]).strip().lower() in {"source_text", "source", "từ gốc", "từ khóa"} and str(values[1]).strip().lower() in {"translated_text", "target", "bản dịch", "nghĩa"}:
+                    continue
                 rows.append(tuple(str(value) if value is not None else "" for value in values))
         except HTTPException:
             raise
