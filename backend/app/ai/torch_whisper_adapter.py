@@ -18,7 +18,7 @@ def load_cached_first(loader, model_id: str, *, local_files_only: bool = False, 
     """Prefer the cache, then replace a missing or corrupt cached artifact."""
     try:
         return loader.from_pretrained(model_id, local_files_only=True, **kwargs)
-    except (OSError, SafetensorError, JSONDecodeError, UnicodeDecodeError):
+    except (OSError, SafetensorError, JSONDecodeError, UnicodeDecodeError, TypeError, ValueError):
         if local_files_only:
             raise
         return loader.from_pretrained(
