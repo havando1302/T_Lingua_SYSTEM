@@ -1720,14 +1720,16 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
     if filename.endswith(".csv"):
         try:
             reader = csv.reader(io.StringIO(contents.decode("utf-8-sig")), strict=True)
-            for index, row in enumerate(reader, start=1):
-                if index > 500:
-                    raise HTTPException(413, "Dictionary upload must not exceed 500 rows")
+            for row in reader:
                 if not row or not any(cell.strip() for cell in row):
                     continue
                 if len(row) < 2:
                     raise HTTPException(422, "Each dictionary row requires source and translation")
+                if row[0].strip().lower() in {"source_text", "source", "từ gốc", "từ khóa"} and row[1].strip().lower() in {"translated_text", "target", "bản dịch", "nghĩa"}:
+                    continue
                 rows.append((row[0], row[1]))
+                if len(rows) > 500:
+                    raise HTTPException(413, "Dictionary upload must not exceed 500 rows")
         except (UnicodeError, csv.Error):
             raise HTTPException(400, "File CSV phải có định dạng UTF-8 và cấu trúc hợp lệ")
     else:

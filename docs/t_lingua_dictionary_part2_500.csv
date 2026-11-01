@@ -1,0 +1,501 @@
+﻿source_text,translated_text,source_lang,target_lang
+Máy khử rung tim,Defibrillator,vi,en
+Truyền tĩnh mạch,Intravenous Infusion,vi,en
+Truyền máu,Blood Transfusion,vi,en
+Nhóm máu hiếm,Rare Blood Type,vi,en
+Hiến máu nhân đạo,Voluntary Blood Donation,vi,en
+Ghép tạng,Organ Transplantation,vi,en
+Đào thải mô ghép,Graft Rejection,vi,en
+Hồi sức cấp cứu,Resuscitation Emergency,vi,en
+Hô hấp nhân tạo CPR,Cardiopulmonary Resuscitation,vi,en
+Sơ cứu ban đầu,First Aid,vi,en
+Băng bó vết thương,Wound Dressing,vi,en
+Cầm máu khẩn cấp,Emergency Hemostasis,vi,en
+Gãy xương hở,Open Bone Fracture,vi,en
+Bó bột cố định,Orthopedic Casting,vi,en
+Vật lý trị liệu,Physical Therapy,vi,en
+Phục hồi chức năng,Rehabilitation,vi,en
+Sức khỏe tâm thần,Mental Health,vi,en
+Rối loạn lo âu,Anxiety Disorder,vi,en
+Trầm cảm lâm sàng,Clinical Depression,vi,en
+Tư vấn tâm lý,Psychological Counseling,vi,en
+Liệu pháp nhận thức hành vi,Cognitive Behavioral Therapy,vi,en
+Mất ngủ kéo dài,Chronic Insomnia,vi,en
+Suy dinh dưỡng,Malnutrition,vi,en
+Béo phì thừa cân,Overweight Obesity,vi,en
+Chế độ ăn kiêng hợp lý,Balanced Diet,vi,en
+Bổ sung vi chất dinh dưỡng,Micronutrient Supplementation,vi,en
+Bảo hiểm y tế toàn dân,Universal Health Insurance,vi,en
+Đồng chi trả bảo hiểm,Insurance Co-payment,vi,en
+Chuyển tuyến điều trị,Hospital Referral,vi,en
+Thời gian nằm viện,Length of Hospital Stay,vi,en
+Xuất viện,Hospital Discharge,vi,en
+Tái khám theo hẹn,Follow-up Examination,vi,en
+Bệnh mạn tính không lây,Chronic Non-communicable Disease,vi,en
+Ung thư giai đoạn sớm,Early Stage Cancer,vi,en
+Hóa trị ung thư,Cancer Chemotherapy,vi,en
+Xạ trị ung thư,Cancer Radiation Therapy,vi,en
+Thuyên giảm bệnh,Disease Remission,vi,en
+Khối u lành tính,Benign Tumor,vi,en
+Khối u ác tính,Malignant Tumor,vi,en
+Di căn ung thư,Cancer Metastasis,vi,en
+Đột quỵ não,Cerebral Stroke,vi,en
+Nhồi máu cơ tim,Myocardial Infarction,vi,en
+Suy thận mạn tính,Chronic Kidney Failure,vi,en
+Chạy thận nhân tạo,Hemodialysis,vi,en
+Viêm gan siêu vi,Viral Hepatitis,vi,en
+Xơ gan mất bù,Decompensated Cirrhosis,vi,en
+Đau nửa đầu,Migraine Headache,vi,en
+Động kinh co giật,Epileptic Seizure,vi,en
+Rối loạn tiền đình,Vestibular Disorder,vi,en
+Suy giảm trí nhớ,Dementia,vi,en
+Bệnh Alzheimer,Alzheimer's Disease,vi,en
+Bệnh Parkinson,Parkinson's Disease,vi,en
+Viêm khớp dạng thấp,Rheumatoid Arthritis,vi,en
+Thoái hóa đốt sống cổ,Cervical Spondylosis,vi,en
+Thoát vị đĩa đệm,Herniated Disc,vi,en
+Loãng xương,Osteoporosis,vi,en
+Đục thủy tinh thể,Cataract,vi,en
+Tật khúc xạ mắt,Refractive Error,vi,en
+Cận thị,Myopia Nearsightedness,vi,en
+Viễn thị,Hyperopia Farsightedness,vi,en
+Loạn thị,Astigmatism,vi,en
+Viêm tai giữa,Otitis Media,vi,en
+Mất thính lực,Hearing Loss,vi,en
+Máy trợ thính,Hearing Aid,vi,en
+Viêm xoang mũi,Sinusitis,vi,en
+Viêm họng hạt,Chronic Pharyngitis,vi,en
+Sâu răng nha khoa,Dental Caries,vi,en
+Viêm nha chu,Periodontitis,vi,en
+Cấy ghép răng Implant,Dental Implant,vi,en
+Niềng răng chỉnh nha,Orthodontic Braces,vi,en
+Da liễu thẩm mỹ,Cosmetic Dermatology,vi,en
+Bệnh vẩy nến,Psoriasis,vi,en
+Viêm da cơ địa,Atopic Eczema,vi,en
+Mụn trứng cá bọc,Cystic Acne,vi,en
+Vết bỏng nhiệt,Thermal Burn,vi,en
+Vết loét tì đè,Pressure Ulcer,vi,en
+Vệ sinh an toàn thực phẩm,Food Safety and Hygiene,vi,en
+Ngộ độc thực phẩm,Food Poisoning,vi,en
+Mất nước điện giải,Electrolyte Dehydration,vi,en
+Bù nước bằng dung dịch Oresol,Oral Rehydration Therapy,vi,en
+Sốt xuất huyết Dengue,Dengue Hemorrhagic Fever,vi,en
+Bệnh sốt rét,Malaria,vi,en
+Bệnh lao phổi,Pulmonary Tuberculosis,vi,en
+Kiểm dịch y tế biên giới,Border Health Quarantine,vi,en
+Giám sát dịch bệnh,Epidemiological Surveillance,vi,en
+Thử nghiệm lâm sàng thuốc,Clinical Drug Trial,vi,en
+Cục quản lý dược phẩm,Drug Regulatory Administration,vi,en
+Chứng nhận thực hành tốt sản xuất thuốc GMP,Good Manufacturing Practice Certification,vi,en
+Hạn sử dụng thuốc,Drug Expiration Date,vi,en
+Bảo quản thuốc đúng chuẩn,Proper Drug Storage,vi,en
+Y học cổ truyền,Traditional Medicine,vi,en
+Châm cứu bấm huyệt,Acupuncture and Acupressure,vi,en
+Dược liệu thảo mộc,Herbal Medicinal Ingredients,vi,en
+Đặt phòng khách sạn,Hotel Reservation,vi,en
+Thủ tục nhận phòng,Check-in Procedure,vi,en
+Thủ tục trả phòng,Check-out Procedure,vi,en
+Bàn lễ tân,Reception Front Desk,vi,en
+Nhân viên hướng dẫn khách,Concierge Staff,vi,en
+Nhân viên khuân vác hành lý,Bellhop Baggage Porter,vi,en
+Dịch vụ dọn phòng hàng ngày,Daily Housekeeping Service,vi,en
+Phòng đơn,Single Room,vi,en
+Phòng đôi hai giường,Twin Room,vi,en
+Phòng đôi một giường lớn,Double Bed Room,vi,en
+Phòng hạng sang Suite,Executive Suite Room,vi,en
+Phòng hướng biển,Ocean View Room,vi,en
+Phòng hướng phố,City View Room,vi,en
+Thẻ chìa khóa từ,Electronic Key Card,vi,en
+Két sắt an toàn trong phòng,In-room Safe Deposit Box,vi,en
+Tủ lạnh mini quầy bar,Mini-bar Refrigerator,vi,en
+Dịch vụ phòng 24 giờ,24-hour Room Service,vi,en
+Dịch vụ giặt ủi lấy ngay,Express Laundry Service,vi,en
+Gọi báo thức buổi sáng,Morning Wake-up Call,vi,en
+Xe buýt đưa đón sân bay,Airport Shuttle Bus,vi,en
+Hủy đặt phòng không mất phí,Free Cancellation Booking,vi,en
+Khoản đặt cọc giữ chỗ,Security Deposit,vi,en
+Bữa sáng tự chọn miễn phí,Complimentary Buffet Breakfast,vi,en
+Hồ bơi vô cực,Infinity Swimming Pool,vi,en
+Phòng tập thể dục thẩm mỹ,Fitness Gym Center,vi,en
+Dịch vụ thư giãn trị liệu Spa,Relaxing Spa Treatment,vi,en
+Bãi đỗ xe có người phục vụ,Valet Parking Service,vi,en
+Hạn trả phòng muộn,Late Check-out,vi,en
+Nhận phòng sớm,Early Check-in,vi,en
+Hóa đơn thanh toán phòng,Hotel Folio Bill,vi,en
+Nhà hàng ẩm thực cao cấp,Fine Dining Restaurant,vi,en
+Bàn đặt trước,Reserved Table,vi,en
+Thực đơn gọi món,A La Carte Menu,vi,en
+Thực đơn trọn gói theo suất,Set Course Menu,vi,en
+Thực đơn nếm thử của đầu bếp,Chef's Tasting Menu,vi,en
+Món khai vị,Appetizer Starter,vi,en
+Món chính,Main Course Entree,vi,en
+Món tráng miệng,Dessert,vi,en
+Món ăn kèm,Side Dish,vi,en
+Đặc sản địa phương,Local Culinary Specialty,vi,en
+Ẩm thực đường phố,Street Food Cuisine,vi,en
+Đồ uống giải khát,Refreshing Beverage,vi,en
+Rượu vang đỏ,Red Wine,vi,en
+Rượu vang trắng,White Wine,vi,en
+Bia thủ công,Craft Beer,vi,en
+Rượu khai vị,Aperitif Drink,vi,en
+Nước khoáng có ga,Sparkling Mineral Water,vi,en
+Nước khoáng không ga,Still Mineral Water,vi,en
+Cà phê pha phin truyền thống,Traditional Drip Filter Coffee,vi,en
+Trà thảo mộc thanh nhiệt,Herbal Infusion Tea,vi,en
+Bồi bàn phục vụ,Dining Waiter,vi,en
+Bếp trưởng điều hành,Executive Head Chef,vi,en
+Chuyên gia tư vấn rượu vang,Sommelier Wine Steward,vi,en
+Yêu cầu thanh toán hóa đơn,Bill Request,vi,en
+Chia đôi hóa đơn,Split Bill Payment,vi,en
+Tiền tip cho nhân viên,Service Gratuity Tip,vi,en
+Phí dịch vụ nhà hàng,Restaurant Service Charge,vi,en
+Món ăn chay,Vegetarian Dish,vi,en
+Món thuần chay hoàn toàn,Strict Vegan Dish,vi,en
+Món ăn không chứa Gluten,Gluten-free Dish,vi,en
+Dị ứng hải sản,Seafood Allergy,vi,en
+Dị ứng đậu phộng lạc,Peanut Nut Allergy,vi,en
+Món ăn cay nồng,Spicy Chili Dish,vi,en
+Thịt bò tái vừa,Medium Rare Beefsteak,vi,en
+Thịt bò chín kỹ,Well-done Beefsteak,vi,en
+Hải sản tươi sống,Fresh Live Seafood,vi,en
+Gia vị truyền thống,Traditional Seasoning Condiments,vi,en
+Gói đồ ăn mang về,Takeaway Takeout Doggy Bag,vi,en
+Đặt món giao tận nhà,Home Food Delivery,vi,en
+Lộ trình tour du lịch,Tour Travel Itinerary,vi,en
+Hướng dẫn viên du lịch chuyên nghiệp,Professional Tour Guide,vi,en
+Công ty lữ hành quốc tế,International Travel Agency,vi,en
+Điểm tham quan danh lam thắng cảnh,Scenic Sightseeing Attraction,vi,en
+Di sản thế giới được UNESCO công nhận,UNESCO Recognized World Heritage Site,vi,en
+Di tích lịch sử văn hóa,Historical Cultural Monument,vi,en
+Bảo tàng nghệ thuật quốc gia,National Art Museum,vi,en
+Vé vào cổng tham quan,Admission Entrance Ticket,vi,en
+Vé trọn gói các điểm,All-inclusive Attraction Pass,vi,en
+Chuyến du ngoạn bằng thuyền,Boat Sightseeing Cruise,vi,en
+Khu nghỉ dưỡng sinh thái,Eco-friendly Resort,vi,en
+Khu bảo tồn thiên nhiên,Natural Wildlife Reserve,vi,en
+Vườn quốc gia,National Wildlife Park,vi,en
+Bãi biển cát trắng,White Sand Beach,vi,en
+Lặn ngắm san hô,Scuba Diving Coral Snorkeling,vi,en
+Chèo thuyền Kayak,Kayak Paddling,vi,en
+Leo núi dã ngoại,Mountain Trekking Hiking,vi,en
+Cắm trại ngoài trời,Outdoor Nature Camping,vi,en
+Du lịch mạo hiểm,Adventure Tourism,vi,en
+Du lịch tâm linh,Spiritual Pilgrimage Tourism,vi,en
+Du lịch hội thảo kết hợp khen thưởng MICE,MICE Meetings Incentives Conferences Exhibitions,vi,en
+Quà lưu niệm địa phương,Local Souvenir Gifts,vi,en
+Chợ đêm truyền thống,Traditional Night Market,vi,en
+Trả giá mặc cả mua hàng,Price Bargaining Haggling,vi,en
+Quầy đổi tiền ngoại tệ,Currency Exchange Counter,vi,en
+Thẻ thanh toán du lịch quốc tế,International Travel Card,vi,en
+Bản đồ chỉ dẫn du lịch,Travel Guide Map,vi,en
+Đại lộ đi bộ,Pedestrian Walking Boulevard,vi,en
+Thuê xe máy tự lái,Self-drive Motorbike Rental,vi,en
+Thuê xe ô tô có lái xe,Chauffeured Car Rental,vi,en
+Bảo hiểm du lịch quốc tế,International Travel Insurance,vi,en
+Mất hộ chiếu ở nước ngoài,Lost Passport Abroad,vi,en
+Đại sứ quán,Embassy,vi,en
+Lãnh sự quán,Consulate General,vi,en
+Cảnh sát du lịch hỗ trợ,Tourist Police Assistance,vi,en
+Đường dây nóng hỗ trợ khẩn cấp,Emergency Hotline,vi,en
+Mùa cao điểm du lịch,Peak Tourist Season,vi,en
+Mùa vắng khách,Off-peak Low Season,vi,en
+Chuyến bay khứ hồi,Round-trip Flight,vi,en
+Chuyến bay một chiều,One-way Flight,vi,en
+Hạng vé phổ thông,Economy Class Ticket,vi,en
+Hạng vé thương gia,Business Class Ticket,vi,en
+Hạng vé nhất,First Class Luxury Ticket,vi,en
+Hành lý xách tay tiêu chuẩn,Standard Carry-on Cabin Baggage,vi,en
+Hành lý ký gửi,Checked Hold Baggage,vi,en
+Cước hành lý quá cước,Excess Baggage Fee,vi,en
+Thẻ lên máy bay,Boarding Pass,vi,en
+Cổng lên máy bay,Departure Boarding Gate,vi,en
+Băng chuyền hành lý đến,Arrival Baggage Carousel,vi,en
+Khai báo thất lạc hành lý,Lost Baggage Declaration,vi,en
+Thủ tục kiểm tra an ninh sân bay,Airport Security Screening,vi,en
+Cửa khẩu hải quan sân bay,Airport Customs Checkpoint,vi,en
+Cửa khẩu xuất nhập cảnh,Immigration Border Control,vi,en
+Thị thực nhập cảnh du lịch,Tourist Entry Visa,vi,en
+Thị thực điện tử,Electronic Visa e-Visa,vi,en
+Miễn thị thực đơn phương,Unilateral Visa Exemption,vi,en
+Giấy phép cư trú tạm thời,Temporary Residence Permit,vi,en
+Đóng dấu xuất cảnh,Exit Passport Stamp,vi,en
+Tờ khai y tế nhập cảnh,Arrival Health Declaration,vi,en
+Khu vực cách ly kiểm dịch,Quarantine Holding Area,vi,en
+Quầy hoàn thuế sân bay,Airport Tax Refund Counter,vi,en
+Cửa hàng miễn thuế sân bay,Duty-Free Airport Shop,vi,en
+Phòng chờ thương gia sân bay,Airport VIP Business Lounge,vi,en
+Chuyến bay bị hoãn giờ,Delayed Flight Schedule,vi,en
+Chuyến bay bị hủy bỏ,Cancelled Flight,vi,en
+Bồi thường do hoãn chuyến bay,Flight Delay Compensation,vi,en
+Chuyển tiếp chuyến bay nối chuyến,Connecting Transit Flight,vi,en
+Khu vực quá cảnh,International Transit Area,vi,en
+Lệch múi giờ sinh học,Jet Lag Fatigue,vi,en
+Khí hậu nhiệt đới gió mùa,Tropical Monsoon Climate,vi,en
+Dự báo thời tiết du lịch,Travel Weather Forecast,vi,en
+Kem chống nắng dưỡng da,Sunscreen Protective Lotion,vi,en
+Thuốc chống say tàu xe,Motion Sickness Medicine,vi,en
+Ổ cắm điện chuyển đổi du lịch,Universal Travel Power Adapter,vi,en
+Thẻ SIM dữ liệu di động,Mobile Data SIM Card,vi,en
+Bộ phát sóng WiFi bỏ túi,Pocket Mobile WiFi Router,vi,en
+"Xin chào, rất vui được gặp bạn","Hello, nice to meet you",vi,en
+Cảm ơn bạn rất nhiều vì sự giúp đỡ,Thank you very much for your help,vi,en
+"Không có chi, rất hân hạnh","You're welcome, my pleasure",vi,en
+Xin lỗi vì đã làm phiền bạn,Sorry for bothering you,vi,en
+Làm ơn cho tôi hỏi đường,"Excuse me, could you tell me the way?",vi,en
+Tôi có thể giúp gì cho bạn không?,How may I help you?,vi,en
+Chúc bạn một ngày làm việc tốt lành,Have a great working day ahead,vi,en
+Hẹn gặp lại bạn vào dịp sớm nhất,See you again very soon,vi,en
+Chúc chuyến đi thượng lộ bình an,Have a safe and pleasant trip,vi,en
+Chúc mừng sinh nhật nhiều niềm vui,Wishing you a happy and joyful birthday,vi,en
+Chúc mừng năm mới an khang thịnh vượng,Happy New Year of prosperity and health,vi,en
+Xin chia buồn sâu sắc cùng gia đình,Deepest condolences to you and your family,vi,en
+Tôi không hiểu rõ ý của bạn,I don't quite understand your point,vi,en
+Bạn có thể nhắc lại lần nữa được không?,Could you please repeat that once more?,vi,en
+Làm ơn nói chậm lại một chút,Please speak a little more slowly,vi,en
+Cái này có giá bao nhiêu tiền?,How much does this cost?,vi,en
+Tôi muốn thanh toán bằng tiền mặt,I would like to pay in cash,vi,en
+Ở đây có chấp nhận quẹt thẻ không?,Do you accept credit card payments here?,vi,en
+Nhà vệ sinh gần nhất ở đâu?,Where is the nearest restroom located?,vi,en
+Ga tàu điện ngầm gần nhất ở hướng nào?,Which way is the nearest subway station?,vi,en
+Làm ơn gọi giúp tôi một chiếc taxi,Please call a taxi for me,vi,en
+Tôi cần đến địa chỉ này,I need to get to this specific address,vi,en
+Mất bao lâu để đi đến đó?,How long does it take to get there?,vi,en
+Đường này đang bị kẹt xe nghiêm trọng,This road is heavily congested with traffic,vi,en
+Đèn tín hiệu giao thông,Traffic Signal Lights,vi,en
+Vạch kẻ đường cho người đi bộ,Pedestrian Crosswalk,vi,en
+Cầu vượt cho người đi bộ,Pedestrian Footbridge,vi,en
+Bãi giữ xe máy tự động,Automated Motorbike Parking Lot,vi,en
+Trạm xe buýt công cộng,Public Bus Stop,vi,en
+Vé tháng xe buýt học sinh sinh viên,Monthly Student Bus Pass,vi,en
+Tuyến đường sắt đô thị trên cao,Elevated Urban Railway Line,vi,en
+Thuê bao điện thoại trả trước,Prepaid Mobile Subscription,vi,en
+Nạp tiền tài khoản điện thoại,Top-up Phone Account,vi,en
+Mật khẩu mạng không dây Wi-Fi,Wireless Wi-Fi Password,vi,en
+Mất tín hiệu kết nối mạng,Lost Network Connection Signal,vi,en
+Điện thoại của tôi sắp hết pin,My phone battery is running very low,vi,en
+Bạn có củ sạc dự phòng không?,Do you have a portable power bank?,vi,en
+Cửa hàng tiện lợi mở cửa 24/7,24/7 Convenience Store,vi,en
+Siêu thị mua sắm gia đình,Family Shopping Supermarket,vi,en
+Xe đẩy hàng mua sắm,Shopping Grocery Cart,vi,en
+Quầy thu ngân thanh toán,Checkout Cashier Counter,vi,en
+Túi mua sắm bảo vệ môi trường,Eco-friendly Reusable Shopping Bag,vi,en
+Chính sách đổi trả hàng trong 7 ngày,7-Day Return and Refund Policy,vi,en
+Phiếu giảm giá khuyến mãi,Promotional Discount Coupon,vi,en
+Chương trình khách hàng thân thiết,Customer Loyalty Rewards Program,vi,en
+Tích điểm đổi quà tặng,Earn Reward Points for Gifts,vi,en
+Trung tâm chăm sóc khách hàng,Customer Care Support Center,vi,en
+Gửi phản hồi khiếu nại chất lượng,Submit Quality Complaint Feedback,vi,en
+Thái độ phục vụ tận tâm,Dedicated Customer Service Attitude,vi,en
+Thời gian làm việc hành chính,Standard Business Working Hours,vi,en
+Nghỉ trưa theo quy định,Prescribed Lunch Break,vi,en
+Làm thêm giờ ngoài giờ,Overtime Work,vi,en
+Tiền lương làm thêm giờ,Overtime Pay Compensation,vi,en
+Đơn xin nghỉ phép năm,Annual Leave Application Form,vi,en
+Nghỉ ốm hưởng bảo hiểm,Sick Leave with Insurance,vi,en
+Nghỉ thai sản theo quy định,Maternity Leave Benefit,vi,en
+Công tác xa ngoại tỉnh,Out-of-town Business Trip,vi,en
+Thanh toán công tác phí,Business Travel Expense Claim,vi,en
+Lịch họp giao ban đầu tuần,Weekly Briefing Meeting Schedule,vi,en
+Biên bản ghi nhớ cuộc họp,Meeting Minutes Record,vi,en
+Trình bày bài thuyết trình,Deliver Presentation Slides,vi,en
+Máy chiếu văn phòng,Office Video Projector,vi,en
+Bảng trắng bút lông,Dry-erase Marker Whiteboard,vi,en
+Họp trực tuyến từ xa qua mạng,Remote Online Video Conference,vi,en
+Bật micro phát biểu,Unmute Microphone to Speak,vi,en
+Chia sẻ màn hình làm việc,Share Desktop Screen,vi,en
+Ghi âm cuộc họp nội bộ,Record Internal Meeting Session,vi,en
+Gửi thư điện tử xác nhận,Send Confirmation Email,vi,en
+Tệp đính kèm thư điện tử,Email Attachment File,vi,en
+Hộp thư đến,Email Inbox,vi,en
+Thư mục rác thư rác,Spam Junk Folder,vi,en
+Hạn chót hoàn thành nhiệm vụ,Project Task Deadline,vi,en
+Giao việc cho nhân viên,Delegate Tasks to Team Members,vi,en
+Báo cáo tiến độ hàng tuần,Weekly Progress Status Report,vi,en
+Kế hoạch hành động cụ thể,Concrete Action Plan,vi,en
+Phân bổ ngân sách dự án,Project Budget Allocation,vi,en
+Cắt giảm chi phí không cần thiết,Cut Unnecessary Operational Costs,vi,en
+Hợp đồng thuê văn phòng,Office Lease Agreement,vi,en
+Tiền cọc thuê nhà,Rental Housing Security Deposit,vi,en
+Hóa đơn tiền điện sinh hoạt,Residential Electricity Utility Bill,vi,en
+Hóa đơn tiền nước sạch,Clean Tap Water Utility Bill,vi,en
+Hóa đơn cước phí Internet,Broadband Internet Service Bill,vi,en
+Phí quản lý chung cư,Apartment Building Management Fee,vi,en
+Thang máy tòa nhà,Building Passenger Elevator,vi,en
+Lối thoát hiểm hỏa hoạn,Emergency Fire Exit Route,vi,en
+Bình chữa cháy mini,Portable Fire Extinguisher,vi,en
+Chuông báo cháy tự động,Automatic Smoke Fire Alarm,vi,en
+Bảo vệ trực tòa nhà,Building Security Guard,vi,en
+Thẻ cư dân chung cư,Residential Access Card,vi,en
+Khu vực tập kết rác thải,Waste Disposal Collection Area,vi,en
+Phân loại rác tại nguồn,Waste Sorting at Source,vi,en
+Rác tái chế được,Recyclable Waste Material,vi,en
+Tiết kiệm năng lượng điện,Save Electrical Energy,vi,en
+Bảo vệ môi trường xanh,Green Environmental Protection,vi,en
+Trồng cây xanh bóng mát,Plant Shade Trees,vi,en
+Ô nhiễm không khí bụi mịn,Fine Dust Particulate Air Pollution,vi,en
+Đeo khẩu trang y tế,Wear Medical Protective Face Mask,vi,en
+Nước rửa tay sát khuẩn,Antibacterial Hand Sanitizer,vi,en
+Giữ khoảng cách an toàn,Maintain Safe Physical Distance,vi,en
+Đo thân nhiệt cơ thể,Measure Body Temperature,vi,en
+Đăng ký tạm trú tạm vắng,Temporary Residence Registration,vi,en
+Căn cước công dân gắn chíp,Chip-embedded Citizen Identity Card,vi,en
+Hộ chiếu phổ thông,Standard Ordinary Passport,vi,en
+Giấy phép lái xe ô tô,Driver's Automobile License,vi,en
+Đăng ký kết hôn hợp pháp,Legal Marriage Registration,vi,en
+Giấy khai sinh bản sao,Certified Copy of Birth Certificate,vi,en
+Sổ hộ khẩu điện tử,Electronic Household Register,vi,en
+Chứng thực sao y bản chính,Notarized True Copy Certification,vi,en
+Văn phòng công chứng tư pháp,Judicial Notary Office,vi,en
+Ủy quyền hợp pháp,Legal Power of Attorney,vi,en
+Đơn khiếu nại hành chính,Administrative Complaint Petition,vi,en
+Tòa án nhân dân,People's Court of Justice,vi,en
+Luật sư bào chữa,Defense Attorney Legal Counsel,vi,en
+Lời khai nhân chứng,Witness Testimony Statement,vi,en
+Bằng chứng xác thực,Authentic Verifiable Evidence,vi,en
+Phiên tòa xét xử sơ thẩm,First Instance Court Trial,vi,en
+Kháng cáo lên cấp phúc thẩm,Appeal to Appellate Court,vi,en
+Bản án có hiệu lực pháp luật,Legally Enforceable Court Judgment,vi,en
+Thi hành án dân sự,Civil Judgment Enforcement,vi,en
+Đóng phạt vi phạm giao thông,Pay Traffic Violation Fine,vi,en
+Tước giấy phép lái xe có thời hạn,Temporary Driver's License Suspension,vi,en
+Nồng độ cồn trong hơi thở,Breath Alcohol Concentration,vi,en
+Đội mũ bảo hiểm đúng quy cách,Wear Standard Safety Helmet,vi,en
+Thắt dây an toàn khi lái xe,Fasten Automobile Seatbelt,vi,en
+Chạy xe quá tốc độ quy định,Exceed Speed Limit Violation,vi,en
+Vượt đèn đỏ nguy hiểm,Run Dangerous Red Traffic Light,vi,en
+Đi ngược chiều làn đường,Drive Against Traffic Lane,vi,en
+Xe cứu thương ưu tiên,Priority Emergency Ambulance,vi,en
+Xe chữa cháy cứu hộ,Fire Rescue Emergency Engine,vi,en
+Số điện thoại cấp cứu 115,115 Emergency Medical Ambulance Service,vi,en
+Số điện thoại cảnh sát 113,113 Police Emergency Dispatch Service,vi,en
+Số điện thoại cứu hỏa 114,114 Fire Rescue Emergency Dispatch,vi,en
+Tổng đài bảo vệ trẻ em 111,111 National Child Protection Hotline,vi,en
+Thời tiết nắng ráo dịu mát,Pleasantly Mild Sunny Weather,vi,en
+Mưa rào rải rác từng đợt,Scattered Showers and Rain,vi,en
+Dông lốc sấm sét nguy hiểm,Severe Thunderstorm with Lightning,vi,en
+Bão nhiệt đới đổ bộ,Tropical Cyclone Landfall,vi,en
+Lũ lụt ngập úng diện rộng,Widespread Flooding Inundation,vi,en
+Sạt lở đất đá miền núi,Mountainous Landslide Debris,vi,en
+Động đất sóng thần,Earthquake and Tsunami,vi,en
+Biến đổi khí hậu toàn cầu,Global Climate Change,vi,en
+Hiệu ứng nhà kính khí quyển,Atmospheric Greenhouse Effect,vi,en
+Nước biển dâng cao,Rising Sea Level,vi,en
+Hạn hán xâm nhập mặn,Severe Drought and Saltwater Intrusion,vi,en
+Bảo tồn đa dạng sinh học,Biological Diversity Conservation,vi,en
+Động vật hoang dã quý hiếm,Rare Endangered Wildlife Animals,vi,en
+Cấm săn bắt buôn bán trái phép,Prohibit Illegal Hunting and Poaching,vi,en
+Rừng ngập mặn ven biển,Coastal Mangrove Forest,vi,en
+Lối sống tối giản thanh tịnh,Minimalist Peaceful Lifestyle,vi,en
+Cân bằng công việc và cuộc sống,Healthy Work-Life Balance,vi,en
+Trường đại học bách khoa,Polytechnic University of Technology,vi,en
+Trường đại học quốc gia,National Research University,vi,en
+Viện nghiên cứu khoa học,Scientific Research Institute,vi,en
+Khoa công nghệ thông tin,Faculty of Information Technology,vi,en
+Phòng thí nghiệm trọng điểm,Key National Laboratory,vi,en
+Giáo sư hướng dẫn đề tài,Academic Thesis Advisor Professor,vi,en
+Nghiên cứu sinh tiến sĩ,Doctoral PhD Research Candidate,vi,en
+Học viên cao học thạc sĩ,Master's Graduate Student,vi,en
+Sinh viên cử nhân chính quy,Full-time Undergraduate Bachelor Student,vi,en
+Khóa luận tốt nghiệp đại học,Undergraduate Graduation Thesis,vi,en
+Luận văn thạc sĩ khoa học,Master of Science Thesis,vi,en
+Luận án tiến sĩ chuyên ngành,Doctoral PhD Dissertation,vi,en
+Hội đồng bảo vệ luận văn,Thesis Defense Examination Board,vi,en
+Học bổng toàn phần,Full Academic Scholarship,vi,en
+Học phí theo tín chỉ,Tuition Fee per Credit Unit,vi,en
+Chương trình đào tạo chuẩn,Standard Academic Curriculum,vi,en
+Học phần bắt buộc,Mandatory Core Course,vi,en
+Học phần tự chọn chuyên sâu,Elective Specialization Course,vi,en
+Điểm trung bình tích lũy GPA,Grade Point Average Cumulative GPA,vi,en
+Bảng điểm học tập chính thức,Official Academic Transcript,vi,en
+Bằng tốt nghiệp đại học,Bachelor Degree Diploma,vi,en
+Chứng chỉ năng lực ngoại ngữ quốc tế,International Foreign Language Certificate,vi,en
+Bài báo khoa học bình duyệt,Peer-reviewed Scientific Journal Paper,vi,en
+Hội thảo khoa học quốc tế,International Academic Conference,vi,en
+Kỷ yếu hội nghị khoa học,Conference Proceedings Collection,vi,en
+Chỉ số trích dẫn khoa học Scopus,Scopus Scientific Citation Index,vi,en
+Đạo văn và liêm chính học thuật,Plagiarism and Academic Integrity,vi,en
+Tài liệu tham khảo học thuật,Academic Bibliography References,vi,en
+Phương pháp nghiên cứu khoa học,Scientific Research Methodology,vi,en
+Giả thuyết nghiên cứu,Research Hypothesis,vi,en
+Phân tích dữ liệu thực nghiệm,Empirical Data Analysis,vi,en
+Khảo sát định lượng,Quantitative Survey,vi,en
+Nghiên cứu định tính,Qualitative Case Study Research,vi,en
+Nhóm mẫu thử nghiệm ngẫu nhiên,Randomized Controlled Trial Group,vi,en
+Khoảng tin cậy thống kê,Statistical Confidence Interval,vi,en
+Mức ý nghĩa thống kê p-value,Statistical Significance p-value,vi,en
+Độ lệch chuẩn,Standard Deviation,vi,en
+Phân phối chuẩn hình chuông,Normal Gaussian Distribution,vi,en
+Hồi quy tuyến tính,Linear Regression,vi,en
+Hồi quy logistic,Logistic Regression,vi,en
+Mối tương quan nhân quả,Causal Correlation Relationship,vi,en
+Học tập suốt đời,Lifelong Continuous Learning,vi,en
+Giáo dục trực tuyến từ xa E-learning,Distance E-learning Education,vi,en
+Khóa học mở trực tuyến đại chúng MOOC,Massive Open Online Course,vi,en
+Lớp học đảo ngược,Flipped Classroom Model,vi,en
+Tư duy phản biện độc lập,Independent Critical Thinking,vi,en
+Giải quyết vấn đề phức tạp,Complex Problem Solving,vi,en
+Kỹ năng làm việc nhóm,Teamwork Collaborative Skills,vi,en
+Kỹ năng giao tiếp thuyết trình,Presentation and Communication Skills,vi,en
+Tự học và tự nghiên cứu,Self-directed Study and Research,vi,en
+Thư viện số điện tử,Digital Electronic Library,vi,en
+Cơ sở dữ liệu luận văn,Dissertation and Thesis Database,vi,en
+Phòng học thông minh đa phương tiện,Smart Multimedia Classroom,vi,en
+Học bổng trao đổi sinh viên quốc tế,International Student Exchange Scholarship,vi,en
+Thực tập sinh tốt nghiệp tại doanh nghiệp,Corporate Graduate Internship,vi,en
+Ngày hội việc làm sinh viên,University Student Career Fair,vi,en
+Hồ sơ năng lực cá nhân Portfolio,Professional Competency Portfolio,vi,en
+Sơ yếu lý lịch CV,Curriculum Vitae Resume,vi,en
+Thư giới thiệu của giáo sư,Professor Recommendation Reference Letter,vi,en
+Thư bày tỏ nguyện vọng du học,Statement of Purpose Motivational Letter,vi,en
+Phỏng vấn xin học bổng,Scholarship Admission Interview,vi,en
+Phí xét tuyển hồ sơ,Application Processing Dossier Fee,vi,en
+Ký túc xá sinh viên,University Student Dormitory Residence,vi,en
+Hội sinh viên trường,University Student Association Council,vi,en
+Câu lạc bộ học thuật,Academic Student Club,vi,en
+Hoạt động tình nguyện mùa hè xanh,Green Summer Volunteer Campaign,vi,en
+Tiếp sức mùa thi,Exam Support Volunteer Activity,vi,en
+Kỳ thi tuyển sinh đại học quốc gia,National University Entrance Examination,vi,en
+Kỳ thi tốt nghiệp trung học phổ thông,High School Graduation Examination,vi,en
+Đề thi chính thức,Official Examination Paper,vi,en
+Đáp án và thang điểm chuẩn,Marking Scheme and Answer Key,vi,en
+Phúc khảo bài thi,Exam Score Review Appeal,vi,en
+Gian lận thi cử,Examination Cheating Fraud,vi,en
+Đình chỉ thi,Examination Suspension Penalty,vi,en
+Học bổng khuyến khích học tập,Academic Encouragement Scholarship,vi,en
+Danh hiệu thủ khoa tốt nghiệp,Valedictorian Graduation Honors,vi,en
+Tốt nghiệp loại xuất sắc,Summa Cum Laude Highest Honors,vi,en
+Tốt nghiệp loại giỏi,Magna Cum Laude High Honors,vi,en
+Tốt nghiệp loại khá,Cum Laude With Honors,vi,en
+Lễ trao bằng tốt nghiệp,Commencement Graduation Ceremony,vi,en
+Mũ và áo cử nhân,Graduation Cap and Academic Gown,vi,en
+Mạng lưới cựu sinh viên,University Alumni Network,vi,en
+Tài trợ nghiên cứu khoa học,Scientific Research Grant,vi,en
+Chuyển giao công nghệ sang doanh nghiệp,Technology Transfer to Industry,vi,en
+Vườn ươm khởi nghiệp đại học,University Startup Business Incubator,vi,en
+Doanh nghiệp khởi nguồn Spin-off,University Spin-off Enterprise,vi,en
+Kinh phí đề tài khoa học cấp nhà nước,State-level Scientific Research Budget,vi,en
+Nghiệm thu đề tài nghiên cứu,Research Project Formal Acceptance,vi,en
+Báo cáo tổng kết đề tài,Final Project Synthesis Report,vi,en
+Tính ứng dụng thực tiễn,Practical Real-world Applicability,vi,en
+Tính sáng tạo đổi mới,Innovative Creativity,vi,en
+Tính khả thi của giải pháp,Solution Feasibility,vi,en
+Đóng góp lý thuyết mới,Novel Theoretical Contribution,vi,en
+Tổng quan tài liệu nghiên cứu,Literature Review Overview,vi,en
+Khoảng trống nghiên cứu,Academic Research Gap,vi,en
+Khung lý thuyết phân tích,Theoretical Analytical Framework,vi,en
+Mô hình thực nghiệm kiểm chứng,Empirical Verification Model,vi,en
+Môi trường mô phỏng máy tính,Computer Simulation Environment,vi,en
+Hội thảo chuyên đề bàn tròn,Roundtable Thematic Seminar,vi,en
+Diễn giả chính hội nghị,Keynote Conference Speaker,vi,en
+Khoa học máy tính,Computer Science,vi,en
+Kỹ thuật phần mềm,Software Engineering,vi,en
+An toàn thông tin,Information Security,vi,en
+Mạng máy tính và truyền thông,Computer Networks and Communications,vi,en
+Hệ thống nhúng và IoT,Embedded Systems and Internet of Things,vi,en
+Khai phóng tiềm năng con người,Unleash Human Potential,vi,en
+Hợp tác công tư PPP,Public-Private Partnership,vi,en
+Trái phiếu xanh tài trợ khí hậu,Climate Green Bonds,vi,en
+Đổi mới sáng tạo mở,Open Innovation,vi,en
+Chuyển đổi năng lượng công bằng,Just Energy Transition,vi,en
+Kinh tế số,Digital Economy,vi,en
+Thành phố thông minh bền vững,Sustainable Smart City,vi,en
