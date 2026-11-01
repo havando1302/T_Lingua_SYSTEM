@@ -1,0 +1,451 @@
+﻿source_text,translated_text,source_language,target_language,domain
+Biển báo giao thông,Traffic sign,vi,en,daily_life
+Tắc đường,Traffic congestion,vi,en,daily_life
+Vạch kẻ đường,Crosswalk,vi,en,daily_life
+Xe máy,Motorbike,vi,en,daily_life
+Xe đạp,Bicycle,vi,en,daily_life
+Ô tô con,Car,vi,en,daily_life
+Xe taxi,Taxi,vi,en,daily_life
+Xe buýt,Bus,vi,en,daily_life
+Xe tải,Truck,vi,en,daily_life
+Xe cứu hỏa,Fire engine,vi,en,daily_life
+Tàu hỏa,Train,vi,en,daily_life
+Tàu điện ngầm,Subway,vi,en,daily_life
+Đường ray,Railway,vi,en,daily_life
+Nhà ga xe lửa,Railway station,vi,en,daily_life
+Bến xe buýt,Bus stop,vi,en,daily_life
+Trạm trung chuyển,Transit station,vi,en,daily_life
+Trạm xăng,Petrol station,vi,en,daily_life
+Sân bay,Airport,vi,en,daily_life
+Cảng biển,Seaport,vi,en,daily_life
+Bến phà,Ferry terminal,vi,en,daily_life
+Máy bay,Airplane,vi,en,daily_life
+Tàu thủy,Ship,vi,en,daily_life
+Thuyền buồm,Sailboat,vi,en,daily_life
+Ca nô,Speedboat,vi,en,daily_life
+Vé máy bay,Flight ticket,vi,en,daily_life
+Vé tàu,Train ticket,vi,en,daily_life
+Vé xe buýt,Bus ticket,vi,en,daily_life
+Thẻ lên máy bay,Boarding pass,vi,en,daily_life
+Hộ chiếu,Passport,vi,en,daily_life
+Thị thực,Visa,vi,en,daily_life
+Cửa khởi hành,Departure gate,vi,en,daily_life
+Băng chuyền hành lý,Baggage carousel,vi,en,daily_life
+Hành lý ký gửi,Checked baggage,vi,en,daily_life
+Hành lý xách tay,Hand luggage,vi,en,daily_life
+Kiểm tra an ninh,Security check,vi,en,daily_life
+Hải quan,Customs,vi,en,daily_life
+Điểm đến,Destination,vi,en,daily_life
+Điểm xuất phát,Departure point,vi,en,daily_life
+Khởi hành,Departure,vi,en,daily_life
+Đến nơi,Arrival,vi,en,daily_life
+Chuyến đi,Trip,vi,en,daily_life
+Hành trình,Journey,vi,en,daily_life
+Lộ trình,Travel route,vi,en,daily_life
+Bản đồ dẫn đường,Navigation map,vi,en,daily_life
+Bãi đỗ xe,Parking lot,vi,en,daily_life
+Bằng lái xe,Driving licence,vi,en,daily_life
+Người lái xe,Driver,vi,en,daily_life
+Hành khách,Passenger,vi,en,daily_life
+Người đi bộ,Pedestrian,vi,en,daily_life
+Tốc độ di chuyển,Travel speed,vi,en,daily_life
+Giới hạn tốc độ,Speed limit,vi,en,daily_life
+Tai nạn giao thông,Traffic accident,vi,en,daily_life
+Sửa chữa xe,Vehicle repair,vi,en,daily_life
+Rửa xe,Car wash,vi,en,daily_life
+Bơm lốp,Tire inflation,vi,en,daily_life
+Phanh xe,Brake,vi,en,daily_life
+Vô lăng,Steering wheel,vi,en,daily_life
+Gương chiếu hậu,Rearview mirror,vi,en,daily_life
+Dây an toàn,Seatbelt,vi,en,daily_life
+Mũ bảo hiểm xe máy,Motorbike helmet,vi,en,daily_life
+Thời gian,Time,vi,en,daily_life
+Khoảnh khắc,Moment,vi,en,daily_life
+Giây,Second,vi,en,daily_life
+Phút,Minute,vi,en,daily_life
+Giờ,Hour,vi,en,daily_life
+Ngày,Day,vi,en,daily_life
+Ban ngày,Daytime,vi,en,daily_life
+Ban đêm,Nighttime,vi,en,daily_life
+Bình minh,Sunrise,vi,en,daily_life
+Hoàng hôn,Sunset,vi,en,daily_life
+Buổi sáng,Morning,vi,en,daily_life
+Buổi trưa,Noon,vi,en,daily_life
+Buổi chiều,Afternoon,vi,en,daily_life
+Buổi tối,Evening,vi,en,daily_life
+Nửa đêm,Midnight,vi,en,daily_life
+Hôm qua,Yesterday,vi,en,daily_life
+Hôm nay,Today,vi,en,daily_life
+Ngày mai,Tomorrow,vi,en,daily_life
+Ngày kia,Day after tomorrow,vi,en,daily_life
+Hôm kia,Day before yesterday,vi,en,daily_life
+Tuần,Week,vi,en,daily_life
+Tuần trước,Last week,vi,en,daily_life
+Tuần này,This week,vi,en,daily_life
+Tuần tới,Next week,vi,en,daily_life
+Cuối tuần,Weekend,vi,en,daily_life
+Ngày làm việc,Workday,vi,en,daily_life
+Ngày nghỉ lễ,Holiday,vi,en,daily_life
+Tháng,Month,vi,en,daily_life
+Đầu tháng,Beginning of month,vi,en,daily_life
+Giữa tháng,Middle of month,vi,en,daily_life
+Cuối tháng,End of month,vi,en,daily_life
+Năm,Year,vi,en,daily_life
+Năm ngoái,Last year,vi,en,daily_life
+Năm nay,This year,vi,en,daily_life
+Năm sau,Next year,vi,en,daily_life
+Thập kỷ,Decade,vi,en,daily_life
+Thế kỷ,Century,vi,en,daily_life
+Lịch treo tường,Wall calendar,vi,en,daily_life
+Đồng hồ báo thức,Alarm clock,vi,en,daily_life
+Hẹn giờ,Timer,vi,en,daily_life
+Lịch trình,Schedule,vi,en,daily_life
+Cuộc hẹn,Appointment,vi,en,daily_life
+Kế hoạch,Plan,vi,en,daily_life
+Đúng giờ,Punctual,vi,en,daily_life
+Đi muộn,Late,vi,en,daily_life
+Đến sớm,Early,vi,en,daily_life
+Trì hoãn,Postponement,vi,en,daily_life
+Hạn chót,Deadline,vi,en,daily_life
+Quá khứ,Past,vi,en,daily_life
+Tương lai,Future,vi,en,daily_life
+Thời tiết,Weather,vi,en,daily_life
+Dự báo thời tiết,Weather forecast,vi,en,daily_life
+Nhiệt độ,Temperature,vi,en,daily_life
+Độ ẩm,Humidity,vi,en,daily_life
+Mùa xuân,Spring,vi,en,daily_life
+Mùa hạ,Summer,vi,en,daily_life
+Mùa thu,Autumn,vi,en,daily_life
+Mùa đông,Winter,vi,en,daily_life
+Mùa mưa,Rainy season,vi,en,daily_life
+Mùa khô,Dry season,vi,en,daily_life
+Bầu trời,Sky,vi,en,daily_life
+Mặt trời,Sun,vi,en,daily_life
+Ánh nắng,Sunlight,vi,en,daily_life
+Mặt trăng,Moon,vi,en,daily_life
+Ánh trăng,Moonlight,vi,en,daily_life
+Ngôi sao,Star,vi,en,daily_life
+Đám mây,Cloud,vi,en,daily_life
+Cơn mưa,Rain,vi,en,daily_life
+Mưa phùn,Drizzle,vi,en,daily_life
+Mưa rào,Heavy shower,vi,en,daily_life
+Mưa giông,Thunderstorm,vi,en,daily_life
+Sấm sét,Thunder and lightning,vi,en,daily_life
+Cơn gió,Wind,vi,en,daily_life
+Gió nhẹ,Breeze,vi,en,daily_life
+Gió mùa,Monsoon,vi,en,daily_life
+Bão nhiệt đới,Tropical storm,vi,en,daily_life
+Cơn lốc xoáy,Tornado,vi,en,daily_life
+Cầu vồng,Rainbow,vi,en,daily_life
+Sương mù,Fog,vi,en,daily_life
+Sương sớm,Morning dew,vi,en,daily_life
+Băng giá,Frost,vi,en,daily_life
+Tuyết rơi,Snowfall,vi,en,daily_life
+Không khí,Air,vi,en,daily_life
+Khí hậu,Climate,vi,en,daily_life
+Cảnh quan thiên nhiên,Natural landscape,vi,en,daily_life
+Rừng cây,Forest,vi,en,daily_life
+Dãy núi,Mountain range,vi,en,daily_life
+Ngọn đồi,Hill,vi,en,daily_life
+Dòng sông,River,vi,en,daily_life
+Con suối,Stream,vi,en,daily_life
+Bờ biển,Beach,vi,en,daily_life
+Đại dương,Ocean,vi,en,daily_life
+Hòn đảo,Island,vi,en,daily_life
+Hồ nước,Lake,vi,en,daily_life
+Đồng cỏ,Meadow,vi,en,daily_life
+Cánh đồng,Field,vi,en,daily_life
+Thung lũng,Valley,vi,en,daily_life
+Môi trường sinh thái,Ecological environment,vi,en,daily_life
+Bảo vệ môi trường,Environmental protection,vi,en,daily_life
+Tự nhiên hoang dã,Wild nature,vi,en,daily_life
+Mua sắm,Shopping,vi,en,daily_life
+Cửa hàng tiện lợi,Convenience store,vi,en,daily_life
+Siêu thị,Supermarket,vi,en,daily_life
+Trung tâm thương mại,Shopping mall,vi,en,daily_life
+Chợ truyền thống,Traditional market,vi,en,daily_life
+Cửa hàng tạp hóa,Grocery store,vi,en,daily_life
+Gian hàng,Stall,vi,en,daily_life
+Người mua hàng,Buyer,vi,en,daily_life
+Người bán hàng,Seller,vi,en,daily_life
+Nhân viên thu ngân,Cashier,vi,en,daily_life
+Khách hàng,Customer,vi,en,daily_life
+Sản phẩm,Product,vi,en,daily_life
+Hàng hóa,Goods,vi,en,daily_life
+Giá cả,Price,vi,en,daily_life
+Giá bán lẻ,Retail price,vi,en,daily_life
+Bảng giá,Price tag,vi,en,daily_life
+Giảm giá,Discount,vi,en,daily_life
+Khuyến mãi,Promotion,vi,en,daily_life
+Phiếu giảm giá,Voucher,vi,en,daily_life
+Tiền mặt,Cash,vi,en,daily_life
+Tiền xu,Coin,vi,en,daily_life
+Tiền giấy,Banknote,vi,en,daily_life
+Tiền lẻ,Small change,vi,en,daily_life
+Tiền thừa,Change money,vi,en,daily_life
+Thẻ ngân hàng,Bank card,vi,en,daily_life
+Thẻ tín dụng,Credit card,vi,en,daily_life
+Thẻ ghi nợ,Debit card,vi,en,daily_life
+Máy rút tiền tự động,ATM machine,vi,en,daily_life
+Máy quẹt thẻ,POS terminal,vi,en,daily_life
+Mã quét thanh toán,QR payment code,vi,en,daily_life
+Chuyển khoản ngân hàng,Bank transfer,vi,en,daily_life
+Ví điện tử,E-wallet,vi,en,daily_life
+Hóa đơn mua hàng,Purchase receipt,vi,en,daily_life
+Phiếu bảo hành,Warranty card,vi,en,daily_life
+Bao bì đóng gói,Packaging,vi,en,daily_life
+Túi đựng hàng,Shopping bag,vi,en,daily_life
+Giỏ hàng,Shopping basket,vi,en,daily_life
+Xe đẩy hàng,Shopping cart,vi,en,daily_life
+Hàng tồn kho,Inventory,vi,en,daily_life
+Hàng chính hãng,Genuine goods,vi,en,daily_life
+Hàng giả mạo,Counterfeit goods,vi,en,daily_life
+Trả lại hàng,Goods return,vi,en,daily_life
+Đổi hàng,Goods exchange,vi,en,daily_life
+Hoàn tiền,Refund,vi,en,daily_life
+Thử đồ,Trying on clothes,vi,en,daily_life
+Phòng thay đồ,Fitting room,vi,en,daily_life
+Đắt đỏ,Expensive,vi,en,daily_life
+Giá rẻ,Cheap,vi,en,daily_life
+Tiết kiệm,Saving,vi,en,daily_life
+Chi tiêu,Expense,vi,en,daily_life
+Ngân sách,Budget,vi,en,daily_life
+Tài khoản ngân hàng,Bank account,vi,en,daily_life
+Số dư tài khoản,Account balance,vi,en,daily_life
+Tiền tiết kiệm,Savings money,vi,en,daily_life
+Tiền gửi tiết kiệm,Bank deposit,vi,en,daily_life
+Tiền thưởng,Bonus,vi,en,daily_life
+Tiền lương,Salary,vi,en,daily_life
+Nợ nần,Debt,vi,en,daily_life
+Lãi suất,Interest rate,vi,en,daily_life
+Giao dịch tài chính,Financial transaction,vi,en,daily_life
+Nơi làm việc,Workplace,vi,en,daily_life
+Văn phòng làm việc,Office,vi,en,daily_life
+Bàn làm việc công sở,Office desk,vi,en,daily_life
+Phòng họp,Meeting room,vi,en,daily_life
+Cơ quan,Agency,vi,en,daily_life
+Doanh nghiệp,Enterprise,vi,en,daily_life
+Công ty tư nhân,Private company,vi,en,daily_life
+Giám đốc điều hành,Chief executive officer,vi,en,daily_life
+Người quản lý,Manager,vi,en,daily_life
+Trưởng phòng,Department head,vi,en,daily_life
+Nhân viên văn phòng,Office staff,vi,en,daily_life
+Nhân viên tập sự,Intern,vi,en,daily_life
+Hợp đồng lao động,Labor contract,vi,en,daily_life
+Thư ký văn phòng,Office secretary,vi,en,daily_life
+Cuộc phỏng vấn xin việc,Job interview,vi,en,daily_life
+Hồ sơ xin việc,Job application resume,vi,en,daily_life
+Báo cáo công việc,Work report,vi,en,daily_life
+Thuyết trình dự án,Project presentation,vi,en,daily_life
+Cuộc họp nội bộ,Internal meeting,vi,en,daily_life
+Giờ làm việc,Working hours,vi,en,daily_life
+Làm việc ngoài giờ,Overtime work,vi,en,daily_life
+Nghỉ phép năm,Annual leave,vi,en,daily_life
+Nghỉ ốm,Sick leave,vi,en,daily_life
+Trường học,School,vi,en,daily_life
+Trường tiểu học,Primary school,vi,en,daily_life
+Trường trung học,Secondary school,vi,en,daily_life
+Trường đại học,University,vi,en,daily_life
+Thư viện trường học,School library,vi,en,daily_life
+Phòng học,Classroom,vi,en,daily_life
+Giáo viên,Teacher,vi,en,daily_life
+Giảng viên đại học,University lecturer,vi,en,daily_life
+Học sinh,Pupil,vi,en,daily_life
+Sinh viên đại học,University student,vi,en,daily_life
+Lớp học,Class,vi,en,daily_life
+Bài học,Lesson,vi,en,daily_life
+Bài kiểm tra,Test,vi,en,daily_life
+Kỳ thi,Exam,vi,en,daily_life
+Kết quả học tập,Academic results,vi,en,daily_life
+Bằng cấp,Degree,vi,en,daily_life
+Học bổng,Scholarship,vi,en,daily_life
+Sách giáo khoa,Textbook,vi,en,daily_life
+Vở ghi bài,Notebook,vi,en,daily_life
+Bút mực,Fountain pen,vi,en,daily_life
+Bút bi,Ballpoint pen,vi,en,daily_life
+Bút chì,Pencil,vi,en,daily_life
+Tẩy bút chì,Eraser,vi,en,daily_life
+Thước kẻ,Ruler,vi,en,daily_life
+Hộp bút,Pencil case,vi,en,daily_life
+Kẹp tài liệu,Paper clip,vi,en,daily_life
+Bấm ghim,Stapler,vi,en,daily_life
+Kéo thủ công,Scissors,vi,en,daily_life
+Băng dính,Adhesive tape,vi,en,daily_life
+Keo dán giấy,Paper glue,vi,en,daily_life
+Giấy in tài liệu,Printing paper,vi,en,daily_life
+Máy in văn phòng,Office printer,vi,en,daily_life
+Máy photocopy,Photocopier,vi,en,daily_life
+Máy tính bảng,Tablet computer,vi,en,daily_life
+Máy tính xách tay,Laptop,vi,en,daily_life
+Thẻ nhớ lưu trữ,Memory card,vi,en,daily_life
+Chuột máy tính,Computer mouse,vi,en,daily_life
+Giải trí,Entertainment,vi,en,daily_life
+Thời gian rảnh rỗi,Free time,vi,en,daily_life
+Sở thích cá nhân,Personal hobby,vi,en,daily_life
+Đọc sách,Reading books,vi,en,daily_life
+Nghe nhạc,Listening to music,vi,en,daily_life
+Xem phim,Watching movies,vi,en,daily_life
+Rạp chiếu phim,Movie theater,vi,en,daily_life
+Vé xem phim,Movie ticket,vi,en,daily_life
+Bài hát,Song,vi,en,daily_life
+Nhạc cụ,Musical instrument,vi,en,daily_life
+Đàn ghi ta,Guitar,vi,en,daily_life
+Đàn dương cầm,Piano,vi,en,daily_life
+Đàn vĩ cầm,Violin,vi,en,daily_life
+Trống gõ,Drum,vi,en,daily_life
+Nhiếp ảnh,Photography,vi,en,daily_life
+Máy ảnh kỹ thuật số,Digital camera,vi,en,daily_life
+Bức ảnh kỷ niệm,Memorial photo,vi,en,daily_life
+Tranh vẽ,Painting,vi,en,daily_life
+Vẽ tranh,Drawing,vi,en,daily_life
+Điêu khắc,Sculpture,vi,en,daily_life
+Bảo tàng,Museum,vi,en,daily_life
+Nhà triển lãm,Exhibition hall,vi,en,daily_life
+Công viên giải trí,Amusement park,vi,en,daily_life
+Vườn thú,Zoo,vi,en,daily_life
+Thủy cung,Aquarium,vi,en,daily_life
+Thể thao,Sports,vi,en,daily_life
+Sân vận động,Stadium,vi,en,daily_life
+Huấn luyện viên,Coach,vi,en,daily_life
+Vận động viên,Athlete,vi,en,daily_life
+Trọng tài,Referee,vi,en,daily_life
+Trận đấu,Match,vi,en,daily_life
+Bóng đá,Football,vi,en,daily_life
+Bóng rổ,Basketball,vi,en,daily_life
+Bóng chuyền,Volleyball,vi,en,daily_life
+Cầu lông,Badminton,vi,en,daily_life
+Quần vợt,Tennis,vi,en,daily_life
+Bóng bàn,Table tennis,vi,en,daily_life
+Bơi lội,Swimming,vi,en,daily_life
+Bể bơi công cộng,Public swimming pool,vi,en,daily_life
+Chạy bộ,Jogging,vi,en,daily_life
+Đi bộ thể dục,Walking exercise,vi,en,daily_life
+Đạp xe đạp,Cycling,vi,en,daily_life
+Tập thể hình,Bodybuilding,vi,en,daily_life
+Phòng tập thể hình,Gym,vi,en,daily_life
+Môn võ thuật,Martial arts,vi,en,daily_life
+Leo núi,Mountain climbing,vi,en,daily_life
+Cắm trại,Camping,vi,en,daily_life
+Lều cắm trại,Camping tent,vi,en,daily_life
+Túi ngủ dã ngoại,Sleeping bag,vi,en,daily_life
+Lửa trại,Campfire,vi,en,daily_life
+Du lịch sinh thái,Ecotourism,vi,en,daily_life
+Khách sạn nghỉ dưỡng,Resort hotel,vi,en,daily_life
+Khu nghỉ dưỡng,Holiday resort,vi,en,daily_life
+Nhà nghỉ bình dân,Motel,vi,en,daily_life
+Phòng đơn,Single room,vi,en,daily_life
+Phòng đôi,Double room,vi,en,daily_life
+Lễ tân khách sạn,Hotel reception,vi,en,daily_life
+Đặt phòng trước,Room reservation,vi,en,daily_life
+Trả phòng khách sạn,Hotel check-out,vi,en,daily_life
+Nhận phòng khách sạn,Hotel check-in,vi,en,daily_life
+Hướng dẫn viên du lịch,Tour guide,vi,en,daily_life
+Bản đồ du lịch,Tourist map,vi,en,daily_life
+Danh lam thắng cảnh,Scenic spot,vi,en,daily_life
+Di tích lịch sử,Historical relic,vi,en,daily_life
+Đồ lưu niệm,Souvenir,vi,en,daily_life
+Bưu thiếp,Postcard,vi,en,daily_life
+Lễ hội truyền thống,Traditional festival,vi,en,daily_life
+Trò chơi điện tử,Video game,vi,en,daily_life
+Trò chơi cờ vua,Chess game,vi,en,daily_life
+Câu cá thư giãn,Leisure fishing,vi,en,daily_life
+Cảm xúc,Emotion,vi,en,daily_life
+Hạnh phúc,Happiness,vi,en,daily_life
+Niềm vui,Joy,vi,en,daily_life
+Nụ cười rạng rỡ,Radiant smile,vi,en,daily_life
+Nỗi buồn,Sadness,vi,en,daily_life
+Nước mắt,Tears,vi,en,daily_life
+Cơn giận dữ,Anger,vi,en,daily_life
+Nỗi sợ hãi,Fear,vi,en,daily_life
+Sự ngạc nhiên,Surprise,vi,en,daily_life
+Sự lo lắng,Anxiety,vi,en,daily_life
+Sự hồi hộp,Nervousness,vi,en,daily_life
+Sự thất vọng,Disappointment,vi,en,daily_life
+Niềm hy vọng,Hope,vi,en,daily_life
+Lòng can đảm,Courage,vi,en,daily_life
+Sự tự tin,Confidence,vi,en,daily_life
+Sự xấu hổ,Shame,vi,en,daily_life
+Sự tò mò,Curiosity,vi,en,daily_life
+Sự cô đơn,Loneliness,vi,en,daily_life
+Bình yên,Peacefulness,vi,en,daily_life
+Sự hài lòng,Satisfaction,vi,en,daily_life
+Tính cách,Personality,vi,en,daily_life
+Thật thà,Honest,vi,en,daily_life
+Dũng cảm,Brave,vi,en,daily_life
+Nhân hậu,Benevolent,vi,en,daily_life
+Kiên nhẫn,Patient,vi,en,daily_life
+Nóng nảy,Hot-tempered,vi,en,daily_life
+Chăm chỉ,Hardworking,vi,en,daily_life
+Lười biếng,Lazy,vi,en,daily_life
+Thông minh,Intelligent,vi,en,daily_life
+Khéo léo,Skillful,vi,en,daily_life
+Hài hước,Humorous,vi,en,daily_life
+Nghiêm túc,Serious,vi,en,daily_life
+Tự lập,Independent,vi,en,daily_life
+Chu đáo,Thoughtful,vi,en,daily_life
+Lạc quan,Optimistic,vi,en,daily_life
+Bi quan,Pessimistic,vi,en,daily_life
+Trạng thái tinh thần,Mental condition,vi,en,daily_life
+Tỉnh táo,Alert,vi,en,daily_life
+Buồn ngủ,Sleepy,vi,en,daily_life
+Đói bụng,Hungry,vi,en,daily_life
+Khát nước,Thirsty,vi,en,daily_life
+No bụng,Full,vi,en,daily_life
+Mệt mỏi rã rời,Exhausted,vi,en,daily_life
+Thoải mái,Comfortable,vi,en,daily_life
+Căng thẳng,Stressed,vi,en,daily_life
+Khỏe khoắn,Energetic,vi,en,daily_life
+Đau đớn,Painful,vi,en,daily_life
+Bận rộn,Busy,vi,en,daily_life
+Rảnh rỗi,Idle,vi,en,daily_life
+Bình tĩnh,Calm,vi,en,daily_life
+Thức dậy,Waking up,vi,en,daily_life
+Rời giường,Getting out of bed,vi,en,daily_life
+Đánh răng,Brushing teeth,vi,en,daily_life
+Rửa mặt,Washing face,vi,en,daily_life
+Tắm rửa,Taking a bath,vi,en,daily_life
+Chải tóc,Combing hair,vi,en,daily_life
+Mặc quần áo,Dressing up,vi,en,daily_life
+Đi giày,Putting on shoes,vi,en,daily_life
+Ra khỏi nhà,Leaving home,vi,en,daily_life
+Đi bộ,Walking,vi,en,daily_life
+Đi làm,Going to work,vi,en,daily_life
+Đi học,Going to school,vi,en,daily_life
+Trở về nhà,Returning home,vi,en,daily_life
+Nấu bữa tối,Cooking dinner,vi,en,daily_life
+Rửa bát đĩa,Washing dishes,vi,en,daily_life
+Dọn dẹp nhà cửa,Cleaning the house,vi,en,daily_life
+Giặt giũ,Doing laundry,vi,en,daily_life
+Phơi quần áo,Hanging clothes,vi,en,daily_life
+Gấp quần áo,Folding clothes,vi,en,daily_life
+Ủi quần áo,Ironing clothes,vi,en,daily_life
+Tưới cây,Watering plants,vi,en,daily_life
+Đổ rác,Taking out trash,vi,en,daily_life
+Mở cửa,Opening door,vi,en,daily_life
+Đóng cửa,Closing door,vi,en,daily_life
+Bật đèn,Turning on light,vi,en,daily_life
+Tắt đèn,Turning off light,vi,en,daily_life
+Sạc pin điện thoại,Charging phone,vi,en,daily_life
+Trả lời điện thoại,Answering phone,vi,en,daily_life
+Gửi tin nhắn,Sending message,vi,en,daily_life
+Đọc tin tức,Reading news,vi,en,daily_life
+Xem truyền hình,Watching television,vi,en,daily_life
+Lướt mạng internet,Browsing internet,vi,en,daily_life
+Trò chuyện bạn bè,Chatting with friends,vi,en,daily_life
+Tập thể dục buổi sáng,Morning exercise,vi,en,daily_life
+Uống nước lọc,Drinking water,vi,en,daily_life
+Nghỉ ngơi giải lao,Taking a break,vi,en,daily_life
+Thư giãn,Relaxing,vi,en,daily_life
+Đặt chuông báo thức,Setting alarm,vi,en,daily_life
+Đi ngủ,Going to sleep,vi,en,daily_life
+Hít thở sâu,Taking deep breath,vi,en,daily_life
+Mỉm cười,Smiling,vi,en,daily_life
+Gật đầu,Nodding,vi,en,daily_life
+Lắc đầu,Shaking head,vi,en,daily_life
+Bắt tay,Shaking hands,vi,en,daily_life
+Ôm chào,Hugging,vi,en,daily_life
+Lắng nghe,Listening,vi,en,daily_life
+Quan sát,Observing,vi,en,daily_life
+Suy nghĩ,Thinking,vi,en,daily_life
+Ghi nhớ,Remembering,vi,en,daily_life
+Quên lãng,Forgetting,vi,en,daily_life

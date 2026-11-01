@@ -1,0 +1,451 @@
+﻿source_text,translated_text,source_language,target_language,domain
+Xin chào,Hello,vi,en,daily_life
+Chào buổi sáng,Good morning,vi,en,daily_life
+Chào buổi trưa,Good afternoon,vi,en,daily_life
+Chào buổi tối,Good evening,vi,en,daily_life
+Chúc ngủ ngon,Good night,vi,en,daily_life
+Tạm biệt,Goodbye,vi,en,daily_life
+Hẹn gặp lại,See you again,vi,en,daily_life
+Hẹn sớm gặp lại,See you soon,vi,en,daily_life
+Hẹn ngày mai,See you tomorrow,vi,en,daily_life
+Chúc may mắn,Good luck,vi,en,daily_life
+Cảm ơn,Thank you,vi,en,daily_life
+Cảm ơn rất nhiều,Thank you very much,vi,en,daily_life
+Không có chi,You're welcome,vi,en,daily_life
+Đừng bận tâm,Never mind,vi,en,daily_life
+Xin lỗi,Sorry,vi,en,daily_life
+Xin thứ lỗi,Excuse me,vi,en,daily_life
+Làm ơn,Please,vi,en,daily_life
+Vui lòng,Kindly,vi,en,daily_life
+Rất hân hạnh,My pleasure,vi,en,daily_life
+Rất vui được gặp,Nice to meet you,vi,en,daily_life
+Chúc mừng,Congratulations,vi,en,daily_life
+Chúc mừng sinh nhật,Happy birthday,vi,en,daily_life
+Chúc mừng năm mới,Happy New Year,vi,en,daily_life
+Giáng sinh vui vẻ,Merry Christmas,vi,en,daily_life
+Chúc một ngày tốt lành,Have a nice day,vi,en,daily_life
+Chúc ngon miệng,Bon appetit,vi,en,daily_life
+Chúc chuyến đi vui vẻ,Have a nice trip,vi,en,daily_life
+Bảo trọng,Take care,vi,en,daily_life
+Hoan nghênh,Welcome,vi,en,daily_life
+Cho phép tôi,Allow me,vi,en,daily_life
+Không sao đâu,It's alright,vi,en,daily_life
+Tất nhiên rồi,Of course,vi,en,daily_life
+Chắc chắn rồi,Certainly,vi,en,daily_life
+Đồng ý,Agreed,vi,en,daily_life
+Từ chối,Refusal,vi,en,daily_life
+Lời xin lỗi,Apology,vi,en,daily_life
+Lời cảm ơn,Gratitude,vi,en,daily_life
+Lời chào,Greeting,vi,en,daily_life
+Lời chúc,Wish,vi,en,daily_life
+Sự tôn trọng,Respect,vi,en,daily_life
+Lịch sự,Polite,vi,en,daily_life
+Thân thiện,Friendly,vi,en,daily_life
+Nhiệt tình,Enthusiastic,vi,en,daily_life
+Chân thành,Sincere,vi,en,daily_life
+Tốt bụng,Kind,vi,en,daily_life
+Hào phóng,Generous,vi,en,daily_life
+Khiêm tốn,Modest,vi,en,daily_life
+Cởi mở,Open-minded,vi,en,daily_life
+Thấu hiểu,Understanding,vi,en,daily_life
+Lòng biết ơn,Appreciation,vi,en,daily_life
+Con người,Human,vi,en,daily_life
+Cá nhân,Individual,vi,en,daily_life
+Đàn ông,Man,vi,en,daily_life
+Phụ nữ,Woman,vi,en,daily_life
+Trẻ em,Child,vi,en,daily_life
+Trẻ sơ sinh,Infant,vi,en,daily_life
+Thiếu niên,Teenager,vi,en,daily_life
+Người lớn,Adult,vi,en,daily_life
+Người cao tuổi,Elderly person,vi,en,daily_life
+Gia đình,Family,vi,en,daily_life
+Bố mẹ,Parents,vi,en,daily_life
+Bố,Father,vi,en,daily_life
+Mẹ,Mother,vi,en,daily_life
+Con trai,Son,vi,en,daily_life
+Con gái,Daughter,vi,en,daily_life
+Anh trai,Older brother,vi,en,daily_life
+Em trai,Younger brother,vi,en,daily_life
+Chị gái,Older sister,vi,en,daily_life
+Em gái,Younger sister,vi,en,daily_life
+Ông nội,Paternal grandfather,vi,en,daily_life
+Bà nội,Paternal grandmother,vi,en,daily_life
+Ông ngoại,Maternal grandfather,vi,en,daily_life
+Bà ngoại,Maternal grandmother,vi,en,daily_life
+Cháu nội,Paternal grandchild,vi,en,daily_life
+Cháu ngoại,Maternal grandchild,vi,en,daily_life
+Chú,Uncle,vi,en,daily_life
+Bác,Older uncle,vi,en,daily_life
+Cô,Aunt,vi,en,daily_life
+Dì,Maternal aunt,vi,en,daily_life
+Cậu,Maternal uncle,vi,en,daily_life
+Cháu trai,Nephew,vi,en,daily_life
+Cháu gái,Niece,vi,en,daily_life
+Anh chị em họ,Cousin,vi,en,daily_life
+Vợ,Wife,vi,en,daily_life
+Chồng,Husband,vi,en,daily_life
+Vợ chồng,Married couple,vi,en,daily_life
+Hôn nhân,Marriage,vi,en,daily_life
+Đám cưới,Wedding,vi,en,daily_life
+Hôn lễ,Wedding ceremony,vi,en,daily_life
+Chú rể,Groom,vi,en,daily_life
+Cô dâu,Bride,vi,en,daily_life
+Bố mẹ chồng,Parents-in-law,vi,en,daily_life
+Con dâu,Daughter-in-law,vi,en,daily_life
+Con rể,Son-in-law,vi,en,daily_life
+Bạn bè,Friends,vi,en,daily_life
+Bạn thân,Best friend,vi,en,daily_life
+Bạn cùng lớp,Classmate,vi,en,daily_life
+Bạn cùng phòng,Roommate,vi,en,daily_life
+Đồng nghiệp,Colleague,vi,en,daily_life
+Đối tác,Partner,vi,en,daily_life
+Hàng xóm,Neighbor,vi,en,daily_life
+Người quen,Acquaintance,vi,en,daily_life
+Người lạ,Stranger,vi,en,daily_life
+Tình bạn,Friendship,vi,en,daily_life
+Tình yêu,Love,vi,en,daily_life
+Tình thân,Affection,vi,en,daily_life
+Sự gắn kết,Bonding,vi,en,daily_life
+Mối quan hệ,Relationship,vi,en,daily_life
+Sự tin tưởng,Trust,vi,en,daily_life
+Sự quan tâm,Care,vi,en,daily_life
+Sự chia sẻ,Sharing,vi,en,daily_life
+Sự giúp đỡ,Help,vi,en,daily_life
+Người bảo hộ,Guardian,vi,en,daily_life
+Thế hệ,Generation,vi,en,daily_life
+Tổ tiên,Ancestor,vi,en,daily_life
+Hậu duệ,Descendant,vi,en,daily_life
+Trưởng họ,Clan leader,vi,en,daily_life
+Dòng họ,Lineage,vi,en,daily_life
+Gia phả,Genealogy,vi,en,daily_life
+Họ hàng,Relatives,vi,en,daily_life
+Ngôi nhà,House,vi,en,daily_life
+Căn hộ,Apartment,vi,en,daily_life
+Tòa nhà,Building,vi,en,daily_life
+Phòng khách,Living room,vi,en,daily_life
+Phòng ngủ,Bedroom,vi,en,daily_life
+Phòng bếp,Kitchen,vi,en,daily_life
+Phòng ăn,Dining room,vi,en,daily_life
+Phòng tắm,Bathroom,vi,en,daily_life
+Nhà vệ sinh,Restroom,vi,en,daily_life
+Ban công,Balcony,vi,en,daily_life
+Sân thượng,Rooftop,vi,en,daily_life
+Sân vườn,Garden,vi,en,daily_life
+Hành lang,Corridor,vi,en,daily_life
+Lối vào,Entrance,vi,en,daily_life
+Cầu thang,Staircase,vi,en,daily_life
+Thang máy,Elevator,vi,en,daily_life
+Tầng hầm,Basement,vi,en,daily_life
+Gác xép,Attic,vi,en,daily_life
+Cửa chính,Main door,vi,en,daily_life
+Cửa sổ,Window,vi,en,daily_life
+Rèm cửa,Curtain,vi,en,daily_life
+Tường nhà,Wall,vi,en,daily_life
+Trần nhà,Ceiling,vi,en,daily_life
+Sàn nhà,Floor,vi,en,daily_life
+Mái nhà,Roof,vi,en,daily_life
+Bàn làm việc,Desk,vi,en,daily_life
+Bàn ăn,Dining table,vi,en,daily_life
+Ghế tựa,Chair,vi,en,daily_life
+Ghế bành,Armchair,vi,en,daily_life
+Ghế sô pha,Sofa,vi,en,daily_life
+Giường ngủ,Bed,vi,en,daily_life
+Nệm ngủ,Mattress,vi,en,daily_life
+Gối đầu,Pillow,vi,en,daily_life
+Chăn ấm,Blanket,vi,en,daily_life
+Ga trải giường,Bed sheet,vi,en,daily_life
+Tủ quần áo,Wardrobe,vi,en,daily_life
+Tủ sách,Bookshelf,vi,en,daily_life
+Kệ để giày,Shoe rack,vi,en,daily_life
+Đèn chùm,Chandelier,vi,en,daily_life
+Đèn bàn,Desk lamp,vi,en,daily_life
+Đèn ngủ,Night light,vi,en,daily_life
+Quạt trần,Ceiling fan,vi,en,daily_life
+Quạt điện,Electric fan,vi,en,daily_life
+Máy điều hòa,Air conditioner,vi,en,daily_life
+Máy sưởi,Space heater,vi,en,daily_life
+Tủ lạnh,Refrigerator,vi,en,daily_life
+Máy giặt,Washing machine,vi,en,daily_life
+Máy sấy quần áo,Clothes dryer,vi,en,daily_life
+Máy rửa bát,Dishwasher,vi,en,daily_life
+Lò vi sóng,Microwave,vi,en,daily_life
+Lò nướng,Oven,vi,en,daily_life
+Bếp gas,Gas stove,vi,en,daily_life
+Bếp từ,Induction cooker,vi,en,daily_life
+Nồi cơm điện,Rice cooker,vi,en,daily_life
+Ấm đun nước,Electric kettle,vi,en,daily_life
+Máy xay sinh tố,Blender,vi,en,daily_life
+Máy hút bụi,Vacuum cleaner,vi,en,daily_life
+Bàn là,Clothes iron,vi,en,daily_life
+Cây lau nhà,Mop,vi,en,daily_life
+Chổi quét nhà,Broom,vi,en,daily_life
+Hót rác,Dustpan,vi,en,daily_life
+Thùng rác,Trash can,vi,en,daily_life
+Bồn rửa bát,Kitchen sink,vi,en,daily_life
+Bồn rửa mặt,Washbasin,vi,en,daily_life
+Vòi hoa sen,Shower head,vi,en,daily_life
+Bồn tắm,Bathtub,vi,en,daily_life
+Bồn cầu,Toilet bowl,vi,en,daily_life
+Gương soi,Mirror,vi,en,daily_life
+Khăn tắm,Bath towel,vi,en,daily_life
+Bàn chải đánh răng,Toothbrush,vi,en,daily_life
+Kem đánh răng,Toothpaste,vi,en,daily_life
+Xà phòng,Soap,vi,en,daily_life
+Dầu gội đầu,Shampoo,vi,en,daily_life
+Sữa tắm,Shower gel,vi,en,daily_life
+Ổ cắm điện,Power outlet,vi,en,daily_life
+Công tắc đèn,Light switch,vi,en,daily_life
+Dây điện,Electric wire,vi,en,daily_life
+Khóa cửa,Door lock,vi,en,daily_life
+Chìa khóa,Key,vi,en,daily_life
+Chuông cửa,Doorbell,vi,en,daily_life
+Bữa ăn,Meal,vi,en,daily_life
+Bữa sáng,Breakfast,vi,en,daily_life
+Bữa trưa,Lunch,vi,en,daily_life
+Bữa tối,Dinner,vi,en,daily_life
+Bữa phụ,Snack,vi,en,daily_life
+Cơm trắng,Steamed rice,vi,en,daily_life
+Gạo tẻ,White rice,vi,en,daily_life
+Gạo nếp,Glutinous rice,vi,en,daily_life
+Bánh mì,Bread,vi,en,daily_life
+Bánh ngọt,Cake,vi,en,daily_life
+Bánh quy,Biscuit,vi,en,daily_life
+Mì sợi,Noodles,vi,en,daily_life
+Phở bò,Beef noodle soup,vi,en,daily_life
+Bún chả,Grilled pork with noodles,vi,en,daily_life
+Canh rau,Vegetable soup,vi,en,daily_life
+Cháo gà,Chicken porridge,vi,en,daily_life
+Thịt lợn,Pork,vi,en,daily_life
+Thịt bò,Beef,vi,en,daily_life
+Thịt gà,Chicken meat,vi,en,daily_life
+Thịt vịt,Duck meat,vi,en,daily_life
+Thịt cừu,Lamb,vi,en,daily_life
+Hải sản,Seafood,vi,en,daily_life
+Cá tươi,Fresh fish,vi,en,daily_life
+Tôm sú,Tiger prawn,vi,en,daily_life
+Cua biển,Sea crab,vi,en,daily_life
+Mực ống,Squid,vi,en,daily_life
+Trứng gà,Chicken egg,vi,en,daily_life
+Trứng vịt,Duck egg,vi,en,daily_life
+Đậu phụ,Tofu,vi,en,daily_life
+Nấm rơm,Straw mushroom,vi,en,daily_life
+Rau muống,Morning glory,vi,en,daily_life
+Rau cải,Mustard greens,vi,en,daily_life
+Rau xà lách,Lettuce,vi,en,daily_life
+Bắp cải,Cabbage,vi,en,daily_life
+Cà chua,Tomato,vi,en,daily_life
+Cà rốt,Carrot,vi,en,daily_life
+Khoai tây,Potato,vi,en,daily_life
+Khoai lang,Sweet potato,vi,en,daily_life
+Hành tây,Onion,vi,en,daily_life
+Tỏi ta,Garlic,vi,en,daily_life
+Gừng tươi,Fresh ginger,vi,en,daily_life
+Ớt cay,Chili pepper,vi,en,daily_life
+Hạt tiêu,Black pepper,vi,en,daily_life
+Muối ăn,Table salt,vi,en,daily_life
+Đường cát,Granulated sugar,vi,en,daily_life
+Nước mắm,Fish sauce,vi,en,daily_life
+Xì dầu,Soy sauce,vi,en,daily_life
+Giấm ăn,Vinegar,vi,en,daily_life
+Dầu ăn,Cooking oil,vi,en,daily_life
+Bơ lạt,Butter,vi,en,daily_life
+Phô mai,Cheese,vi,en,daily_life
+Sữa tươi,Fresh milk,vi,en,daily_life
+Sữa chua,Yogurt,vi,en,daily_life
+Nước lọc,Purified water,vi,en,daily_life
+Nước khoáng,Mineral water,vi,en,daily_life
+Nước ngọt,Soft drink,vi,en,daily_life
+Nước ép trái cây,Fruit juice,vi,en,daily_life
+Trà xanh,Green tea,vi,en,daily_life
+Trà sen,Lotus tea,vi,en,daily_life
+Trà sữa,Milk tea,vi,en,daily_life
+Cà phê đen,Black coffee,vi,en,daily_life
+Cà phê sữa,Milk coffee,vi,en,daily_life
+Rượu vang,Wine,vi,en,daily_life
+Bia lạnh,Cold beer,vi,en,daily_life
+Quả táo,Apple,vi,en,daily_life
+Quả chuối,Banana,vi,en,daily_life
+Quả cam,Orange,vi,en,daily_life
+Quả chanh,Lemon,vi,en,daily_life
+Quả dưa hấu,Watermelon,vi,en,daily_life
+Quả xoài,Mango,vi,en,daily_life
+Quả ổi,Guava,vi,en,daily_life
+Quả dứa,Pineapple,vi,en,daily_life
+Quả nho,Grape,vi,en,daily_life
+Quả dâu tây,Strawberry,vi,en,daily_life
+Quả thanh long,Dragon fruit,vi,en,daily_life
+Quả dừa,Coconut,vi,en,daily_life
+Quả đu đủ,Papaya,vi,en,daily_life
+Nấu ăn,Cooking,vi,en,daily_life
+Luộc rau,Boiled greens,vi,en,daily_life
+Xào thịt,Stir-fried meat,vi,en,daily_life
+Chiên giòn,Deep frying,vi,en,daily_life
+Nướng than,Charcoal grilling,vi,en,daily_life
+Hấp chín,Steaming,vi,en,daily_life
+Hầm xương,Simmering bone,vi,en,daily_life
+Nêm nếm,Seasoning,vi,en,daily_life
+Cắt lát,Slicing,vi,en,daily_life
+Băm nhỏ,Mincing,vi,en,daily_life
+Trộn đều,Mixing,vi,en,daily_life
+Bát ăn cơm,Rice bowl,vi,en,daily_life
+Đĩa sứ,Ceramic plate,vi,en,daily_life
+Đũa gỗ,Wooden chopsticks,vi,en,daily_life
+Thìa ăn,Spoon,vi,en,daily_life
+Dĩa ăn,Fork,vi,en,daily_life
+Dao làm bếp,Kitchen knife,vi,en,daily_life
+Thớt gỗ,Chopping board,vi,en,daily_life
+Chảo rán,Frying pan,vi,en,daily_life
+Nồi canh,Soup pot,vi,en,daily_life
+Cốc thủy tinh,Glass cup,vi,en,daily_life
+Tách trà,Teacup,vi,en,daily_life
+Gia vị,Condiment,vi,en,daily_life
+Quần áo,Clothes,vi,en,daily_life
+Áo sơ mi,Shirt,vi,en,daily_life
+Áo phông,T-shirt,vi,en,daily_life
+Áo khoác,Jacket,vi,en,daily_life
+Áo len,Sweater,vi,en,daily_life
+Áo mưa,Raincoat,vi,en,daily_life
+Áo vest,Suit jacket,vi,en,daily_life
+Áo dài,Ao dai,vi,en,daily_life
+Váy liền,Dress,vi,en,daily_life
+Chân váy,Skirt,vi,en,daily_life
+Quần dài,Trousers,vi,en,daily_life
+Quần bò,Jeans,vi,en,daily_life
+Quần ngắn,Shorts,vi,en,daily_life
+Đồ lót,Underwear,vi,en,daily_life
+Đồ ngủ,Pajamas,vi,en,daily_life
+Đồ bơi,Swimsuit,vi,en,daily_life
+Bộ comple,Formal suit,vi,en,daily_life
+Đồng phục,Uniform,vi,en,daily_life
+Cà vạt,Necktie,vi,en,daily_life
+Khăn quàng cổ,Scarf,vi,en,daily_life
+Găng tay,Gloves,vi,en,daily_life
+Tất chân,Socks,vi,en,daily_life
+Mũ bảo hiểm,Helmet,vi,en,daily_life
+Mũ lưỡi trai,Cap,vi,en,daily_life
+Mũ rộng vành,Wide-brimmed hat,vi,en,daily_life
+Giày da,Leather shoes,vi,en,daily_life
+Giày thể thao,Sneakers,vi,en,daily_life
+Giày cao gót,High heels,vi,en,daily_life
+Dép lê,Slippers,vi,en,daily_life
+Xăng đan,Sandals,vi,en,daily_life
+Thắt lưng,Leather belt,vi,en,daily_life
+Ví tiền,Wallet,vi,en,daily_life
+Túi xách,Handbag,vi,en,daily_life
+Ba lô,Backpack,vi,en,daily_life
+Vali du lịch,Suitcase,vi,en,daily_life
+Đồng hồ đeo tay,Wristwatch,vi,en,daily_life
+Kính râm,Sunglasses,vi,en,daily_life
+Kính cận,Prescription glasses,vi,en,daily_life
+Dây chuyền,Necklace,vi,en,daily_life
+Nhẫn vàng,Gold ring,vi,en,daily_life
+Bông tai,Earrings,vi,en,daily_life
+Vòng tay,Bracelet,vi,en,daily_life
+Cài áo,Brooch,vi,en,daily_life
+Ô che mưa,Umbrella,vi,en,daily_life
+Khẩu trang,Face mask,vi,en,daily_life
+Nước hoa,Perfume,vi,en,daily_life
+Son môi,Lipstick,vi,en,daily_life
+Phấn trang điểm,Face powder,vi,en,daily_life
+Kem dưỡng da,Skin moisturizer,vi,en,daily_life
+Kem chống nắng,Sunscreen,vi,en,daily_life
+Khăn tay,Handkerchief,vi,en,daily_life
+Cắt tóc,Haircut,vi,en,daily_life
+Kiểu tóc,Hairstyle,vi,en,daily_life
+Móng tay,Fingernail,vi,en,daily_life
+Nụ cười,Smile,vi,en,daily_life
+Chiều cao,Height,vi,en,daily_life
+Cân nặng,Weight,vi,en,daily_life
+Vóc dáng,Body shape,vi,en,daily_life
+Gương mặt,Face,vi,en,daily_life
+Làn da,Complexion,vi,en,daily_life
+Cơ thể,Body,vi,en,daily_life
+Đầu,Head,vi,en,daily_life
+Mái tóc,Hair,vi,en,daily_life
+Trán,Forehead,vi,en,daily_life
+Mắt,Eye,vi,en,daily_life
+Mũi,Nose,vi,en,daily_life
+Miệng,Mouth,vi,en,daily_life
+Môi,Lip,vi,en,daily_life
+Răng,Tooth,vi,en,daily_life
+Lưỡi,Tongue,vi,en,daily_life
+Tai,Ear,vi,en,daily_life
+Cổ,Neck,vi,en,daily_life
+Vai,Shoulder,vi,en,daily_life
+Cánh tay,Arm,vi,en,daily_life
+Khuỷu tay,Elbow,vi,en,daily_life
+Cổ tay,Wrist,vi,en,daily_life
+Bàn tay,Hand,vi,en,daily_life
+Ngón tay,Finger,vi,en,daily_life
+Ngực,Chest,vi,en,daily_life
+Bụng,Abdomen,vi,en,daily_life
+Lưng,Back,vi,en,daily_life
+Eo,Waist,vi,en,daily_life
+Hông,Hip,vi,en,daily_life
+Chân,Leg,vi,en,daily_life
+Đầu gối,Knee,vi,en,daily_life
+Bàn chân,Foot,vi,en,daily_life
+Ngón chân,Toe,vi,en,daily_life
+Tim,Heart,vi,en,daily_life
+Phổi,Lungs,vi,en,daily_life
+Dạ dày,Stomach,vi,en,daily_life
+Sức khỏe,Health,vi,en,daily_life
+Thể lực,Physical strength,vi,en,daily_life
+Tinh thần,Mental state,vi,en,daily_life
+Bệnh viện,Hospital,vi,en,daily_life
+Phòng khám,Medical clinic,vi,en,daily_life
+Hiệu thuốc,Pharmacy,vi,en,daily_life
+Bác sĩ,Doctor,vi,en,daily_life
+Bác sĩ nha khoa,Dentist,vi,en,daily_life
+Y tá,Nurse,vi,en,daily_life
+Dược sĩ,Pharmacist,vi,en,daily_life
+Bệnh nhân,Patient,vi,en,daily_life
+Khám bệnh,Medical examination,vi,en,daily_life
+Đơn thuốc,Prescription,vi,en,daily_life
+Thuốc tây,Western medicine,vi,en,daily_life
+Thuốc kháng sinh,Antibiotic,vi,en,daily_life
+Thuốc giảm đau,Painkiller,vi,en,daily_life
+Thuốc hạ sốt,Antipyretic,vi,en,daily_life
+Thuốc cảm cúm,Cold medicine,vi,en,daily_life
+Thuốc nhỏ mắt,Eye drops,vi,en,daily_life
+Băng cá nhân,Bandage,vi,en,daily_life
+Cồn sát trùng,Antiseptic alcohol,vi,en,daily_life
+Nhiệt kế,Thermometer,vi,en,daily_life
+Máy đo huyết áp,Blood pressure monitor,vi,en,daily_life
+Cơn sốt,Fever,vi,en,daily_life
+Cơn đau đầu,Headache,vi,en,daily_life
+Cơn đau bụng,Stomachache,vi,en,daily_life
+Đau răng,Toothache,vi,en,daily_life
+Cảm cúm,Flu,vi,en,daily_life
+Cảm lạnh,Common cold,vi,en,daily_life
+Ho khan,Dry cough,vi,en,daily_life
+Viêm họng,Sore throat,vi,en,daily_life
+Chóng mặt,Dizziness,vi,en,daily_life
+Buồn nôn,Nausea,vi,en,daily_life
+Mệt mỏi,Fatigue,vi,en,daily_life
+Dị ứng,Allergy,vi,en,daily_life
+Vết thương,Wound,vi,en,daily_life
+Vết bầm,Bruise,vi,en,daily_life
+Gãy xương,Bone fracture,vi,en,daily_life
+Vết bỏng,Burn,vi,en,daily_life
+Chảy máu,Bleeding,vi,en,daily_life
+Tiêm vắc xin,Vaccination,vi,en,daily_life
+Cấp cứu,Emergency,vi,en,daily_life
+Xe cứu thương,Ambulance,vi,en,daily_life
+Hồi phục,Recovery,vi,en,daily_life
+Vệ sinh cá nhân,Personal hygiene,vi,en,daily_life
+Tập thể dục,Physical exercise,vi,en,daily_life
+Giấc ngủ ngon,Good sleep,vi,en,daily_life
+Chế độ ăn uống,Diet,vi,en,daily_life
+Lối sống lành mạnh,Healthy lifestyle,vi,en,daily_life
+Bảo hiểm y tế,Health insurance,vi,en,daily_life
+Giao thông,Traffic,vi,en,daily_life
+Phương tiện giao thông,Means of transport,vi,en,daily_life
+Đường phố,Street,vi,en,daily_life
+Con đường,Road,vi,en,daily_life
+Ngã tư,Intersection,vi,en,daily_life
+Vỉa hè,Sidewalk,vi,en,daily_life
+Lối đi bộ,Pedestrian walkway,vi,en,daily_life
+Cầu vượt,Overpass,vi,en,daily_life
+Hầm chui,Underpass,vi,en,daily_life
+Đèn tín hiệu giao thông,Traffic light,vi,en,daily_life
