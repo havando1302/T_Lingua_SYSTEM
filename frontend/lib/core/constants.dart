@@ -39,7 +39,7 @@ class ApiEndpointConfig {
 final apiEndpointConfig = ApiEndpointConfig(
   const String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000',
+    defaultValue: 'https://culture-tapioca-sturdily.ngrok-free.dev',
   ),
 );
 String get httpBaseUrl => apiEndpointConfig.baseUri.toString();
