@@ -11,11 +11,13 @@ import re
 import shutil
 import tempfile
 import threading
+from collections import Counter
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from typing import Optional
 
 from app.services.translation_cache import invalidate_all, invalidate_owner
+from app.utils.translation_safety import PROTECTED_ENTITY
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 _TM_FILE = os.path.join(_DATA_DIR, "translation_memory.json")
@@ -55,16 +57,15 @@ _NEGATION_TOKENS = {
     "en": {
         "not", "no", "never", "without", "cannot", "can't", "won't",
         "don't", "didn't", "isn't", "aren't",
+        "hasn't", "haven't", "hadn't", "wasn't", "weren't", "wouldn't", "shouldn't", "couldn't", "mustn't", "doesn't",
     },
 }
-_ENTITY_TOKEN = re.compile(
-    r"[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*", re.IGNORECASE,
-)
+_ENTITY_TOKEN = PROTECTED_ENTITY
 
 
-def _fuzzy_signature(text: str, language: str) -> tuple[frozenset[str], frozenset[str]]:
-    entities = frozenset(match.casefold() for match in _ENTITY_TOKEN.findall(text))
-    words = set(re.findall(r"[^\W_]+(?:['’][^\W_]+)?", text.casefold(), flags=re.UNICODE))
+def _fuzzy_signature(text: str, language: str) -> tuple[tuple[tuple[str, int], ...], frozenset[str]]:
+    entities = tuple(sorted(Counter(match.casefold() for match in _ENTITY_TOKEN.findall(text)).items()))
+    words = set(re.findall(r"[^\W_]+(?:['’][^\W_]+)?", text.casefold().replace("’", "'"), flags=re.UNICODE))
     negations = frozenset(words & _NEGATION_TOKENS.get(normalize_lang_code(language), set()))
     return entities, negations
 

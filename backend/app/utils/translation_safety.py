@@ -1,12 +1,18 @@
 """Shared rules for internal translation markers and glossary eligibility."""
 import re
 
+PROTECTED_ENTITY = re.compile(
+    r"(?<!\w)[+-]?[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*(?!\w)", re.IGNORECASE,
+)
+
 
 # NLLB can insert whitespace or punctuation between any marker characters.
 _GAP = r"[\s._\-\u200b]*"
 INTERNAL_PLACEHOLDER = re.compile(
-    _GAP.join("ZXQTL") + _GAP + "(?:" + _GAP.join("ENTITY")
-    + "|" + _GAP.join("GLOSSARY") + ")", re.IGNORECASE,
+    # The suffix is intentionally unrestricted: real NLLB output can misspell
+    # GLOSSARY as GLOSARY or repeat TL before ENTITY. The reserved prefix is
+    # enough to reject such leaks without guessing which value they represent.
+    _GAP.join("ZXQTL"), re.IGNORECASE,
 )
 
 

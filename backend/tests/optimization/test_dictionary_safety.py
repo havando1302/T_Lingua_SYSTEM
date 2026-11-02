@@ -51,7 +51,7 @@ class DictionarySafetyTests(unittest.TestCase):
             engine.dispose()
 
     def test_marker_mutations_are_detected(self):
-        for value in ("ZXQTLENTITY0Q", "ZXQTL ENTITY-0 Q", "Z X Q T L G L O S S A R Y 12 Q", "zxqtl_entity"):
+        for value in ("ZXQTLENTITY0Q", "ZXQTL ENTITY-0 Q", "Z X Q T L G L O S S A R Y 12 Q", "zxqtl_entity", "ZXQTLGLOSARY0Q", "ZXQTLTLENTITY0Q"):
             with self.subTest(value=value):
                 self.assertTrue(has_internal_placeholder(value))
         self.assertFalse(has_internal_placeholder("Phenikaa University, H3, 15%"))

@@ -172,3 +172,70 @@ def test_missing_negation_triggers_bounded_quality_retry():
     assert retried is True
     assert "missing_negation" in warnings
     assert [call["num_beams"] for call in model.calls] == [1, 3]
+
+
+def test_vietnamese_name_detection_does_not_protect_english_title_phrases():
+    names = service._vietnamese_proper_names(
+        "Cửa hàng An Nhiên ở Phú Yên đã mở cửa.", "vie_Latn",
+    )
+    assert [row["source_text"] for row in names] == ["An Nhiên", "Phú Yên"]
+    assert service._vietnamese_proper_names("The Natural Store is open.", "en") == []
+    assert service._vietnamese_proper_names("Hôm nay tôi đến trường.", "vi") == []
+
+
+def test_nllb_preserves_unlisted_vietnamese_names_and_approved_override():
+    tokenizer, model = _Tokenizer(), _Model()
+    glossary = [{"source_text": "An Nhiên", "translated_text": "An Nhien"}]
+    with patch.object(service, "_get_nllb", return_value=(model, tokenizer)):
+        translated, warnings, _ = service._translate_nllb_with_quality(
+            "Cửa hàng An Nhiên ở Phú Yên đã mở cửa.", "vie_Latn", "eng_Latn", glossary,
+        )
+    assert "An Nhien" in translated
+    assert "Phú Yên" in translated
+    assert "An Nhiên" not in translated
+    assert warnings == []
+
+
+def test_quality_guard_detects_lost_negative_sign_and_repeated_number():
+    for source, target in [("Temperature -18 C.", "Nhiệt độ 18 C."),
+                           ("Order 15 and invoice 15.", "Đơn hàng 15.")]:
+        assert "missing_number_or_code" in service._translation_quality_issues(
+            source, target, "eng_Latn", "vie_Latn", [],
+        )
+    protected, entities = service._protect_translation_entities("Temperature -18 C and growth +15%.")
+    assert [value for _, value in entities] == ["-18", "+15%"]
+    assert service._restore_translation_entities(protected, entities) == "Temperature -18 C and growth +15%."
+
+
+def test_quality_guard_recognizes_smart_apostrophe_and_extended_contractions():
+    for word in ["hasn’t", "shouldn't", "wouldn’t"]:
+        assert "missing_negation" in service._translation_quality_issues(
+            f"He {word} accept it.", "Anh ấy chấp nhận.", "eng_Latn", "vie_Latn", [],
+        )
+
+
+def test_corrupted_name_marker_falls_back_while_retaining_code_safety():
+    with patch.object(service, "_translate_nllb_candidate", side_effect=[
+        ("Đông Hải receives ZXQTLGLOSARY0Q.", [("ZXQTLGLOSSARY0Q", "Đông Hải", "Đông Hải")]),
+        ("The center receives RX11.", []),
+    ]) as candidate, patch.object(service.settings, "TRANSLATION_BEAM_SIZE", 3):
+        text, warnings, retried = service._translate_nllb_with_quality(
+            "Trung tâm Đông Hải tiếp nhận RX11.", "vie_Latn", "eng_Latn", [],
+        )
+    assert text == "The center receives RX11."
+    assert retried is True
+    assert warnings == ["proper_name_protection_fallback"]
+    assert candidate.call_args.kwargs["protect_names"] is False
+
+
+def test_omitted_name_gets_safe_fallback_even_with_quality_beam():
+    with patch.object(service, "_translate_nllb_candidate", side_effect=[
+        ("He scored three goals.", [("ZXQTLGLOSSARY0Q", "Mê Kông", "Mê Kông")]),
+        ("The Mekong team scored three goals.", []),
+    ]) as candidate, patch.object(service.settings, "TRANSLATION_BEAM_SIZE", 3):
+        text, warnings, retried = service._translate_nllb_with_quality(
+            "Đội Mê Kông ghi ba bàn.", "vie_Latn", "eng_Latn", [],
+        )
+    assert text == "The Mekong team scored three goals."
+    assert retried and warnings == ["proper_name_protection_fallback"]
+    assert candidate.call_args.kwargs["protect_names"] is False

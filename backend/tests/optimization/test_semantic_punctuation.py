@@ -6,9 +6,26 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from app.services.semantic_service import build_glossary_prompt, correct_text_semantics
+from app.utils.dictionary import refine_text_rule_based
 
 
 class SemanticPunctuationTests(unittest.TestCase):
+    def test_valid_words_and_meaning_are_not_corrupted_by_partial_typo_rules(self):
+        for text in [
+            "Tôi dạy học và sử dụng máy tính để phát triển ứng dụng.",
+            "Bên bán có trách nhiệm giao hàng.",
+            "Người bán đang kiểm tra hàng.",
+            "Tờ thu tiền được lưu tại quầy.",
+        ]:
+            with self.subTest(text=text):
+                self.assertEqual(refine_text_rule_based(text), text)
+
+    def test_typo_cleanup_is_idempotent(self):
+        text = "Tôi dùng máy tín và ứng dụn mới."
+        once = refine_text_rule_based(text)
+        self.assertEqual(once, "Tôi dùng máy tính và ứng dụng mới.")
+        self.assertEqual(refine_text_rule_based(once), once)
+
     def test_advice_with_embedded_question_is_not_direct_question(self):
         text = "Bạn nên liên lạc với bên bảo hành để kiểm tra xem ống dẫn ga có rò rỉ hay không?"
         self.assertTrue(correct_text_semantics(text, "").endswith("."))

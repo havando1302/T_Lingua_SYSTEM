@@ -28,7 +28,6 @@ _REPLACEMENTS = (
 
     # === Sai phụ âm đầu ===
     ("dời sống", "đời sống"),
-    ("dạy học", "dậy học"),
     ("giáo giục", "giáo dục"),
     ("trương trình", "chương trình"),
     ("Chương chình", "Chương trình"),
@@ -55,6 +54,13 @@ _REPLACEMENTS = (
     ("tờ thu", "sở thú"),
 )
 
+_RULES = tuple(
+    (source, re.compile(rf"(?<!\w){re.escape(source)}(?!\w)", re.IGNORECASE), target)
+    for source, target in _REPLACEMENTS
+)
+_SHORT_CLIP_ONLY = {"sjá þú", "thở thú", "tờ thu"}
+_SENTENCE_START_ONLY = {"bán có", "bán đang"}
+
 
 def _preserve_capitalization(replacement: str, matched: str) -> str:
     if not matched:
@@ -71,10 +77,15 @@ def refine_text_rule_based(text: str) -> str:
         return text
 
     updated = text
-    for source, target in _REPLACEMENTS:
-        pattern = re.compile(re.escape(source), flags=re.IGNORECASE)
+    for source, pattern, target in _RULES:
+        key = source.casefold()
+        if key in _SHORT_CLIP_ONLY and updated.strip(" .,!?;:\"'").casefold() != key:
+            continue
         updated = pattern.sub(
-            lambda match: _preserve_capitalization(target, match.group(0)),
+            lambda match: (
+                match.group(0) if key in _SENTENCE_START_ONLY and match.start() != 0
+                else _preserve_capitalization(target, match.group(0))
+            ),
             updated
         )
 

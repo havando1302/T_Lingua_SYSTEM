@@ -2,6 +2,7 @@
 import re
 import threading
 import time
+from collections import Counter
 from contextvars import ContextVar
 from typing import Any, Optional, Tuple
 
@@ -10,7 +11,7 @@ import torch
 from app.core.config import DEVICE, SOURCE_LANG, TARGET_LANG, settings
 from app.services import translation_memory as tm
 from app.services.translation_cache import GLOBAL_TRANSLATION_CACHE
-from app.utils.translation_safety import INTERNAL_PLACEHOLDER, has_internal_placeholder, is_glossary_term
+from app.utils.translation_safety import INTERNAL_PLACEHOLDER, PROTECTED_ENTITY, has_internal_placeholder, is_glossary_term
 
 # Tokenizer.src_lang is mutable and shared by both HTTP and websocket workers.
 _inference_lock = threading.RLock()
@@ -26,16 +27,14 @@ _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 # omit identifiers such as H3, RX11, 4.0 and 08:30 when they are left in the
 # sentence.  Protect only tokens that contain digits; ordinary words and names
 # still receive normal grammatical translation.
-_PROTECTED_ENTITY = re.compile(
-    r"(?<!\w)[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*(?!\w)", re.IGNORECASE
-)
+_PROTECTED_ENTITY = PROTECTED_ENTITY
 _PLACEHOLDER_PREFIX = "ZXQTLENTITY"
 _GLOSSARY_PLACEHOLDER_PREFIX = "ZXQTLGLOSSARY"
 _UNRESOLVED_PLACEHOLDER = INTERNAL_PLACEHOLDER
 _NEGATION_PATTERNS = {
     "vie_Latn": re.compile(r"(?<!\w)(?:không|chưa|chẳng|chả|đừng)(?!\w)", re.IGNORECASE),
     "eng_Latn": re.compile(
-        r"(?<!\w)(?:not|no|never|without|cannot|can't|won't|don't|didn't|isn't|aren't)(?!\w)",
+        r"(?<!\w)(?:not|no|never|without|cannot|\w+n['’]t)(?!\w)",
         re.IGNORECASE,
     ),
 }
@@ -124,6 +123,33 @@ def _protect_glossary_entities(
     return updated, protected
 
 
+def _vietnamese_proper_names(text: str, source_lang: str) -> list[dict[str, str]]:
+    """Preserve consecutive capitalized Vietnamese name words from the source.
+
+    This deliberately excludes single words and English title-case phrases.
+    Explicit approved glossary translations take precedence over these hints.
+    """
+    if tm.normalize_lang_code(source_lang) != "vi":
+        return []
+    tokens = list(re.finditer(r"[^\W\d_]+", text, flags=re.UNICODE))
+    groups: list[list[re.Match[str]]] = []
+    for token in tokens:
+        word = token.group()
+        if not word[0].isupper() or len(word) < 2 or word.isupper():
+            continue
+        if groups and text[groups[-1][-1].end():token.start()].isspace():
+            groups[-1].append(token)
+        else:
+            groups.append([token])
+    names = []
+    for group in groups:
+        if not 2 <= len(group) <= 6:
+            continue
+        name = text[group[0].start():group[-1].end()]
+        names.append({"source_text": name, "translated_text": name})
+    return names
+
+
 def _restore_glossary_entities(
     translated: str, protected: list[tuple[str, str, str]],
 ) -> str:
@@ -145,9 +171,9 @@ def _translation_quality_issues(
 ) -> list[str]:
     """Return deterministic high-risk losses suitable for retry/audit."""
     issues: list[str] = []
-    expected_entities = [value.casefold() for value in _PROTECTED_ENTITY.findall(source_text)]
-    actual_entities = [value.casefold() for value in _PROTECTED_ENTITY.findall(translated_text)]
-    if any(value not in actual_entities for value in expected_entities):
+    expected_entities = Counter(value.casefold() for value in _PROTECTED_ENTITY.findall(source_text))
+    actual_entities = Counter(value.casefold() for value in _PROTECTED_ENTITY.findall(translated_text))
+    if expected_entities - actual_entities:
         issues.append("missing_number_or_code")
     for _marker, _source, target in glossary_entities:
         if target.casefold() not in translated_text.casefold():
@@ -185,6 +211,7 @@ def _translate_nllb_candidate(
     target_lang: str,
     glossary_entries: list[dict[str, str | None]],
     beam_size: int,
+    *, protect_names: bool = True,
 ) -> tuple[str, list[tuple[str, str, str]]]:
     with _inference_lock:
         model, tokenizer = _get_nllb()
@@ -193,8 +220,11 @@ def _translate_nllb_candidate(
         if target_token_id is None or target_token_id == getattr(tokenizer, "unk_token_id", None):
             raise ValueError(f"Invalid target language: {target_lang}")
         # Protect full glossary phrases before their embedded numbers/codes.
+        approved_sources = {str(row.get("source_text") or "").strip().casefold() for row in glossary_entries}
+        name_entries = [row for row in (_vietnamese_proper_names(text, source_lang) if protect_names else [])
+                        if row["source_text"].casefold() not in approved_sources]
         protected_text, glossary_entities = _protect_glossary_entities(
-            text, glossary_entries,
+            text, glossary_entries + name_entries,
         )
         protected_text, protected_entities = _protect_translation_entities(protected_text)
         segments = _split_translation_segments(protected_text)
@@ -241,12 +271,16 @@ def _translate_nllb_with_quality(
         text, first, source_lang, target_lang, entities,
     )
     retry_beam = getattr(settings, "TRANSLATION_RETRY_BEAM_SIZE", 3)
-    if not first_issues or retry_beam <= settings.TRANSLATION_BEAM_SIZE:
+    name_fallback = bool(_vietnamese_proper_names(text, source_lang)) and any(
+        issue in first_issues for issue in ("unresolved_placeholder", "missing_number_or_code", "missing_glossary_term")
+    )
+    if not first_issues or (retry_beam <= settings.TRANSLATION_BEAM_SIZE and not name_fallback):
         if "unresolved_placeholder" in first_issues:
             raise RuntimeError("NLLB returned an unresolved internal placeholder")
         return first, first_issues, False
     retry, retry_entities = _translate_nllb_candidate(
-        text, source_lang, target_lang, glossary_entries, retry_beam,
+        text, source_lang, target_lang, glossary_entries, max(retry_beam, settings.TRANSLATION_BEAM_SIZE),
+        protect_names=not name_fallback,
     )
     retry_issues = _translation_quality_issues(
         text, retry, source_lang, target_lang, retry_entities,
@@ -260,6 +294,8 @@ def _translate_nllb_with_quality(
         selected, selected_issues = first, first_issues
     if "unresolved_placeholder" in selected_issues:
         raise RuntimeError("NLLB returned an unresolved internal placeholder")
+    if name_fallback and selected == retry:
+        selected_issues = [*selected_issues, "proper_name_protection_fallback"]
     return selected, selected_issues, True
 
 

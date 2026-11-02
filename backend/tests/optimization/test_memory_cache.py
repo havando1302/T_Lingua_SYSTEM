@@ -334,6 +334,14 @@ class MemoryCacheTests(unittest.TestCase):
             result = service.translate_text("hello", client_id="user:a", source_lang="en", target_lang="vi")
         self.assertEqual(result["translated_text"], "approved translation")
 
+    def test_fuzzy_protects_sign_counts_and_extended_negation(self):
+        for source, candidate in [
+            ("Store the sample at -18 degrees", "Store the sample at 18 degrees"),
+            ("Order 15 and invoice 15 are ready", "Order 15 and invoice are ready"),
+            ("He hasn’t accepted this proposal", "He has accepted this proposal"),
+        ]:
+            self.assertFalse(tm._fuzzy_semantics_compatible(source, candidate, "en"))
+
     def test_parallel_model_calls_cannot_switch_shared_tokenizer_direction(self):
         class Inputs(dict):
             def to(self, device):
