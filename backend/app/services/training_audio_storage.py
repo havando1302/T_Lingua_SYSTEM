@@ -13,7 +13,9 @@ from fastapi import HTTPException, UploadFile
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-TRAINING_AUDIO_DIR = BACKEND_DIR / "data" / "training_audio"
+TRAINING_AUDIO_DIR = Path(
+    os.environ.get("TRAINING_AUDIO_DIR") or (BACKEND_DIR / "data" / "training_audio")
+).resolve()
 _FILE_NAME = re.compile(r"^[0-9a-f]{32}\.wav$")
 MAX_TRAINING_AUDIO_BYTES = 2_000_000
 MAX_TRAINING_AUDIO_SECONDS = 30
