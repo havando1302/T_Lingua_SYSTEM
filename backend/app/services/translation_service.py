@@ -2,6 +2,7 @@
 import re
 import threading
 import time
+from contextvars import ContextVar
 from typing import Any, Optional, Tuple
 
 import torch
@@ -12,6 +13,12 @@ from app.services.translation_cache import GLOBAL_TRANSLATION_CACHE
 
 # Tokenizer.src_lang is mutable and shared by both HTTP and websocket workers.
 _inference_lock = threading.RLock()
+_request_glossary: ContextVar[list[dict[str, str | None]] | None] = ContextVar(
+    "translation_request_glossary", default=None,
+)
+_last_quality_result: ContextVar[tuple[list[str], bool]] = ContextVar(
+    "translation_quality_result", default=([], False),
+)
 _NLLB_LANGUAGES = {"vi": "vie_Latn", "en": "eng_Latn"}
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 # NLLB is good at preserving neutral ASCII placeholders, but can translate or
@@ -22,6 +29,14 @@ _PROTECTED_ENTITY = re.compile(
     r"(?<!\w)[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*(?!\w)", re.IGNORECASE
 )
 _PLACEHOLDER_PREFIX = "ZXQTLENTITY"
+_GLOSSARY_PLACEHOLDER_PREFIX = "ZXQTLGLOSSARY"
+_NEGATION_PATTERNS = {
+    "vie_Latn": re.compile(r"(?<!\w)(?:không|chưa|chẳng|chả|đừng)(?!\w)", re.IGNORECASE),
+    "eng_Latn": re.compile(
+        r"(?<!\w)(?:not|no|never|without|cannot|can't|won't|don't|didn't|isn't|aren't)(?!\w)",
+        re.IGNORECASE,
+    ),
+}
 
 
 def _get_nllb() -> Tuple[Any, Any]:
@@ -69,6 +84,71 @@ def _restore_translation_entities(
     return restored
 
 
+def _protect_glossary_entities(
+    text: str,
+    glossary_entries: list[dict[str, str | None]],
+) -> tuple[str, list[tuple[str, str, str]]]:
+    """Replace approved terms with placeholders carrying canonical targets."""
+    protected: list[tuple[str, str, str]] = []
+    updated = text
+    entries = sorted(
+        glossary_entries,
+        key=lambda row: len(str(row.get("source_text") or "")),
+        reverse=True,
+    )
+    for row in entries:
+        source = str(row.get("source_text") or "").strip()
+        target = str(row.get("translated_text") or "").strip()
+        if not source or not target or len(source) > 100 or len(source.split()) > 8:
+            continue
+        pattern = re.compile(rf"(?<!\w){re.escape(source)}(?!\w)", re.IGNORECASE)
+        if not pattern.search(updated):
+            continue
+        marker = f"{_GLOSSARY_PLACEHOLDER_PREFIX}{len(protected)}Q"
+        updated = pattern.sub(marker, updated)
+        protected.append((marker, source, target))
+    return updated, protected
+
+
+def _restore_glossary_entities(
+    translated: str, protected: list[tuple[str, str, str]],
+) -> str:
+    restored = translated
+    for marker, _source, target in protected:
+        restored = re.sub(
+            re.escape(marker), lambda _match: target, restored, flags=re.IGNORECASE,
+        )
+    return restored
+
+
+def _translation_quality_issues(
+    source_text: str,
+    translated_text: str,
+    source_lang: str,
+    target_lang: str,
+    glossary_entities: list[tuple[str, str, str]],
+) -> list[str]:
+    """Return deterministic high-risk losses suitable for retry/audit."""
+    issues: list[str] = []
+    expected_entities = [value.casefold() for value in _PROTECTED_ENTITY.findall(source_text)]
+    actual_entities = [value.casefold() for value in _PROTECTED_ENTITY.findall(translated_text)]
+    if any(value not in actual_entities for value in expected_entities):
+        issues.append("missing_number_or_code")
+    for _marker, _source, target in glossary_entities:
+        if target.casefold() not in translated_text.casefold():
+            issues.append("missing_glossary_term")
+            break
+    source_has_negation = bool(
+        _NEGATION_PATTERNS.get(source_lang, re.compile(r"$^")).search(source_text)
+    )
+    target_has_negation = bool(
+        _NEGATION_PATTERNS.get(target_lang, re.compile(r"$^")).search(translated_text)
+    )
+    if source_has_negation and not target_has_negation:
+        issues.append("missing_negation")
+    return issues
+
+
 def _translation_token_budget(input_ids: Any, attention_mask: Any = None) -> int:
     """Bound decoding to the longest unpadded input in the current batch."""
     if input_ids is None:
@@ -82,7 +162,13 @@ def _translation_token_budget(input_ids: Any, attention_mask: Any = None) -> int
     return min(128, max(24, int(source_tokens * 1.6) + 12))
 
 
-def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
+def _translate_nllb_candidate(
+    text: str,
+    source_lang: str,
+    target_lang: str,
+    glossary_entries: list[dict[str, str | None]],
+    beam_size: int,
+) -> tuple[str, list[tuple[str, str, str]]]:
     with _inference_lock:
         model, tokenizer = _get_nllb()
         tokenizer.src_lang = source_lang
@@ -90,6 +176,9 @@ def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
         if target_token_id is None or target_token_id == getattr(tokenizer, "unk_token_id", None):
             raise ValueError(f"Invalid target language: {target_lang}")
         protected_text, protected_entities = _protect_translation_entities(text)
+        protected_text, glossary_entities = _protect_glossary_entities(
+            protected_text, glossary_entries,
+        )
         segments = _split_translation_segments(protected_text)
         batch_size = getattr(settings, "TRANSLATION_SENTENCE_BATCH_SIZE", 4)
         translated_segments: list[str] = []
@@ -108,14 +197,58 @@ def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
                     forced_bos_token_id=target_token_id,
                     max_length=None,
                     max_new_tokens=token_budget,
-                    num_beams=settings.TRANSLATION_BEAM_SIZE,
+                    num_beams=beam_size,
                     use_cache=True,
                 )
             decoded = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
             translated_segments.extend(part.lstrip("- ").strip() for part in decoded if part.strip())
         if len(translated_segments) != len(segments):
             raise RuntimeError("NLLB returned an incomplete sentence batch")
-        return _restore_translation_entities(" ".join(translated_segments), protected_entities)
+        restored = _restore_glossary_entities(" ".join(translated_segments), glossary_entities)
+        restored = _restore_translation_entities(restored, protected_entities)
+        return restored, glossary_entities
+
+
+def _translate_nllb_with_quality(
+    text: str,
+    source_lang: str,
+    target_lang: str,
+    glossary_entries: list[dict[str, str | None]] | None = None,
+) -> tuple[str, list[str], bool]:
+    glossary_entries = glossary_entries or []
+    first, entities = _translate_nllb_candidate(
+        text, source_lang, target_lang, glossary_entries, settings.TRANSLATION_BEAM_SIZE,
+    )
+    first_issues = _translation_quality_issues(
+        text, first, source_lang, target_lang, entities,
+    )
+    retry_beam = getattr(settings, "TRANSLATION_RETRY_BEAM_SIZE", 3)
+    if not first_issues or retry_beam <= settings.TRANSLATION_BEAM_SIZE:
+        return first, first_issues, False
+    retry, retry_entities = _translate_nllb_candidate(
+        text, source_lang, target_lang, glossary_entries, retry_beam,
+    )
+    retry_issues = _translation_quality_issues(
+        text, retry, source_lang, target_lang, retry_entities,
+    )
+    if len(retry_issues) < len(first_issues):
+        return retry, retry_issues, True
+    return first, first_issues, True
+
+
+def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
+    """Stable inference seam with approved glossary and quality validation."""
+    from app.services.semantic_service import get_runtime_glossary
+
+    glossary = _request_glossary.get()
+    if glossary is None:
+        glossary = get_runtime_glossary(None, source_lang, target_lang)
+    translated, issues, retried = _translate_nllb_with_quality(
+        text, source_lang, target_lang,
+        glossary,
+    )
+    _last_quality_result.set((issues, retried))
+    return translated
 
 
 def translate_text(
@@ -147,17 +280,44 @@ def translate_text(
     if translated is not None:
         source = "translation_memory"
     else:
-        translated = repository.lookup_fuzzy(text, client_id, resolved_source, resolved_target) if client_id else None
+        fuzzy_threshold = getattr(settings, "TRANSLATION_FUZZY_THRESHOLD", 0.97)
+        translated = repository.lookup_fuzzy(
+            text, client_id, resolved_source, resolved_target,
+            threshold=fuzzy_threshold,
+        ) if client_id else None
         if translated is None:
-            translated = repository.lookup_fuzzy(text, "global:approved", resolved_source, resolved_target)
+            translated = repository.lookup_fuzzy(
+                text, "global:approved", resolved_source, resolved_target,
+                threshold=fuzzy_threshold,
+            )
         if translated is not None:
             source = "translation_memory_fuzzy"
         else:
-            translated = _translate_nllb(text, resolved_source, resolved_target)
+            # Keep the public inference seam stable for cache/runtime callers.
+            # The wrapper performs glossary protection, validation, and retry.
+            from app.services.semantic_service import get_runtime_glossary
+
+            token = _request_glossary.set(
+                get_runtime_glossary(client_id, resolved_source, resolved_target),
+            )
+            _last_quality_result.set(([], False))
+            try:
+                translated = _translate_nllb(text, resolved_source, resolved_target)
+                quality_warnings, quality_retried = _last_quality_result.get()
+            finally:
+                _request_glossary.reset(token)
             source = "nllb_model"
     if use_cache and translated:
         GLOBAL_TRANSLATION_CACHE.put(
             cache_owner, resolved_source, resolved_target, text, translated,
             expected_version=snapshot,
         )
-    return {"translated_text": translated, "latency": round(max(0.015, time.monotonic() - start), 3), "source": source}
+    result = {
+        "translated_text": translated,
+        "latency": round(max(0.015, time.monotonic() - start), 3),
+        "source": source,
+    }
+    if source == "nllb_model":
+        result["quality_warnings"] = quality_warnings
+        result["quality_retried"] = quality_retried
+    return result

@@ -17,8 +17,11 @@ from app.utils.audio_utils import (
 from app.services.whisper_service import transcribe_audio
 from app.services.whisper_service import should_process_audio
 from app.services.vad_service import WebRtcVadStream
-from app.services.semantic_service import correct_text_semantics
-from app.services import translation_memory as tm
+from app.services.semantic_service import (
+    build_glossary_prompt,
+    correct_text_semantics,
+    get_runtime_glossary,
+)
 from app.core.queues import GLOBAL_STT_QUEUE, GLOBAL_TRANSLATE_QUEUE
 from app.core.config import MAX_BUFFER_BYTES, MIN_BUFFER_BYTES, STT_CONCURRENCY, settings
 from app.services.deepfilter_service import denoise_numpy
@@ -114,7 +117,9 @@ async def stt_worker(worker_id: int = 0):
                     audio_np = await asyncio.to_thread(
                         denoise_numpy, audio_np,
                         atten_lim_db=settings.DENOISE_ATTENUATION_DB,
-                        min_duration_seconds=getattr(settings, "DENOISE_MIN_AUDIO_SECONDS", 3.0))
+                        min_duration_seconds=getattr(settings, "DENOISE_MIN_AUDIO_SECONDS", 3.0),
+                        auto_bypass_snr_db=getattr(settings, "DENOISE_AUTO_BYPASS_SNR_DB", 18.0),
+                    )
                 except Exception as e:
                     print("DeepFilter failed:", type(e).__name__)
 
@@ -151,7 +156,10 @@ async def stt_worker(worker_id: int = 0):
                 )
                 async with _stt_semaphore:
                     cid = getattr(session, "client_id", getattr(session, "owner_id", "default"))
-                    glossary_prompt = tm.get_tm_repository().get_glossary_prompt(cid)
+                    glossary_entries = await asyncio.to_thread(
+                        get_runtime_glossary, cid, source_lang, target_lang,
+                    )
+                    glossary_prompt = build_glossary_prompt(glossary_entries)
                     final_result = await asyncio.to_thread(
                         transcribe_audio,
                         audio_np,
@@ -168,7 +176,9 @@ async def stt_worker(worker_id: int = 0):
                 raw_text = final_result.get("text")
                 final_text: str = str(raw_text or "").strip()
                 if final_text:
-                    final_text = await asyncio.to_thread(correct_text_semantics, final_text, "")
+                    final_text = await asyncio.to_thread(
+                        correct_text_semantics, final_text, "", glossary_entries,
+                    )
                     logger.info("stt_done chars=%d language=%s latency=%.3fs", len(final_text), whisper_lang, final_result.get("latency", 0.0))
                     if turn and hasattr(session, "is_turn_active") and not session.is_turn_active(turn.turn_id):
                         break

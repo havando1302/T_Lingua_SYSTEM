@@ -29,6 +29,12 @@ class Settings(AuthSettings, PolicySettings):
     NLLB_MODEL: str = "facebook/nllb-200-distilled-1.3B"
     NLLB_REVISION: str = "7be3e24664b38ce1cac29b8aeed6911aa0cf0576"
     TRANSLATION_BEAM_SIZE: int = Field(default=1, ge=1, le=10)
+    # Exact Translation Memory remains the first choice. Fuzzy reuse is kept
+    # deliberately strict because a one-word change can reverse meaning.
+    TRANSLATION_FUZZY_THRESHOLD: float = Field(default=0.97, ge=0.90, le=1.0)
+    # Only retry NLLB when deterministic quality guards detect a lost
+    # negation/entity. Normal realtime requests keep the fast beam=1 path.
+    TRANSLATION_RETRY_BEAM_SIZE: int = Field(default=3, ge=1, le=5)
     # NLLB can stop after the first sentence when a multi-sentence utterance is
     # decoded as one sequence. Translate bounded sentence batches together so
     # content stays complete without paying one GPU launch per sentence.

@@ -111,3 +111,37 @@ def test_nllb_round_trip_preserves_codes_without_increasing_global_beam():
     assert "18" in translated
     assert model.calls[0]["num_beams"] == 1
     assert model.calls[0]["use_cache"] is True
+
+
+def test_nllb_protects_approved_glossary_target():
+    tokenizer, model = _Tokenizer(), _Model()
+    glossary = [{
+        "source_text": "Trường Đại học Phenikaa",
+        "translated_text": "Phenikaa University",
+        "source_lang": "vi",
+        "target_lang": "en",
+    }]
+    with patch.object(service, "_get_nllb", return_value=(model, tokenizer)):
+        translated, warnings, retried = service._translate_nllb_with_quality(
+            "Tôi học tại Trường Đại học Phenikaa.",
+            "vie_Latn", "eng_Latn", glossary,
+        )
+
+    assert "Phenikaa University" in translated
+    assert "Trường Đại học Phenikaa" not in tokenizer.calls[0][0]
+    assert warnings == []
+    assert retried is False
+
+
+def test_missing_negation_triggers_bounded_quality_retry():
+    tokenizer, model = _Tokenizer(), _Model()
+    with patch.object(service, "_get_nllb", return_value=(model, tokenizer)), \
+         patch.object(service.settings, "TRANSLATION_BEAM_SIZE", 1), \
+         patch.object(service.settings, "TRANSLATION_RETRY_BEAM_SIZE", 3):
+        _translated, warnings, retried = service._translate_nllb_with_quality(
+            "Tôi không đồng ý.", "vie_Latn", "eng_Latn",
+        )
+
+    assert retried is True
+    assert "missing_negation" in warnings
+    assert [call["num_beams"] for call in model.calls] == [1, 3]

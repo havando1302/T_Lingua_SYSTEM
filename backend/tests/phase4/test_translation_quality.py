@@ -108,6 +108,29 @@ class TranslationQualityTests(unittest.TestCase):
         finally:
             tm.delete("vui lòng gửi báo cáo trước thứ sáu", client_id=owner)
 
+    def test_fuzzy_tm_rejects_changed_number_and_negation(self):
+        owner = "test-fuzzy-semantics"
+        tm.add(
+            "tôi đã nhận 15 đơn hàng", "I received 15 orders",
+            client_id=owner, source_lang="vi", target_lang="en",
+        )
+        tm.add(
+            "tôi không đồng ý với phương án này", "I do not agree with this plan",
+            client_id=owner, source_lang="vi", target_lang="en",
+        )
+        try:
+            self.assertIsNone(tm.lookup_fuzzy(
+                "tôi đã nhận 16 đơn hàng", client_id=owner,
+                source_lang="vi", target_lang="en", threshold=0.8,
+            ))
+            self.assertIsNone(tm.lookup_fuzzy(
+                "tôi đồng ý với phương án này", client_id=owner,
+                source_lang="vi", target_lang="en", threshold=0.8,
+            ))
+        finally:
+            tm.delete("tôi đã nhận 15 đơn hàng", client_id=owner)
+            tm.delete("tôi không đồng ý với phương án này", client_id=owner)
+
     def test_dictionary_preserves_industry_term(self):
         # "công nghiệp" must not be replaced with "công nghệ"
         phrase = "Cách mạng công nghiệp lần thứ tư"

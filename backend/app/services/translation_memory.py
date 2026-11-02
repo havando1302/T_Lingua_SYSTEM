@@ -50,6 +50,30 @@ def _normalize(text: str) -> str:
     return text.strip(" .,!?;:\"'").lower()
 
 
+_NEGATION_TOKENS = {
+    "vi": {"không", "chưa", "chẳng", "chả", "đừng"},
+    "en": {
+        "not", "no", "never", "without", "cannot", "can't", "won't",
+        "don't", "didn't", "isn't", "aren't",
+    },
+}
+_ENTITY_TOKEN = re.compile(
+    r"[A-Za-z]*\d+(?:[.,:/-]\d+)*[A-Za-z%]*", re.IGNORECASE,
+)
+
+
+def _fuzzy_signature(text: str, language: str) -> tuple[frozenset[str], frozenset[str]]:
+    entities = frozenset(match.casefold() for match in _ENTITY_TOKEN.findall(text))
+    words = set(re.findall(r"[^\W_]+(?:['’][^\W_]+)?", text.casefold(), flags=re.UNICODE))
+    negations = frozenset(words & _NEGATION_TOKENS.get(normalize_lang_code(language), set()))
+    return entities, negations
+
+
+def _fuzzy_semantics_compatible(source: str, candidate: str, source_lang: str) -> bool:
+    """Reject near matches that change protected entities or negation."""
+    return _fuzzy_signature(source, source_lang) == _fuzzy_signature(candidate, source_lang)
+
+
 def _pair(source_lang: Optional[str], target_lang: Optional[str]) -> tuple[str, str]:
     source, target = normalize_lang_code(source_lang), normalize_lang_code(target_lang)
     if bool(source) != bool(target):
@@ -217,6 +241,8 @@ def lookup_fuzzy(
             if candidate == source:
                 return translated
             if abs(len(candidate) - len(source)) > max(4, int(len(source) * 0.2)):
+                continue
+            if not _fuzzy_semantics_compatible(source, candidate, pair[0]):
                 continue
             score = SequenceMatcher(None, source, candidate, autojunk=False).ratio()
             if score >= threshold:
@@ -505,6 +531,8 @@ class DatabaseTranslationMemoryRepository(ITranslationMemoryRepository):
                 if candidate == source:
                     return row.translated_text
                 if abs(len(candidate) - len(source)) > max(4, int(len(source) * 0.2)):
+                    continue
+                if not _fuzzy_semantics_compatible(source, candidate, pair[0]):
                     continue
                 score = SequenceMatcher(None, source, candidate, autojunk=False).ratio()
                 if score >= threshold:

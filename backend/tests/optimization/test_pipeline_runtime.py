@@ -67,7 +67,12 @@ def isolated_suite(legacy=False):
     model_manager_module = module("app.ai.model_manager", model_manager=SimpleNamespace(is_loaded=False, device="cpu", whisper_model=None))
     queues = module("app.core.queues", GLOBAL_STT_QUEUE=asyncio.Queue(), GLOBAL_TRANSLATE_QUEUE=asyncio.Queue(), GLOBAL_TTS_QUEUE=asyncio.Queue())
     module("app.services.deepfilter_service", denoise_numpy=lambda audio, **kwargs: audio)
-    module("app.services.semantic_service", correct_text_semantics=lambda text, context="": text)
+    module(
+        "app.services.semantic_service",
+        correct_text_semantics=lambda text, context="", glossary_entries=None: text,
+        get_runtime_glossary=lambda *args, **kwargs: [],
+        build_glossary_prompt=lambda entries, max_chars=300: "",
+    )
     exists = os.path.exists
     live_tm = os.path.normcase(str(_REPO / "backend/data/translation_memory.json"))
     with patch("os.path.exists", side_effect=lambda path: False if os.path.normcase(os.path.abspath(path)) == live_tm else exists(path)):

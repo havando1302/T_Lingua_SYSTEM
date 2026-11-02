@@ -36,11 +36,19 @@ def _run_pipeline(audio_path: str, *, client_id: str, output_path: str | None,
 
     # STEP 1 - STT
     GLOBAL_TELEMETRY.record_stage(metric_id, "stt_start")
+    from app.services.semantic_service import (
+        build_glossary_prompt,
+        correct_text_semantics,
+        get_runtime_glossary,
+    )
+    glossary_entries = get_runtime_glossary(client_id, source_lang, target_lang)
     stt_result = transcribe_audio(
         audio_path,
         beam_size=getattr(settings, "WHISPER_REALTIME_BEAM_SIZE", 1),
         preprocess=True,
-                                  language={"vie_Latn": "vi", "eng_Latn": "en"}.get(source_lang, source_lang))
+        context_prompt=build_glossary_prompt(glossary_entries),
+        language={"vie_Latn": "vi", "eng_Latn": "en"}.get(source_lang, source_lang),
+    )
     GLOBAL_TELEMETRY.record_stage(metric_id, "stt_done")
 
     original_text: str = str(stt_result.get("text") or "")
@@ -48,8 +56,7 @@ def _run_pipeline(audio_path: str, *, client_id: str, output_path: str | None,
         raise NoSpeechDetected("No intelligible speech was detected")
     # Keep HTTP audio behavior aligned with the realtime worker: inexpensive,
     # deterministic STT corrections run before translation and cache lookup.
-    from app.services.semantic_service import correct_text_semantics
-    original_text = correct_text_semantics(original_text, "")
+    original_text = correct_text_semantics(original_text, "", glossary_entries)
 
     # STEP 2 - TRANSLATION
     GLOBAL_TELEMETRY.record_stage(metric_id, "translate_start")
