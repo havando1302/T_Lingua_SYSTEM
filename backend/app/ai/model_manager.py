@@ -32,6 +32,10 @@ class ModelManager:
         self._whisper_backend: str = "not_loaded"
         self._whisper_model_id: str = "not_loaded"
         self._whisper_fallback: bool = False
+        self._nllb_model_id: str = "not_loaded"
+        self._tts_model_eng: str = "not_loaded"
+        self._tts_model_vie: str = "not_loaded"
+        self._deepfilter_model_id: str = "none"
         self._tts_device: str = "not_loaded"
         self._tts_dtype: str = "not_loaded"
         self._denoise_device: str = "disabled"
@@ -132,6 +136,7 @@ class ModelManager:
 
         # --- NLLB ---
         t0 = time.time()
+        self._nllb_model_id = s.NLLB_MODEL
         print(f"  Loading NLLB ({s.NLLB_MODEL}) ...", end=" ", flush=True)
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
         from app.ai.torch_whisper_adapter import load_cached_first
@@ -207,6 +212,8 @@ class ModelManager:
             tts_dtype = torch.float32
         self._tts_device = tts_device
         self._tts_dtype = str(tts_dtype).removeprefix("torch.")
+        self._tts_model_eng = s.TTS_MODEL_ENG
+        self._tts_model_vie = s.TTS_MODEL_VIE
         self.tts_model_eng = load_cached_first(
             VitsModel,
             s.TTS_MODEL_ENG, revision=s.TTS_MODEL_ENG_REVISION,
@@ -260,6 +267,7 @@ class ModelManager:
                     else:
                         os.environ["DEVICE"] = previous_device
                 self._denoise_device = denoise_device
+                self._deepfilter_model_id = "DeepFilterNet3"
                 print(f"OK ({time.time() - t0:.1f}s)")
             except Exception as e:
                 print(f"SKIP ({e})")
@@ -334,15 +342,46 @@ class ModelManager:
         }
 
     def get_runtime_status(self) -> dict:
-        return {"device": self._device, "whisper_device": self._whisper_device,
-                "whisper_backend": self._whisper_backend,
-                "whisper_model_id": self._whisper_model_id,
-                "whisper_compute_type": self._whisper_compute_type,
-                "tts_device": self._tts_device,
-                "tts_dtype": self._tts_dtype,
-                "denoise_device": self._denoise_device,
-                "whisper_cpu_fallback": self._whisper_fallback,
-                "model_load_seconds": round(self._load_seconds, 3)}
+        from app.core.config import settings as _s
+        nllb_id = getattr(self, "_nllb_model_id", "not_loaded")
+        if nllb_id == "not_loaded":
+            nllb_id = getattr(_s, "NLLB_MODEL", "facebook/nllb-200-distilled-1.3B")
+
+        tts_eng = getattr(self, "_tts_model_eng", "not_loaded")
+        if tts_eng == "not_loaded":
+            tts_eng = getattr(_s, "TTS_MODEL_ENG", "facebook/mms-tts-eng")
+
+        tts_vie = getattr(self, "_tts_model_vie", "not_loaded")
+        if tts_vie == "not_loaded":
+            tts_vie = getattr(_s, "TTS_MODEL_VIE", "facebook/mms-tts-vie")
+
+        df_id = getattr(self, "_deepfilter_model_id", "none")
+        if df_id == "none" and self.deepfilter_model:
+            df_id = "DeepFilterNet3"
+
+        whisper_id = self._whisper_model_id
+        if whisper_id == "not_loaded":
+            whisper_id = getattr(_s, "WHISPER_TORCH_MODEL", None) or getattr(_s, "WHISPER_MODEL", "openai/whisper-large-v3-turbo")
+
+        return {
+            "device": self._device,
+            "whisper_device": self._whisper_device,
+            "whisper_backend": self._whisper_backend,
+            "whisper_model_id": whisper_id,
+            "whisper_compute_type": self._whisper_compute_type,
+            "whisper_cpu_fallback": self._whisper_fallback,
+            "nllb_model_id": nllb_id,
+            "nllb_device": self._device,
+            "nllb_dtype": "float16" if self._device == "cuda" else "float32",
+            "tts_model_eng": tts_eng,
+            "tts_model_vie": tts_vie,
+            "tts_device": self._tts_device,
+            "tts_dtype": self._tts_dtype,
+            "deepfilter_model_id": df_id,
+            "deepfilter_enabled": self.deepfilter_model is not None or getattr(_s, "ENABLE_DEEPFILTER", False),
+            "denoise_device": self._denoise_device,
+            "model_load_seconds": round(self._load_seconds, 3),
+        }
 
     @property
     def is_loaded(self) -> bool:

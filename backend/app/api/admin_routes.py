@@ -1064,7 +1064,7 @@ def export_whisper_training_data(db: Session = Depends(get_db), user: User = Dep
 
 # --- SYSTEM & HARDWARE ---
 @router.get("/system/status")
-def get_system_status(user: User = Depends(require_admin)):
+def get_system_status(user: User = Depends(require_reporting_user)):
     from app.core.gpu_manager import GPU_MANAGER
     from app.ai.model_manager import model_manager
     cpu_percent = psutil.cpu_percent(interval=0.1)
