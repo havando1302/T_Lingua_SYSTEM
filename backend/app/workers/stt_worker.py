@@ -159,7 +159,11 @@ async def stt_worker(worker_id: int = 0):
                     glossary_entries = await asyncio.to_thread(
                         get_runtime_glossary, cid, source_lang, target_lang,
                     )
-                    glossary_prompt = build_glossary_prompt(glossary_entries)
+                    context_key = (source_lang, target_lang, speaker)
+                    glossary_context = getattr(session, "_glossary_context", {})
+                    glossary_prompt = build_glossary_prompt(
+                        glossary_entries, context=glossary_context.get(context_key, ""),
+                    )
                     final_result = await asyncio.to_thread(
                         transcribe_audio,
                         audio_np,
@@ -182,6 +186,8 @@ async def stt_worker(worker_id: int = 0):
                     logger.info("stt_done chars=%d language=%s latency=%.3fs", len(final_text), whisper_lang, final_result.get("latency", 0.0))
                     if turn and hasattr(session, "is_turn_active") and not session.is_turn_active(turn.turn_id):
                         break
+                    glossary_context[context_key] = final_text[-500:]
+                    session._glossary_context = glossary_context
 
                     msg_id = item.get("message_id") or metric_id
                     stt_payload = {

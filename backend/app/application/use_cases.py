@@ -68,14 +68,21 @@ class TranslateTurnUseCase:
         # Tra cứu cache
         snapshot = self._cache.get_version_snapshot(client_id) if self._use_cache else None
         cached = self._cache.get(client_id, turn.lang_pair.source_lang, turn.lang_pair.target_lang, source_text) if self._use_cache else None
+        from app.utils.translation_safety import has_internal_placeholder
+        if cached is not None and has_internal_placeholder(cached):
+            cached = None
         if cached is not None:
             translated_text = cached
             trans_source = "cache"
         else:
             # Tra cứu TM
             tm_hit = self._tm.lookup(source_text, client_id=client_id, source_lang=turn.lang_pair.source_lang, target_lang=turn.lang_pair.target_lang)
+            if tm_hit is not None and has_internal_placeholder(tm_hit):
+                tm_hit = None
             if tm_hit is None:
                 tm_hit = self._tm.lookup(source_text, client_id="global:approved", source_lang=turn.lang_pair.source_lang, target_lang=turn.lang_pair.target_lang)
+            if tm_hit is not None and has_internal_placeholder(tm_hit):
+                tm_hit = None
             if tm_hit is not None:
                 translated_text = tm_hit
                 trans_source = "translation_memory"
@@ -89,6 +96,8 @@ class TranslateTurnUseCase:
                 translated_text = trans_res.get("translated_text", "")
                 trans_source = trans_res.get("source", "nllb")
 
+            if has_internal_placeholder(translated_text):
+                raise RuntimeError("Translation returned an unresolved internal placeholder")
             if translated_text and self._use_cache:
                 self._cache.put(client_id, turn.lang_pair.source_lang, turn.lang_pair.target_lang, source_text, translated_text, expected_version=snapshot)
 

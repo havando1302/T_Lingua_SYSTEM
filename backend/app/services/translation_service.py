@@ -10,6 +10,7 @@ import torch
 from app.core.config import DEVICE, SOURCE_LANG, TARGET_LANG, settings
 from app.services import translation_memory as tm
 from app.services.translation_cache import GLOBAL_TRANSLATION_CACHE
+from app.utils.translation_safety import INTERNAL_PLACEHOLDER, has_internal_placeholder, is_glossary_term
 
 # Tokenizer.src_lang is mutable and shared by both HTTP and websocket workers.
 _inference_lock = threading.RLock()
@@ -30,6 +31,7 @@ _PROTECTED_ENTITY = re.compile(
 )
 _PLACEHOLDER_PREFIX = "ZXQTLENTITY"
 _GLOSSARY_PLACEHOLDER_PREFIX = "ZXQTLGLOSSARY"
+_UNRESOLVED_PLACEHOLDER = INTERNAL_PLACEHOLDER
 _NEGATION_PATTERNS = {
     "vie_Latn": re.compile(r"(?<!\w)(?:không|chưa|chẳng|chả|đừng)(?!\w)", re.IGNORECASE),
     "eng_Latn": re.compile(
@@ -68,6 +70,10 @@ def _protect_translation_entities(text: str) -> tuple[str, list[tuple[str, str]]
     protected: list[tuple[str, str]] = []
 
     def replace(match: re.Match[str]) -> str:
+        # Glossary placeholders contain an index too. Protecting them a second
+        # time hides them from restoration and leaks the glossary marker.
+        if has_internal_placeholder(match.group(0)):
+            return match.group(0)
         marker = f"{_PLACEHOLDER_PREFIX}{len(protected)}Q"
         protected.append((marker, match.group(0)))
         return marker
@@ -80,8 +86,16 @@ def _restore_translation_entities(
 ) -> str:
     restored = translated
     for marker, original in protected:
-        restored = re.sub(re.escape(marker), lambda _match: original, restored, flags=re.IGNORECASE)
+        restored = re.sub(
+            _tolerant_marker_pattern(marker), lambda _match: original,
+            restored, flags=re.IGNORECASE,
+        )
     return restored
+
+
+def _tolerant_marker_pattern(marker: str) -> str:
+    """Match harmless spacing/punctuation mutations introduced by NLLB."""
+    return r"[\s._-]*".join(re.escape(char) for char in marker)
 
 
 def _protect_glossary_entities(
@@ -99,7 +113,7 @@ def _protect_glossary_entities(
     for row in entries:
         source = str(row.get("source_text") or "").strip()
         target = str(row.get("translated_text") or "").strip()
-        if not source or not target or len(source) > 100 or len(source.split()) > 8:
+        if not is_glossary_term(source) or not target or has_internal_placeholder(target):
             continue
         pattern = re.compile(rf"(?<!\w){re.escape(source)}(?!\w)", re.IGNORECASE)
         if not pattern.search(updated):
@@ -116,7 +130,8 @@ def _restore_glossary_entities(
     restored = translated
     for marker, _source, target in protected:
         restored = re.sub(
-            re.escape(marker), lambda _match: target, restored, flags=re.IGNORECASE,
+            _tolerant_marker_pattern(marker), lambda _match: target,
+            restored, flags=re.IGNORECASE,
         )
     return restored
 
@@ -146,6 +161,8 @@ def _translation_quality_issues(
     )
     if source_has_negation and not target_has_negation:
         issues.append("missing_negation")
+    if _UNRESOLVED_PLACEHOLDER.search(translated_text):
+        issues.append("unresolved_placeholder")
     return issues
 
 
@@ -175,10 +192,11 @@ def _translate_nllb_candidate(
         target_token_id = tokenizer.convert_tokens_to_ids(target_lang)
         if target_token_id is None or target_token_id == getattr(tokenizer, "unk_token_id", None):
             raise ValueError(f"Invalid target language: {target_lang}")
-        protected_text, protected_entities = _protect_translation_entities(text)
+        # Protect full glossary phrases before their embedded numbers/codes.
         protected_text, glossary_entities = _protect_glossary_entities(
-            protected_text, glossary_entries,
+            text, glossary_entries,
         )
+        protected_text, protected_entities = _protect_translation_entities(protected_text)
         segments = _split_translation_segments(protected_text)
         batch_size = getattr(settings, "TRANSLATION_SENTENCE_BATCH_SIZE", 4)
         translated_segments: list[str] = []
@@ -224,6 +242,8 @@ def _translate_nllb_with_quality(
     )
     retry_beam = getattr(settings, "TRANSLATION_RETRY_BEAM_SIZE", 3)
     if not first_issues or retry_beam <= settings.TRANSLATION_BEAM_SIZE:
+        if "unresolved_placeholder" in first_issues:
+            raise RuntimeError("NLLB returned an unresolved internal placeholder")
         return first, first_issues, False
     retry, retry_entities = _translate_nllb_candidate(
         text, source_lang, target_lang, glossary_entries, retry_beam,
@@ -231,9 +251,16 @@ def _translate_nllb_with_quality(
     retry_issues = _translation_quality_issues(
         text, retry, source_lang, target_lang, retry_entities,
     )
-    if len(retry_issues) < len(first_issues):
-        return retry, retry_issues, True
-    return first, first_issues, True
+    if ("unresolved_placeholder" in first_issues and "unresolved_placeholder" not in retry_issues) or (
+        ("unresolved_placeholder" in retry_issues) == ("unresolved_placeholder" in first_issues)
+        and len(retry_issues) < len(first_issues)
+    ):
+        selected, selected_issues = retry, retry_issues
+    else:
+        selected, selected_issues = first, first_issues
+    if "unresolved_placeholder" in selected_issues:
+        raise RuntimeError("NLLB returned an unresolved internal placeholder")
+    return selected, selected_issues, True
 
 
 def _translate_nllb(text: str, source_lang: str, target_lang: str) -> str:
@@ -260,6 +287,8 @@ def translate_text(
     text = _normalize_stt_text(text)
     if not text:
         raise ValueError("No text to translate")
+    if has_internal_placeholder(text):
+        raise ValueError("Source text contains an internal translation placeholder")
     resolved_source = source_lang or SOURCE_LANG
     resolved_target = target_lang or TARGET_LANG
     resolved_source = _NLLB_LANGUAGES.get(tm.normalize_lang_code(resolved_source), resolved_source)
@@ -271,12 +300,14 @@ def translate_text(
     snapshot = GLOBAL_TRANSLATION_CACHE.get_version_snapshot(cache_owner) if use_cache else None
     if use_cache:
         cached = GLOBAL_TRANSLATION_CACHE.get(cache_owner, resolved_source, resolved_target, text)
-        if cached is not None:
+        if cached is not None and not has_internal_placeholder(cached):
             return {"translated_text": cached, "latency": round(max(0.015, time.monotonic() - start), 3), "source": "cache"}
 
     translated = repository.lookup(text, client_id, resolved_source, resolved_target) if client_id else None
-    if translated is None:
+    if translated is None or has_internal_placeholder(translated):
         translated = repository.lookup(text, "global:approved", resolved_source, resolved_target)
+    if translated is not None and has_internal_placeholder(translated):
+        translated = None
     if translated is not None:
         source = "translation_memory"
     else:
@@ -285,11 +316,13 @@ def translate_text(
             text, client_id, resolved_source, resolved_target,
             threshold=fuzzy_threshold,
         ) if client_id else None
-        if translated is None:
+        if translated is None or has_internal_placeholder(translated):
             translated = repository.lookup_fuzzy(
                 text, "global:approved", resolved_source, resolved_target,
                 threshold=fuzzy_threshold,
             )
+        if translated is not None and has_internal_placeholder(translated):
+            translated = None
         if translated is not None:
             source = "translation_memory_fuzzy"
         else:
@@ -307,6 +340,8 @@ def translate_text(
             finally:
                 _request_glossary.reset(token)
             source = "nllb_model"
+    if translated and has_internal_placeholder(translated):
+        raise RuntimeError("Translation returned an unresolved internal placeholder")
     if use_cache and translated:
         GLOBAL_TRANSLATION_CACHE.put(
             cache_owner, resolved_source, resolved_target, text, translated,

@@ -1,0 +1,3505 @@
+{
+  "provenance": "Selected from scripts/generate_dictionary_1000.py; project and university examples supplied by user. Reverse pairs checked for unique source keys. Domain review is recommended before remote production use.",
+  "entries": [
+    {
+      "source_text": "T-Lingua",
+      "translated_text": "T-Lingua",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "project"
+    },
+    {
+      "source_text": "T-Lingua",
+      "translated_text": "T-Lingua",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "project"
+    },
+    {
+      "source_text": "Đại học Phenikaa",
+      "translated_text": "Phenikaa University",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Phenikaa University",
+      "translated_text": "Đại học Phenikaa",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Trí tuệ nhân tạo",
+      "translated_text": "Artificial Intelligence",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Artificial Intelligence",
+      "translated_text": "Trí tuệ nhân tạo",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học máy",
+      "translated_text": "Machine Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Machine Learning",
+      "translated_text": "Học máy",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học sâu",
+      "translated_text": "Deep Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Deep Learning",
+      "translated_text": "Học sâu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Xử lý ngôn ngữ tự nhiên",
+      "translated_text": "Natural Language Processing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Natural Language Processing",
+      "translated_text": "Xử lý ngôn ngữ tự nhiên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Thị giác máy tính",
+      "translated_text": "Computer Vision",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Computer Vision",
+      "translated_text": "Thị giác máy tính",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mô hình ngôn ngữ lớn",
+      "translated_text": "Large Language Model",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Large Language Model",
+      "translated_text": "Mô hình ngôn ngữ lớn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mạng nơ-ron nhân tạo",
+      "translated_text": "Artificial Neural Network",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Artificial Neural Network",
+      "translated_text": "Mạng nơ-ron nhân tạo",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mạng nơ-ron tích chập",
+      "translated_text": "Convolutional Neural Network",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Convolutional Neural Network",
+      "translated_text": "Mạng nơ-ron tích chập",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mạng nơ-ron hồi quy",
+      "translated_text": "Recurrent Neural Network",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Recurrent Neural Network",
+      "translated_text": "Mạng nơ-ron hồi quy",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiến trúc Transformer",
+      "translated_text": "Transformer Architecture",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Transformer Architecture",
+      "translated_text": "Kiến trúc Transformer",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cơ chế chú ý",
+      "translated_text": "Attention Mechanism",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Attention Mechanism",
+      "translated_text": "Cơ chế chú ý",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tinh chỉnh mô hình",
+      "translated_text": "Model Fine-tuning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Model Fine-tuning",
+      "translated_text": "Tinh chỉnh mô hình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Huấn luyện mô hình",
+      "translated_text": "Model Training",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Model Training",
+      "translated_text": "Huấn luyện mô hình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Suy luận mô hình",
+      "translated_text": "Model Inference",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Model Inference",
+      "translated_text": "Suy luận mô hình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học tăng cường",
+      "translated_text": "Reinforcement Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Reinforcement Learning",
+      "translated_text": "Học tăng cường",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học có giám sát",
+      "translated_text": "Supervised Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Supervised Learning",
+      "translated_text": "Học có giám sát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học không giám sát",
+      "translated_text": "Unsupervised Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Unsupervised Learning",
+      "translated_text": "Học không giám sát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Học bán giám sát",
+      "translated_text": "Semi-supervised Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Semi-supervised Learning",
+      "translated_text": "Học bán giám sát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hàm mất mát",
+      "translated_text": "Loss Function",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Loss Function",
+      "translated_text": "Hàm mất mát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Độ dốc suy giảm",
+      "translated_text": "Gradient Descent",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Gradient Descent",
+      "translated_text": "Độ dốc suy giảm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Lan truyền ngược",
+      "translated_text": "Backpropagation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Backpropagation",
+      "translated_text": "Lan truyền ngược",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tối ưu hóa siêu tham số",
+      "translated_text": "Hyperparameter Optimization",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hyperparameter Optimization",
+      "translated_text": "Tối ưu hóa siêu tham số",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hiện tượng quá khớp",
+      "translated_text": "Overfitting",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Overfitting",
+      "translated_text": "Hiện tượng quá khớp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hiện tượng chưa khớp",
+      "translated_text": "Underfitting",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Underfitting",
+      "translated_text": "Hiện tượng chưa khớp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Dữ liệu huấn luyện",
+      "translated_text": "Training Data",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Training Data",
+      "translated_text": "Dữ liệu huấn luyện",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tập kiểm thử",
+      "translated_text": "Test Set",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Test Set",
+      "translated_text": "Tập kiểm thử",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tập thẩm định",
+      "translated_text": "Validation Set",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Validation Set",
+      "translated_text": "Tập thẩm định",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Độ chính xác",
+      "translated_text": "Accuracy",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Accuracy",
+      "translated_text": "Độ chính xác",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Độ chuẩn xác",
+      "translated_text": "Precision",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Precision",
+      "translated_text": "Độ chuẩn xác",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Độ bao phủ",
+      "translated_text": "Recall",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Recall",
+      "translated_text": "Độ bao phủ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Chỉ số F1",
+      "translated_text": "F1 Score",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "F1 Score",
+      "translated_text": "Chỉ số F1",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Nhận dạng giọng nói tự động",
+      "translated_text": "Automatic Speech Recognition",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Automatic Speech Recognition",
+      "translated_text": "Nhận dạng giọng nói tự động",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Chuyển văn bản thành giọng nói",
+      "translated_text": "Text-to-Speech",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Text-to-Speech",
+      "translated_text": "Chuyển văn bản thành giọng nói",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Dịch máy nơ-ron",
+      "translated_text": "Neural Machine Translation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Neural Machine Translation",
+      "translated_text": "Dịch máy nơ-ron",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phát hiện hoạt động giọng nói",
+      "translated_text": "Voice Activity Detection",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Voice Activity Detection",
+      "translated_text": "Phát hiện hoạt động giọng nói",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Lọc nhiễu âm thanh",
+      "translated_text": "Audio Noise Reduction",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Audio Noise Reduction",
+      "translated_text": "Lọc nhiễu âm thanh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phân đoạn âm thanh",
+      "translated_text": "Audio Segmentation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Audio Segmentation",
+      "translated_text": "Phân đoạn âm thanh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tần số lấy mẫu âm thanh",
+      "translated_text": "Audio Sample Rate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Audio Sample Rate",
+      "translated_text": "Tần số lấy mẫu âm thanh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Độ trễ xử lý",
+      "translated_text": "Processing Latency",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Processing Latency",
+      "translated_text": "Độ trễ xử lý",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Băng thông mạng",
+      "translated_text": "Network Bandwidth",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Network Bandwidth",
+      "translated_text": "Băng thông mạng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Điện toán đám mây",
+      "translated_text": "Cloud Computing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cloud Computing",
+      "translated_text": "Điện toán đám mây",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Điện toán biên",
+      "translated_text": "Edge Computing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Edge Computing",
+      "translated_text": "Điện toán biên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cơ sở dữ liệu quan hệ",
+      "translated_text": "Relational Database",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Relational Database",
+      "translated_text": "Cơ sở dữ liệu quan hệ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cơ sở dữ liệu phi quan hệ",
+      "translated_text": "NoSQL Database",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "NoSQL Database",
+      "translated_text": "Cơ sở dữ liệu phi quan hệ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Khóa chính",
+      "translated_text": "Primary Key",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Primary Key",
+      "translated_text": "Khóa chính",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Khóa ngoại",
+      "translated_text": "Foreign Key",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Foreign Key",
+      "translated_text": "Khóa ngoại",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Chỉ mục cơ sở dữ liệu",
+      "translated_text": "Database Index",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Database Index",
+      "translated_text": "Chỉ mục cơ sở dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Giao dịch cơ sở dữ liệu",
+      "translated_text": "Database Transaction",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Database Transaction",
+      "translated_text": "Giao dịch cơ sở dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bảo đảm tính toàn vẹn dữ liệu",
+      "translated_text": "Data Integrity Assurance",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Data Integrity Assurance",
+      "translated_text": "Bảo đảm tính toàn vẹn dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Sao lưu và phục hồi dữ liệu",
+      "translated_text": "Data Backup and Recovery",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Data Backup and Recovery",
+      "translated_text": "Sao lưu và phục hồi dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kho dữ liệu",
+      "translated_text": "Data Warehouse",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Data Warehouse",
+      "translated_text": "Kho dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hồ dữ liệu",
+      "translated_text": "Data Lake",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Data Lake",
+      "translated_text": "Hồ dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Khai phá dữ liệu",
+      "translated_text": "Data Mining",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Data Mining",
+      "translated_text": "Khai phá dữ liệu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kỹ nghệ đặc trưng",
+      "translated_text": "Feature Engineering",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Feature Engineering",
+      "translated_text": "Kỹ nghệ đặc trưng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Nhúng từ vựng",
+      "translated_text": "Word Embedding",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Word Embedding",
+      "translated_text": "Nhúng từ vựng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phân tích cảm xúc",
+      "translated_text": "Sentiment Analysis",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Sentiment Analysis",
+      "translated_text": "Phân tích cảm xúc",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Trích xuất thông tin",
+      "translated_text": "Information Extraction",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Information Extraction",
+      "translated_text": "Trích xuất thông tin",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tóm tắt văn bản tự động",
+      "translated_text": "Automatic Text Summarization",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Automatic Text Summarization",
+      "translated_text": "Tóm tắt văn bản tự động",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hệ thống gợi ý",
+      "translated_text": "Recommendation System",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Recommendation System",
+      "translated_text": "Hệ thống gợi ý",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Trợ lý ảo thông minh",
+      "translated_text": "Intelligent Virtual Assistant",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Intelligent Virtual Assistant",
+      "translated_text": "Trợ lý ảo thông minh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Nhận diện khuôn mặt",
+      "translated_text": "Facial Recognition",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Facial Recognition",
+      "translated_text": "Nhận diện khuôn mặt",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phát hiện vật thể",
+      "translated_text": "Object Detection",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Object Detection",
+      "translated_text": "Phát hiện vật thể",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phân loại hình ảnh",
+      "translated_text": "Image Classification",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Image Classification",
+      "translated_text": "Phân loại hình ảnh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Sinh ảnh nhân tạo",
+      "translated_text": "AI Image Generation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "AI Image Generation",
+      "translated_text": "Sinh ảnh nhân tạo",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mạng đối nghịch tạo sinh",
+      "translated_text": "Generative Adversarial Network",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Generative Adversarial Network",
+      "translated_text": "Mạng đối nghịch tạo sinh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mô hình khuếch tán",
+      "translated_text": "Diffusion Model",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Diffusion Model",
+      "translated_text": "Mô hình khuếch tán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bộ vi xử lý đồ họa",
+      "translated_text": "Graphics Processing Unit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Graphics Processing Unit",
+      "translated_text": "Bộ vi xử lý đồ họa",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bộ vi xử lý trung tâm",
+      "translated_text": "Central Processing Unit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Central Processing Unit",
+      "translated_text": "Bộ vi xử lý trung tâm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bộ nhớ truy xuất ngẫu nhiên",
+      "translated_text": "Random Access Memory",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Random Access Memory",
+      "translated_text": "Bộ nhớ truy xuất ngẫu nhiên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Ổ lưu trữ thể rắn",
+      "translated_text": "Solid State Drive",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Solid State Drive",
+      "translated_text": "Ổ lưu trữ thể rắn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hệ điều hành mã nguồn mở",
+      "translated_text": "Open Source Operating System",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Open Source Operating System",
+      "translated_text": "Hệ điều hành mã nguồn mở",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bộ chứa ứng dụng",
+      "translated_text": "Software Container",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Software Container",
+      "translated_text": "Bộ chứa ứng dụng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Điều phối bộ chứa",
+      "translated_text": "Container Orchestration",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Container Orchestration",
+      "translated_text": "Điều phối bộ chứa",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiến trúc dịch vụ siêu nhỏ",
+      "translated_text": "Microservices Architecture",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Microservices Architecture",
+      "translated_text": "Kiến trúc dịch vụ siêu nhỏ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiến trúc nguyên khối",
+      "translated_text": "Monolithic Architecture",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Monolithic Architecture",
+      "translated_text": "Kiến trúc nguyên khối",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Giao diện lập trình ứng dụng",
+      "translated_text": "Application Programming Interface",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Application Programming Interface",
+      "translated_text": "Giao diện lập trình ứng dụng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cổng giao tiếp API",
+      "translated_text": "API Gateway",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "API Gateway",
+      "translated_text": "Cổng giao tiếp API",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Chứng thực người dùng",
+      "translated_text": "User Authentication",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "User Authentication",
+      "translated_text": "Chứng thực người dùng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phân quyền truy cập",
+      "translated_text": "Access Authorization",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Access Authorization",
+      "translated_text": "Phân quyền truy cập",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Xác thực đa yếu tố",
+      "translated_text": "Multi-Factor Authentication",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Multi-Factor Authentication",
+      "translated_text": "Xác thực đa yếu tố",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mã xác thực một lần theo thời gian",
+      "translated_text": "Time-based One-Time Password",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Time-based One-Time Password",
+      "translated_text": "Mã xác thực một lần theo thời gian",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Mã hóa đầu cuối",
+      "translated_text": "End-to-End Encryption",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "End-to-End Encryption",
+      "translated_text": "Mã hóa đầu cuối",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Khóa mật mã bất đối xứng",
+      "translated_text": "Asymmetric Cryptographic Key",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Asymmetric Cryptographic Key",
+      "translated_text": "Khóa mật mã bất đối xứng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Chữ ký điện tử số",
+      "translated_text": "Digital Signature",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Digital Signature",
+      "translated_text": "Chữ ký điện tử số",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tường lửa bảo mật",
+      "translated_text": "Security Firewall",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Security Firewall",
+      "translated_text": "Tường lửa bảo mật",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Hệ thống phát hiện xâm nhập",
+      "translated_text": "Intrusion Detection System",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Intrusion Detection System",
+      "translated_text": "Hệ thống phát hiện xâm nhập",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tấn công từ chối dịch vụ",
+      "translated_text": "Denial of Service Attack",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Denial of Service Attack",
+      "translated_text": "Tấn công từ chối dịch vụ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Lỗ hổng bảo mật",
+      "translated_text": "Security Vulnerability",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Security Vulnerability",
+      "translated_text": "Lỗ hổng bảo mật",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bản vá bảo mật",
+      "translated_text": "Security Patch",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Security Patch",
+      "translated_text": "Bản vá bảo mật",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiểm thử thâm nhập",
+      "translated_text": "Penetration Testing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Penetration Testing",
+      "translated_text": "Kiểm thử thâm nhập",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Quản lý mã nguồn",
+      "translated_text": "Source Code Management",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Source Code Management",
+      "translated_text": "Quản lý mã nguồn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiểm thử đơn vị",
+      "translated_text": "Unit Testing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Unit Testing",
+      "translated_text": "Kiểm thử đơn vị",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiểm thử tích hợp",
+      "translated_text": "Integration Testing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Integration Testing",
+      "translated_text": "Kiểm thử tích hợp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Kiểm thử hồi quy",
+      "translated_text": "Regression Testing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Regression Testing",
+      "translated_text": "Kiểm thử hồi quy",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Tích hợp liên tục",
+      "translated_text": "Continuous Integration",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Continuous Integration",
+      "translated_text": "Tích hợp liên tục",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Triển khai liên tục",
+      "translated_text": "Continuous Deployment",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Continuous Deployment",
+      "translated_text": "Triển khai liên tục",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Phát hành bản thử nghiệm",
+      "translated_text": "Canary Deployment",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Canary Deployment",
+      "translated_text": "Phát hành bản thử nghiệm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Khôi phục phiên bản cũ",
+      "translated_text": "Version Rollback",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Version Rollback",
+      "translated_text": "Khôi phục phiên bản cũ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cân bằng tải hệ thống",
+      "translated_text": "System Load Balancing",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "System Load Balancing",
+      "translated_text": "Cân bằng tải hệ thống",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Bộ nhớ đệm trung gian",
+      "translated_text": "Cache Memory",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Cache Memory",
+      "translated_text": "Bộ nhớ đệm trung gian",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "technology"
+    },
+    {
+      "source_text": "Điều khoản thanh toán",
+      "translated_text": "Payment Terms",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Payment Terms",
+      "translated_text": "Điều khoản thanh toán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Phương thức thanh toán",
+      "translated_text": "Payment Method",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Payment Method",
+      "translated_text": "Phương thức thanh toán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thanh toán trực tuyến",
+      "translated_text": "Online Payment",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Online Payment",
+      "translated_text": "Thanh toán trực tuyến",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chuyển khoản ngân hàng",
+      "translated_text": "Bank Wire Transfer",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bank Wire Transfer",
+      "translated_text": "Chuyển khoản ngân hàng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tài khoản vãng lai",
+      "translated_text": "Checking Account",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Checking Account",
+      "translated_text": "Tài khoản vãng lai",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tài khoản tiết kiệm",
+      "translated_text": "Savings Account",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Savings Account",
+      "translated_text": "Tài khoản tiết kiệm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lãi suất ngân hàng",
+      "translated_text": "Bank Interest Rate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bank Interest Rate",
+      "translated_text": "Lãi suất ngân hàng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lãi suất danh nghĩa",
+      "translated_text": "Nominal Interest Rate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nominal Interest Rate",
+      "translated_text": "Lãi suất danh nghĩa",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lãi suất thực tế",
+      "translated_text": "Real Interest Rate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Real Interest Rate",
+      "translated_text": "Lãi suất thực tế",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lãi kép",
+      "translated_text": "Compound Interest",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Compound Interest",
+      "translated_text": "Lãi kép",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tỷ giá hối đoái",
+      "translated_text": "Foreign Exchange Rate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Foreign Exchange Rate",
+      "translated_text": "Tỷ giá hối đoái",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Ngoại tệ",
+      "translated_text": "Foreign Currency",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Foreign Currency",
+      "translated_text": "Ngoại tệ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Dự trữ ngoại hối",
+      "translated_text": "Foreign Exchange Reserves",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Foreign Exchange Reserves",
+      "translated_text": "Dự trữ ngoại hối",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lạm phát",
+      "translated_text": "Inflation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Inflation",
+      "translated_text": "Lạm phát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Giảm phát",
+      "translated_text": "Deflation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Deflation",
+      "translated_text": "Giảm phát",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chỉ số giá tiêu dùng",
+      "translated_text": "Consumer Price Index",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Consumer Price Index",
+      "translated_text": "Chỉ số giá tiêu dùng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tổng sản phẩm quốc nội",
+      "translated_text": "Gross Domestic Product",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Gross Domestic Product",
+      "translated_text": "Tổng sản phẩm quốc nội",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thu nhập bình quân đầu người",
+      "translated_text": "Per Capita Income",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Per Capita Income",
+      "translated_text": "Thu nhập bình quân đầu người",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Báo cáo tài chính năm",
+      "translated_text": "Annual Financial Statement",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Annual Financial Statement",
+      "translated_text": "Báo cáo tài chính năm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bảng cân đối kế toán",
+      "translated_text": "Balance Sheet",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Balance Sheet",
+      "translated_text": "Bảng cân đối kế toán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Báo cáo kết quả hoạt động kinh doanh",
+      "translated_text": "Income Statement",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Income Statement",
+      "translated_text": "Báo cáo kết quả hoạt động kinh doanh",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Báo cáo lưu chuyển tiền tệ",
+      "translated_text": "Cash Flow Statement",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Cash Flow Statement",
+      "translated_text": "Báo cáo lưu chuyển tiền tệ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Dòng tiền thuần",
+      "translated_text": "Net Cash Flow",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Net Cash Flow",
+      "translated_text": "Dòng tiền thuần",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tài sản lưu động",
+      "translated_text": "Current Assets",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Current Assets",
+      "translated_text": "Tài sản lưu động",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tài sản cố định",
+      "translated_text": "Fixed Assets",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Fixed Assets",
+      "translated_text": "Tài sản cố định",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Khấu hao tài sản",
+      "translated_text": "Asset Depreciation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Asset Depreciation",
+      "translated_text": "Khấu hao tài sản",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nợ ngắn hạn",
+      "translated_text": "Short-term Liabilities",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Short-term Liabilities",
+      "translated_text": "Nợ ngắn hạn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nợ dài hạn",
+      "translated_text": "Long-term Liabilities",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Long-term Liabilities",
+      "translated_text": "Nợ dài hạn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Vốn chủ sở hữu",
+      "translated_text": "Owner's Equity",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Owner's Equity",
+      "translated_text": "Vốn chủ sở hữu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Vốn điều lệ",
+      "translated_text": "Charter Capital",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Charter Capital",
+      "translated_text": "Vốn điều lệ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Vốn lưu động",
+      "translated_text": "Working Capital",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Working Capital",
+      "translated_text": "Vốn lưu động",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Doanh thu thuần",
+      "translated_text": "Net Revenue",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Net Revenue",
+      "translated_text": "Doanh thu thuần",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lợi nhuận gộp",
+      "translated_text": "Gross Profit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Gross Profit",
+      "translated_text": "Lợi nhuận gộp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Lợi nhuận ròng",
+      "translated_text": "Net Profit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Net Profit",
+      "translated_text": "Lợi nhuận ròng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Biên lợi nhuận",
+      "translated_text": "Profit Margin",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Profit Margin",
+      "translated_text": "Biên lợi nhuận",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tỷ suất sinh lời trên tổng tài sản",
+      "translated_text": "Return on Assets",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Return on Assets",
+      "translated_text": "Tỷ suất sinh lời trên tổng tài sản",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Giá trị hiện tại ròng",
+      "translated_text": "Net Present Value",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Net Present Value",
+      "translated_text": "Giá trị hiện tại ròng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tỷ suất hoàn vốn nội bộ",
+      "translated_text": "Internal Rate of Return",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Internal Rate of Return",
+      "translated_text": "Tỷ suất hoàn vốn nội bộ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Điểm hòa vốn",
+      "translated_text": "Break-even Point",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Break-even Point",
+      "translated_text": "Điểm hòa vốn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chi phí cố định",
+      "translated_text": "Fixed Costs",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Fixed Costs",
+      "translated_text": "Chi phí cố định",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chi phí biến đổi",
+      "translated_text": "Variable Costs",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Variable Costs",
+      "translated_text": "Chi phí biến đổi",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chi phí vận hành",
+      "translated_text": "Operating Expenses",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Operating Expenses",
+      "translated_text": "Chi phí vận hành",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Chi phí vốn",
+      "translated_text": "Capital Expenditure",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Capital Expenditure",
+      "translated_text": "Chi phí vốn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thị trường chứng khoán",
+      "translated_text": "Stock Market",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Stock Market",
+      "translated_text": "Thị trường chứng khoán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Cổ phiếu phổ thông",
+      "translated_text": "Common Stock",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Common Stock",
+      "translated_text": "Cổ phiếu phổ thông",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Cổ phiếu ưu đãi",
+      "translated_text": "Preferred Stock",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Preferred Stock",
+      "translated_text": "Cổ phiếu ưu đãi",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Trái phiếu chính phủ",
+      "translated_text": "Government Bonds",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Government Bonds",
+      "translated_text": "Trái phiếu chính phủ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Trái phiếu doanh nghiệp",
+      "translated_text": "Corporate Bonds",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Corporate Bonds",
+      "translated_text": "Trái phiếu doanh nghiệp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Cổ tức",
+      "translated_text": "Dividend",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Dividend",
+      "translated_text": "Cổ tức",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Giá trị vốn hóa thị trường",
+      "translated_text": "Market Capitalization",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Market Capitalization",
+      "translated_text": "Giá trị vốn hóa thị trường",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Quỹ đầu tư mạo hiểm",
+      "translated_text": "Venture Capital Fund",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Venture Capital Fund",
+      "translated_text": "Quỹ đầu tư mạo hiểm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Quỹ hoán đổi danh mục",
+      "translated_text": "Exchange-Traded Fund",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Exchange-Traded Fund",
+      "translated_text": "Quỹ hoán đổi danh mục",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nhà đầu tư thiên thần",
+      "translated_text": "Angel Investor",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Angel Investor",
+      "translated_text": "Nhà đầu tư thiên thần",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Mua bán và sáp nhập doanh nghiệp",
+      "translated_text": "Mergers and Acquisitions",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Mergers and Acquisitions",
+      "translated_text": "Mua bán và sáp nhập doanh nghiệp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thẩm định giá trị doanh nghiệp",
+      "translated_text": "Corporate Valuation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Corporate Valuation",
+      "translated_text": "Thẩm định giá trị doanh nghiệp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thẩm tra chi tiết trước đầu tư",
+      "translated_text": "Due Diligence",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Due Diligence",
+      "translated_text": "Thẩm tra chi tiết trước đầu tư",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Quản trị rủi ro tài chính",
+      "translated_text": "Financial Risk Management",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Financial Risk Management",
+      "translated_text": "Quản trị rủi ro tài chính",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Xếp hạng tín nhiệm",
+      "translated_text": "Credit Rating",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Credit Rating",
+      "translated_text": "Xếp hạng tín nhiệm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Hạn mức tín dụng",
+      "translated_text": "Credit Limit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Credit Limit",
+      "translated_text": "Hạn mức tín dụng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nợ xấu",
+      "translated_text": "Non-performing Loan",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Non-performing Loan",
+      "translated_text": "Nợ xấu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Tài sản thế chấp",
+      "translated_text": "Collateral Asset",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Collateral Asset",
+      "translated_text": "Tài sản thế chấp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Giải ngân vốn vay",
+      "translated_text": "Loan Disbursement",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Loan Disbursement",
+      "translated_text": "Giải ngân vốn vay",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thời hạn đáo hạn",
+      "translated_text": "Maturity Date",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Maturity Date",
+      "translated_text": "Thời hạn đáo hạn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bảo lãnh ngân hàng",
+      "translated_text": "Bank Guarantee",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bank Guarantee",
+      "translated_text": "Bảo lãnh ngân hàng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Thư tín dụng",
+      "translated_text": "Letter of Credit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Letter of Credit",
+      "translated_text": "Thư tín dụng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Nhờ thu chứng từ",
+      "translated_text": "Documentary Collection",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Documentary Collection",
+      "translated_text": "Nhờ thu chứng từ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Hóa đơn thương mại",
+      "translated_text": "Commercial Invoice",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Commercial Invoice",
+      "translated_text": "Hóa đơn thương mại",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Vận đơn đường biển",
+      "translated_text": "Bill of Lading",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Bill of Lading",
+      "translated_text": "Vận đơn đường biển",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Vận đơn hàng không",
+      "translated_text": "Air Waybill",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Air Waybill",
+      "translated_text": "Vận đơn hàng không",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Phiếu đóng gói hàng hóa",
+      "translated_text": "Packing List",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Packing List",
+      "translated_text": "Phiếu đóng gói hàng hóa",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "commerce"
+    },
+    {
+      "source_text": "Học viên cao học thạc sĩ",
+      "translated_text": "Master's Graduate Student",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Master's Graduate Student",
+      "translated_text": "Học viên cao học thạc sĩ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Sinh viên cử nhân chính quy",
+      "translated_text": "Full-time Undergraduate Bachelor Student",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Full-time Undergraduate Bachelor Student",
+      "translated_text": "Sinh viên cử nhân chính quy",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Khóa luận tốt nghiệp đại học",
+      "translated_text": "Undergraduate Graduation Thesis",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Undergraduate Graduation Thesis",
+      "translated_text": "Khóa luận tốt nghiệp đại học",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Luận văn thạc sĩ khoa học",
+      "translated_text": "Master of Science Thesis",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Master of Science Thesis",
+      "translated_text": "Luận văn thạc sĩ khoa học",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Luận án tiến sĩ chuyên ngành",
+      "translated_text": "Doctoral PhD Dissertation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Doctoral PhD Dissertation",
+      "translated_text": "Luận án tiến sĩ chuyên ngành",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hội đồng bảo vệ luận văn",
+      "translated_text": "Thesis Defense Examination Board",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Thesis Defense Examination Board",
+      "translated_text": "Hội đồng bảo vệ luận văn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học bổng toàn phần",
+      "translated_text": "Full Academic Scholarship",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Full Academic Scholarship",
+      "translated_text": "Học bổng toàn phần",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học phí theo tín chỉ",
+      "translated_text": "Tuition Fee per Credit Unit",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Tuition Fee per Credit Unit",
+      "translated_text": "Học phí theo tín chỉ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Chương trình đào tạo chuẩn",
+      "translated_text": "Standard Academic Curriculum",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Standard Academic Curriculum",
+      "translated_text": "Chương trình đào tạo chuẩn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học phần bắt buộc",
+      "translated_text": "Mandatory Core Course",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Mandatory Core Course",
+      "translated_text": "Học phần bắt buộc",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học phần tự chọn chuyên sâu",
+      "translated_text": "Elective Specialization Course",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Elective Specialization Course",
+      "translated_text": "Học phần tự chọn chuyên sâu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Điểm trung bình tích lũy GPA",
+      "translated_text": "Grade Point Average Cumulative GPA",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Grade Point Average Cumulative GPA",
+      "translated_text": "Điểm trung bình tích lũy GPA",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Bảng điểm học tập chính thức",
+      "translated_text": "Official Academic Transcript",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Official Academic Transcript",
+      "translated_text": "Bảng điểm học tập chính thức",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Bằng tốt nghiệp đại học",
+      "translated_text": "Bachelor Degree Diploma",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Bachelor Degree Diploma",
+      "translated_text": "Bằng tốt nghiệp đại học",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Chứng chỉ năng lực ngoại ngữ quốc tế",
+      "translated_text": "International Foreign Language Certificate",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "International Foreign Language Certificate",
+      "translated_text": "Chứng chỉ năng lực ngoại ngữ quốc tế",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Bài báo khoa học bình duyệt",
+      "translated_text": "Peer-reviewed Scientific Journal Paper",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Peer-reviewed Scientific Journal Paper",
+      "translated_text": "Bài báo khoa học bình duyệt",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hội thảo khoa học quốc tế",
+      "translated_text": "International Academic Conference",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "International Academic Conference",
+      "translated_text": "Hội thảo khoa học quốc tế",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Kỷ yếu hội nghị khoa học",
+      "translated_text": "Conference Proceedings Collection",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Conference Proceedings Collection",
+      "translated_text": "Kỷ yếu hội nghị khoa học",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Chỉ số trích dẫn khoa học Scopus",
+      "translated_text": "Scopus Scientific Citation Index",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Scopus Scientific Citation Index",
+      "translated_text": "Chỉ số trích dẫn khoa học Scopus",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Đạo văn và liêm chính học thuật",
+      "translated_text": "Plagiarism and Academic Integrity",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Plagiarism and Academic Integrity",
+      "translated_text": "Đạo văn và liêm chính học thuật",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Tài liệu tham khảo học thuật",
+      "translated_text": "Academic Bibliography References",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Academic Bibliography References",
+      "translated_text": "Tài liệu tham khảo học thuật",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Phương pháp nghiên cứu khoa học",
+      "translated_text": "Scientific Research Methodology",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Scientific Research Methodology",
+      "translated_text": "Phương pháp nghiên cứu khoa học",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Giả thuyết nghiên cứu",
+      "translated_text": "Research Hypothesis",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Research Hypothesis",
+      "translated_text": "Giả thuyết nghiên cứu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Phân tích dữ liệu thực nghiệm",
+      "translated_text": "Empirical Data Analysis",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Empirical Data Analysis",
+      "translated_text": "Phân tích dữ liệu thực nghiệm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Khảo sát định lượng",
+      "translated_text": "Quantitative Survey",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Quantitative Survey",
+      "translated_text": "Khảo sát định lượng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Nghiên cứu định tính",
+      "translated_text": "Qualitative Case Study Research",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Qualitative Case Study Research",
+      "translated_text": "Nghiên cứu định tính",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Nhóm mẫu thử nghiệm ngẫu nhiên",
+      "translated_text": "Randomized Controlled Trial Group",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Randomized Controlled Trial Group",
+      "translated_text": "Nhóm mẫu thử nghiệm ngẫu nhiên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Khoảng tin cậy thống kê",
+      "translated_text": "Statistical Confidence Interval",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Statistical Confidence Interval",
+      "translated_text": "Khoảng tin cậy thống kê",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Mức ý nghĩa thống kê p-value",
+      "translated_text": "Statistical Significance p-value",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Statistical Significance p-value",
+      "translated_text": "Mức ý nghĩa thống kê p-value",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Độ lệch chuẩn",
+      "translated_text": "Standard Deviation",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Standard Deviation",
+      "translated_text": "Độ lệch chuẩn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Phân phối chuẩn hình chuông",
+      "translated_text": "Normal Gaussian Distribution",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Normal Gaussian Distribution",
+      "translated_text": "Phân phối chuẩn hình chuông",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hồi quy tuyến tính",
+      "translated_text": "Linear Regression",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Linear Regression",
+      "translated_text": "Hồi quy tuyến tính",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hồi quy logistic",
+      "translated_text": "Logistic Regression",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Logistic Regression",
+      "translated_text": "Hồi quy logistic",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Mối tương quan nhân quả",
+      "translated_text": "Causal Correlation Relationship",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Causal Correlation Relationship",
+      "translated_text": "Mối tương quan nhân quả",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học tập suốt đời",
+      "translated_text": "Lifelong Continuous Learning",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Lifelong Continuous Learning",
+      "translated_text": "Học tập suốt đời",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Giáo dục trực tuyến từ xa E-learning",
+      "translated_text": "Distance E-learning Education",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Distance E-learning Education",
+      "translated_text": "Giáo dục trực tuyến từ xa E-learning",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Khóa học mở trực tuyến đại chúng MOOC",
+      "translated_text": "Massive Open Online Course",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Massive Open Online Course",
+      "translated_text": "Khóa học mở trực tuyến đại chúng MOOC",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Lớp học đảo ngược",
+      "translated_text": "Flipped Classroom Model",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Flipped Classroom Model",
+      "translated_text": "Lớp học đảo ngược",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Tư duy phản biện độc lập",
+      "translated_text": "Independent Critical Thinking",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Independent Critical Thinking",
+      "translated_text": "Tư duy phản biện độc lập",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Giải quyết vấn đề phức tạp",
+      "translated_text": "Complex Problem Solving",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Complex Problem Solving",
+      "translated_text": "Giải quyết vấn đề phức tạp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Kỹ năng làm việc nhóm",
+      "translated_text": "Teamwork Collaborative Skills",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Teamwork Collaborative Skills",
+      "translated_text": "Kỹ năng làm việc nhóm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Kỹ năng giao tiếp thuyết trình",
+      "translated_text": "Presentation and Communication Skills",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Presentation and Communication Skills",
+      "translated_text": "Kỹ năng giao tiếp thuyết trình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Tự học và tự nghiên cứu",
+      "translated_text": "Self-directed Study and Research",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Self-directed Study and Research",
+      "translated_text": "Tự học và tự nghiên cứu",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Thư viện số điện tử",
+      "translated_text": "Digital Electronic Library",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Digital Electronic Library",
+      "translated_text": "Thư viện số điện tử",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Cơ sở dữ liệu luận văn",
+      "translated_text": "Dissertation and Thesis Database",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Dissertation and Thesis Database",
+      "translated_text": "Cơ sở dữ liệu luận văn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Phòng học thông minh đa phương tiện",
+      "translated_text": "Smart Multimedia Classroom",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Smart Multimedia Classroom",
+      "translated_text": "Phòng học thông minh đa phương tiện",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Học bổng trao đổi sinh viên quốc tế",
+      "translated_text": "International Student Exchange Scholarship",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "International Student Exchange Scholarship",
+      "translated_text": "Học bổng trao đổi sinh viên quốc tế",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Thực tập sinh tốt nghiệp tại doanh nghiệp",
+      "translated_text": "Corporate Graduate Internship",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Corporate Graduate Internship",
+      "translated_text": "Thực tập sinh tốt nghiệp tại doanh nghiệp",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Ngày hội việc làm sinh viên",
+      "translated_text": "University Student Career Fair",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "University Student Career Fair",
+      "translated_text": "Ngày hội việc làm sinh viên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hồ sơ năng lực cá nhân Portfolio",
+      "translated_text": "Professional Competency Portfolio",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "education"
+    },
+    {
+      "source_text": "Professional Competency Portfolio",
+      "translated_text": "Hồ sơ năng lực cá nhân Portfolio",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "education"
+    },
+    {
+      "source_text": "Hẹn gặp lại bạn vào dịp sớm nhất",
+      "translated_text": "See you again very soon",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "See you again very soon",
+      "translated_text": "Hẹn gặp lại bạn vào dịp sớm nhất",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Chúc chuyến đi thượng lộ bình an",
+      "translated_text": "Have a safe and pleasant trip",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Have a safe and pleasant trip",
+      "translated_text": "Chúc chuyến đi thượng lộ bình an",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Chúc mừng sinh nhật nhiều niềm vui",
+      "translated_text": "Wishing you a happy and joyful birthday",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Wishing you a happy and joyful birthday",
+      "translated_text": "Chúc mừng sinh nhật nhiều niềm vui",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Chúc mừng năm mới an khang thịnh vượng",
+      "translated_text": "Happy New Year of prosperity and health",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Happy New Year of prosperity and health",
+      "translated_text": "Chúc mừng năm mới an khang thịnh vượng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Xin chia buồn sâu sắc cùng gia đình",
+      "translated_text": "Deepest condolences to you and your family",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Deepest condolences to you and your family",
+      "translated_text": "Xin chia buồn sâu sắc cùng gia đình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Tôi không hiểu rõ ý của bạn",
+      "translated_text": "I don't quite understand your point",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "I don't quite understand your point",
+      "translated_text": "Tôi không hiểu rõ ý của bạn",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Làm ơn nói chậm lại một chút",
+      "translated_text": "Please speak a little more slowly",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Please speak a little more slowly",
+      "translated_text": "Làm ơn nói chậm lại một chút",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Tôi muốn thanh toán bằng tiền mặt",
+      "translated_text": "I would like to pay in cash",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "I would like to pay in cash",
+      "translated_text": "Tôi muốn thanh toán bằng tiền mặt",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Làm ơn gọi giúp tôi một chiếc taxi",
+      "translated_text": "Please call a taxi for me",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Please call a taxi for me",
+      "translated_text": "Làm ơn gọi giúp tôi một chiếc taxi",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Tôi cần đến địa chỉ này",
+      "translated_text": "I need to get to this specific address",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "I need to get to this specific address",
+      "translated_text": "Tôi cần đến địa chỉ này",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Đường này đang bị kẹt xe nghiêm trọng",
+      "translated_text": "This road is heavily congested with traffic",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "This road is heavily congested with traffic",
+      "translated_text": "Đường này đang bị kẹt xe nghiêm trọng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Đèn tín hiệu giao thông",
+      "translated_text": "Traffic Signal Lights",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Traffic Signal Lights",
+      "translated_text": "Đèn tín hiệu giao thông",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Vạch kẻ đường cho người đi bộ",
+      "translated_text": "Pedestrian Crosswalk",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Pedestrian Crosswalk",
+      "translated_text": "Vạch kẻ đường cho người đi bộ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Cầu vượt cho người đi bộ",
+      "translated_text": "Pedestrian Footbridge",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Pedestrian Footbridge",
+      "translated_text": "Cầu vượt cho người đi bộ",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Bãi giữ xe máy tự động",
+      "translated_text": "Automated Motorbike Parking Lot",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Automated Motorbike Parking Lot",
+      "translated_text": "Bãi giữ xe máy tự động",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Trạm xe buýt công cộng",
+      "translated_text": "Public Bus Stop",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Public Bus Stop",
+      "translated_text": "Trạm xe buýt công cộng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Vé tháng xe buýt học sinh sinh viên",
+      "translated_text": "Monthly Student Bus Pass",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Monthly Student Bus Pass",
+      "translated_text": "Vé tháng xe buýt học sinh sinh viên",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Tuyến đường sắt đô thị trên cao",
+      "translated_text": "Elevated Urban Railway Line",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Elevated Urban Railway Line",
+      "translated_text": "Tuyến đường sắt đô thị trên cao",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Thuê bao điện thoại trả trước",
+      "translated_text": "Prepaid Mobile Subscription",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Prepaid Mobile Subscription",
+      "translated_text": "Thuê bao điện thoại trả trước",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Nạp tiền tài khoản điện thoại",
+      "translated_text": "Top-up Phone Account",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Top-up Phone Account",
+      "translated_text": "Nạp tiền tài khoản điện thoại",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Mật khẩu mạng không dây Wi-Fi",
+      "translated_text": "Wireless Wi-Fi Password",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Wireless Wi-Fi Password",
+      "translated_text": "Mật khẩu mạng không dây Wi-Fi",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Mất tín hiệu kết nối mạng",
+      "translated_text": "Lost Network Connection Signal",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Lost Network Connection Signal",
+      "translated_text": "Mất tín hiệu kết nối mạng",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Điện thoại của tôi sắp hết pin",
+      "translated_text": "My phone battery is running very low",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "My phone battery is running very low",
+      "translated_text": "Điện thoại của tôi sắp hết pin",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Cửa hàng tiện lợi mở cửa 24/7",
+      "translated_text": "24/7 Convenience Store",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "24/7 Convenience Store",
+      "translated_text": "Cửa hàng tiện lợi mở cửa 24/7",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Siêu thị mua sắm gia đình",
+      "translated_text": "Family Shopping Supermarket",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Family Shopping Supermarket",
+      "translated_text": "Siêu thị mua sắm gia đình",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Xe đẩy hàng mua sắm",
+      "translated_text": "Shopping Grocery Cart",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Shopping Grocery Cart",
+      "translated_text": "Xe đẩy hàng mua sắm",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Quầy thu ngân thanh toán",
+      "translated_text": "Checkout Cashier Counter",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Checkout Cashier Counter",
+      "translated_text": "Quầy thu ngân thanh toán",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Túi mua sắm bảo vệ môi trường",
+      "translated_text": "Eco-friendly Reusable Shopping Bag",
+      "source_lang": "vi",
+      "target_lang": "en",
+      "domain": "daily"
+    },
+    {
+      "source_text": "Eco-friendly Reusable Shopping Bag",
+      "translated_text": "Túi mua sắm bảo vệ môi trường",
+      "source_lang": "en",
+      "target_lang": "vi",
+      "domain": "daily"
+    }
+  ]
+}

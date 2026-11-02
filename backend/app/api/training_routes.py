@@ -238,7 +238,7 @@ def training_overview(db: Session = Depends(get_db), user: User = Depends(requir
     assets = {row.translation_log_id: row for row in db.query(TrainingAudioAsset).all()}
     whisper = [(review, log, assets.get(log.id)) for review, log in reviewed
                if eligible_for_whisper(review, assets.get(log.id))]
-    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review)]
+    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review, log)]
     whisper_splits = {split: sum(review.whisper_split == split for review, _, _ in whisper)
                       for split in ("train", "validation", "test")}
     nllb_splits = {split: sum(review.nllb_split == split for review, _ in nllb)

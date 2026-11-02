@@ -574,10 +574,12 @@ class DatabaseTranslationMemoryRepository(ITranslationMemoryRepository):
                 TranslationMemoryEntry.norm_version == 1,
             ).all()
             by_key = {(row.source_text_normalized, row.source_lang, row.target_lang): row for row in existing}
-            planned: list[tuple[str, str, str, str, str]] = []
+            planned = {}
             for source, target, src, tgt, original in prepared:
                 if src:
                     key = (source, src, tgt)
+                    by_key.pop((source, "", ""), None)
+                    planned.pop((source, "", ""), None)
                 else:
                     plain_key = (source, "", "")
                     if plain_key in by_key:
@@ -587,29 +589,19 @@ class DatabaseTranslationMemoryRepository(ITranslationMemoryRepository):
                         if len(matches) > 1:
                             raise ValueError("Specify a language pair for a term with multiple translations")
                         key = matches[0] if matches else plain_key
-                planned.append((source, target, key[1], key[2], original))
+                planned[key] = (target, original)
                 by_key.setdefault(key, None)
             if max_entries is not None and len(by_key) > max_entries:
                 raise ValueError("Dictionary capacity reached")
 
-            for source, target, src, tgt, original in planned:
-                if src:
-                    legacy = session.query(TranslationMemoryEntry).filter(
-                        TranslationMemoryEntry.owner_id == client_id,
-                        TranslationMemoryEntry.source_text_normalized == source,
-                        TranslationMemoryEntry.source_lang == "",
-                        TranslationMemoryEntry.target_lang == "",
-                        TranslationMemoryEntry.norm_version == 1,
-                    ).first()
-                    if legacy is not None:
-                        session.delete(legacy)
-                row = session.query(TranslationMemoryEntry).filter(
-                    TranslationMemoryEntry.owner_id == client_id,
-                    TranslationMemoryEntry.source_text_normalized == source,
-                    TranslationMemoryEntry.source_lang == src,
-                    TranslationMemoryEntry.target_lang == tgt,
-                    TranslationMemoryEntry.norm_version == 1,
-                ).first()
+            # Plan the final state before mutating the session. SessionLocal has
+            # autoflush disabled, so querying per input row can create duplicate
+            # pending inserts for repeated terms in the same upload.
+            for row in existing:
+                if (row.source_text_normalized, row.source_lang, row.target_lang) not in by_key:
+                    session.delete(row)
+            for (source, src, tgt), (target, original) in planned.items():
+                row = by_key[(source, src, tgt)]
                 if row is None:
                     row = TranslationMemoryEntry(
                         owner_id=client_id, source_lang=src, target_lang=tgt,

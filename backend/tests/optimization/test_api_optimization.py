@@ -303,6 +303,41 @@ def isolated_suite():
             self.assertEqual(tm.count("global:approved"), 0)
             self.assertFalse(self.tm_path.exists())
 
+        def test_csv_export_import_preserves_mixed_directions_over_form_defaults(self):
+            for src, tgt, value in (("en", "vi", "forward"), ("vi", "en", "reverse")):
+                tm.add("same", value, "global:approved", source_lang=src, target_lang=tgt)
+            exported = self.request("GET", "/admin/dictionary/export").content
+            tm.delete("same", "global:approved")
+            response = self.request("POST", "/admin/dictionary/upload",
+                                    data={"source_lang": "en", "target_lang": "vi"},
+                                    files={"file": ("backup.csv", exported, "text/csv")})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(tm.lookup("same", "global:approved", "en", "vi"), "forward")
+            self.assertEqual(tm.lookup("same", "global:approved", "vi", "en"), "reverse")
+
+        def test_csv_partial_language_metadata_is_rejected_atomically(self):
+            response = self.request("POST", "/admin/dictionary/upload",
+                                    files={"file": ("invalid.csv", b"valid,target,en,vi\nbad,target,en,\n", "text/csv")})
+            self.assertEqual(response.status_code, 422, response.text)
+            self.assertEqual(tm.count("global:approved"), 0)
+
+        def test_xlsx_import_preserves_row_languages(self):
+            import openpyxl
+            workbook = openpyxl.Workbook()
+            worksheet = workbook.active
+            worksheet.append(["source_text", "translated_text", "source_lang", "target_lang"])
+            worksheet.append(["same", "forward", "en", "vi"])
+            worksheet.append(["same", "reverse", "vi", "en"])
+            output = io.BytesIO()
+            workbook.save(output)
+            workbook.close()
+            response = self.request("POST", "/admin/dictionary/upload",
+                                    data={"source_lang": "en", "target_lang": "vi"},
+                                    files={"file": ("mixed.xlsx", output.getvalue(), "application/octet-stream")})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(tm.lookup("same", "global:approved", "en", "vi"), "forward")
+            self.assertEqual(tm.lookup("same", "global:approved", "vi", "en"), "reverse")
+
         def test_cache_setting_controls_direct_translate_and_invalidates_existing_entries(self):
             owner = self.users["employee"].public_id
             with patch.object(api, "translate_text", return_value={"translated_text": "translated"}) as inference:

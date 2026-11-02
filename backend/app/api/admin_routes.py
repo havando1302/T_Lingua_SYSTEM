@@ -714,7 +714,7 @@ def get_quality_overview(
         (review, log, assets.get(log.id)) for review, log in reviewed
         if eligible_for_whisper(review, assets.get(log.id))
     ]
-    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review)]
+    nllb = [(review, log) for review, log in reviewed if eligible_for_nllb(review, log)]
     return {
         "qa": {
             "reviewed": len(reviewed),
@@ -976,7 +976,7 @@ def get_training_stats(db: Session = Depends(get_db), user: User = Depends(requi
         (review, log, audio_by_log.get(log.id)) for review, log in rows
         if eligible_for_whisper(review, audio_by_log.get(log.id))
     ]
-    nllb = [(review, log) for review, log in rows if eligible_for_nllb(review)]
+    nllb = [(review, log) for review, log in rows if eligible_for_nllb(review, log)]
     return {
         "whisper": {
             "samples": len(whisper),
@@ -1001,7 +1001,7 @@ def export_nllb_training_data(db: Session = Depends(get_db), user: User = Depend
     lines = []
     seen = set()
     for review, log in _approved_training_rows(db):
-        if not eligible_for_nllb(review):
+        if not eligible_for_nllb(review, log):
             continue
         source = (review.corrected_source_text or log.source_text or "").strip()
         target = (review.corrected_text or "").strip()
@@ -1652,12 +1652,13 @@ def upload_dictionary_csv(file: UploadFile = File(...),
             raise HTTPException(422, "Dictionary upload is empty")
         # Parse and validate every row before writing anything to the dictionary.
         rows = _parse_dictionary_rows(contents, filename)
-        pairs = [_validated_pair(source, target, db) for source, target in rows]
-        if not pairs:
+        for row in rows:
+            row["source_text"], row["translated_text"] = _validated_pair(row["source_text"], row["translated_text"], db)
+        if not rows:
             raise HTTPException(422, "Dictionary upload contains no entries")
         try:
             added = tm.get_tm_repository().add_many(
-                [{"source_text": source, "translated_text": target} for source, target in pairs],
+                rows,
                 client_id=APPROVED_DICTIONARY, source_lang=source_lang, target_lang=target_lang, db=db,
             )
         except ValueError:
@@ -1674,8 +1675,11 @@ def upload_dictionary_csv(file: UploadFile = File(...),
 
 
 def _validated_pair(source: str, target: str, db: Session) -> tuple[str, str]:
+    from app.utils.translation_safety import has_internal_placeholder
     source = validate_text(source, db)
     target = validate_text(target, db)
+    if has_internal_placeholder(source) or has_internal_placeholder(target):
+        raise HTTPException(422, "Internal translation placeholders are not dictionary entries")
     if max(len(source), len(target)) > 5000 or not source.strip(".,!?;:\"'").strip():
         raise HTTPException(422, "Dictionary entry is invalid")
     return source, target
@@ -1721,8 +1725,18 @@ def _check_xlsx_archive(contents: bytes) -> None:
         raise HTTPException(400, "Không thể đọc cấu trúc file Excel")
 
 
-def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, str]]:
+def _parse_dictionary_rows(contents: bytes, filename: str) -> list[dict]:
     rows = []
+    def append_row(values):
+        if len(values) not in (2, 4):
+            raise HTTPException(422, "Dictionary rows require 2 text columns or 4 columns including languages")
+        row = {"source_text": values[0], "translated_text": values[1]}
+        if len(values) == 4:
+            # Explicit file metadata takes precedence over form defaults. Empty
+            # language columns preserve legacy entries on export/import.
+            row.update(source_lang=values[2].strip(), target_lang=values[3].strip())
+        rows.append(row)
+
     if filename.endswith(".csv"):
         try:
             reader = csv.reader(io.StringIO(contents.decode("utf-8-sig")), strict=True)
@@ -1733,7 +1747,7 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
                     raise HTTPException(422, "Each dictionary row requires source and translation")
                 if row[0].strip().lower() in {"source_text", "source", "từ gốc", "từ khóa"} and row[1].strip().lower() in {"translated_text", "target", "bản dịch", "nghĩa"}:
                     continue
-                rows.append((row[0], row[1]))
+                append_row(row)
                 if len(rows) > 5000:
                     raise HTTPException(413, "Dictionary upload must not exceed 5000 rows")
         except (UnicodeError, csv.Error):
@@ -1746,9 +1760,11 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
             worksheet = workbook.active
             if worksheet is None:
                 raise HTTPException(422, "Excel workbook contains no active worksheet")
+            if worksheet.max_column is not None and worksheet.max_column not in (2, 4):
+                raise HTTPException(422, "Dictionary worksheets require 2 or 4 columns")
             if worksheet.max_row is not None and worksheet.max_row > 5000:
                 raise HTTPException(413, "Dictionary upload must not exceed 5000 rows")
-            for index, row in enumerate(worksheet.iter_rows(max_row=5001, max_col=2), start=1):
+            for index, row in enumerate(worksheet.iter_rows(max_row=5001, max_col=5), start=1):
                 values = [cell.value for cell in row]
                 if all(value is None or str(value).strip() == "" for value in values):
                     continue
@@ -1758,7 +1774,10 @@ def _parse_dictionary_rows(contents: bytes, filename: str) -> list[tuple[str, st
                     raise HTTPException(422, "Excel formulas are not supported in dictionary entries")
                 if str(values[0]).strip().lower() in {"source_text", "source", "từ gốc", "từ khóa"} and str(values[1]).strip().lower() in {"translated_text", "target", "bản dịch", "nghĩa"}:
                     continue
-                rows.append(tuple(str(value) if value is not None else "" for value in values))
+                if values[4] is not None:
+                    raise HTTPException(422, "Dictionary rows must not contain extra columns")
+                column_count = 4 if worksheet.max_column and worksheet.max_column >= 4 else 2
+                append_row([str(value) if value is not None else "" for value in values[:column_count]])
         except HTTPException:
             raise
         except Exception:

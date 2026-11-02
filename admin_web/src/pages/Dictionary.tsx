@@ -218,6 +218,13 @@ const Dictionary = () => {
             </div>
           </CardHeader>
           <CardContent>
+            <p className="mb-4 text-sm text-text-muted">
+              File gồm 2 cột source_text, translated_text sẽ dùng chiều dịch đang chọn.
+              File có thêm source_lang, target_lang sẽ dùng chiều dịch của từng dòng,
+              phù hợp để nhập lại CSV đã xuất. Dòng trùng cùng chiều dịch dùng bản dịch ở dòng cuối.
+              {' '}Thuật ngữ tối đa 8 từ và 100 ký tự được bảo vệ trong câu dịch;
+              nội dung dài hơn chỉ dùng để tra Translation Memory khi khớp cả câu.
+            </p>
             {/* Language pair selectors with quick swap */}
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <label className="text-sm font-medium flex items-center gap-2">

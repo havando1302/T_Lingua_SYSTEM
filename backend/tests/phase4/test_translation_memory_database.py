@@ -51,6 +51,48 @@ class TranslationMemoryDatabaseTests(unittest.TestCase):
             self.assertEqual(row.translated_text, "Hello")
             self.assertTrue(row.is_approved)
 
+    def test_batch_duplicate_terms_use_last_value_without_unique_constraint_error(self):
+        repository = tm.DatabaseTranslationMemoryRepository()
+        with self.Session() as session:
+            self.assertEqual(repository.add_many([
+                {"source_text": "Hello!", "translated_text": "first"},
+                {"source_text": " hello ", "translated_text": "last"},
+            ], "global:approved", source_lang="en", target_lang="vi", db=session), 2)
+            session.commit()
+        with self.Session() as session:
+            self.assertEqual(repository.count("global:approved", db=session), 1)
+            self.assertEqual(repository.lookup("hello", "global:approved", "en", "vi", db=session), "last")
+
+    def test_batch_reclassifies_legacy_at_capacity_and_preserves_directions(self):
+        repository = tm.DatabaseTranslationMemoryRepository()
+        with self.Session() as session:
+            repository.add("hello", "legacy", "global:approved", db=session)
+            session.commit()
+            repository.add_many([
+                {"source_text": "hello", "translated_text": "forward", "source_lang": "en", "target_lang": "vi"},
+                {"source_text": "hello", "translated_text": "reverse", "source_lang": "vi", "target_lang": "en"},
+            ], "global:approved", max_entries=2, db=session)
+            session.commit()
+            self.assertEqual(repository.count("global:approved", db=session), 2)
+            self.assertEqual(repository.lookup("hello", "global:approved", "en", "vi", db=session), "forward")
+            self.assertEqual(repository.lookup("hello", "global:approved", "vi", "en", db=session), "reverse")
+
+    def test_invalid_batch_leaves_injected_session_unchanged(self):
+        repository = tm.DatabaseTranslationMemoryRepository()
+        with self.Session() as session:
+            repository.add_many([
+                {"source_text": "same", "translated_text": "forward", "source_lang": "en", "target_lang": "vi"},
+                {"source_text": "same", "translated_text": "reverse", "source_lang": "vi", "target_lang": "en"},
+            ], "global:approved", db=session)
+            session.commit()
+            with self.assertRaises(ValueError):
+                repository.add_many([
+                    {"source_text": "new", "translated_text": "new"},
+                    {"source_text": "same", "translated_text": "ambiguous"},
+                ], "global:approved", db=session)
+            session.commit()
+            self.assertEqual(repository.count("global:approved", db=session), 2)
+
     def test_legacy_json_migration_is_atomic_backed_up_and_idempotent(self):
         legacy_path = Path(self.temp.name) / "translation_memory.json"
         legacy_path.write_text(json.dumps({

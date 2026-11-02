@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import QualityReview, TrainingAudioAsset, TrainingDataset, TranslationLog
 from app.services.training_audio_storage import training_audio_path
+from app.utils.translation_safety import has_internal_placeholder
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -45,11 +46,14 @@ def has_training_clearance(review: QualityReview) -> bool:
     return bool(review.consent_for_training and review.pii_status in {"clean", "redacted"})
 
 
-def eligible_for_nllb(review: QualityReview) -> bool:
+def eligible_for_nllb(review: QualityReview, log: TranslationLog | None = None) -> bool:
     return bool(
         has_training_clearance(review)
         and review.use_for_nllb
         and review.translation_status in {"correct", "corrected"}
+        and not has_internal_placeholder(review.corrected_text or "")
+        and not has_internal_placeholder(review.corrected_source_text or "")
+        and not has_internal_placeholder((log.source_text or "") if log and not review.corrected_source_text else "")
     )
 
 
@@ -173,7 +177,7 @@ def preview_qa_snapshot(db: Session, task: str, *, domain: str | None = None,
         if task == "nllb":
             if not review.use_for_nllb or review.translation_status not in {"correct", "corrected"}:
                 blockers["not_approved"] += 1
-            if eligible_for_nllb(review):
+            if eligible_for_nllb(review, log):
                 selected.append((review, log, asset))
         else:
             if asset is None:
@@ -225,7 +229,7 @@ def create_qa_snapshot(db: Session, dataset: TrainingDataset, *, domain: str | N
         path = destination / "nllb-training.jsonl"
         with path.open("x", encoding="utf-8", newline="\n") as output:
             for review, log in rows:
-                if not eligible_for_nllb(review):
+                if not eligible_for_nllb(review, log):
                     continue
                 source = (review.corrected_source_text or log.source_text or "").strip()
                 target = (review.corrected_text or "").strip()
@@ -296,6 +300,8 @@ def _normalise_nllb_row(row: dict, number: int) -> dict:
     split = str(row.get("split", "")).strip()
     if not source or not target:
         raise ValueError(f"Row {number}: source and target are required")
+    if has_internal_placeholder(source) or has_internal_placeholder(target):
+        raise ValueError(f"Row {number}: internal translation placeholder is forbidden")
     if source_lang not in _LANGS or target_lang not in _LANGS or source_lang == target_lang:
         raise ValueError(f"Row {number}: invalid language direction")
     if split not in _SPLITS:

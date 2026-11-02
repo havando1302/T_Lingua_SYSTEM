@@ -99,6 +99,33 @@ def test_numeric_and_alphanumeric_entities_are_protected_and_restored():
     )
 
 
+def test_entity_restoration_tolerates_marker_spacing_and_punctuation():
+    protected, entities = service._protect_translation_entities("Discount is 12%.")
+    mutated = protected.replace("ZXQTLENTITY0Q", "ZXQTL ENTITY-0 Q")
+    assert service._restore_translation_entities(mutated, entities) == "Discount is 12%."
+
+
+def test_glossary_with_number_is_protected_as_one_term():
+    glossary = [{"source_text": "Building H3", "translated_text": "Building H3"}]
+    protected, glossary_entities = service._protect_glossary_entities(
+        "Building H3 is open.", glossary,
+    )
+    numeric_protected, numeric_entities = service._protect_translation_entities(protected)
+    assert "ZXQTLGLOSSARY0Q" in numeric_protected
+    assert numeric_entities == []
+    assert service._restore_glossary_entities(numeric_protected, glossary_entities) == (
+        "Building H3 is open."
+    )
+
+
+def test_unresolved_internal_placeholder_is_a_quality_issue():
+    issues = service._translation_quality_issues(
+        "Discount 12%.", "Discount ZXQTL ENTITY 0 Q.",
+        "eng_Latn", "vie_Latn", [],
+    )
+    assert "unresolved_placeholder" in issues
+
+
 def test_nllb_round_trip_preserves_codes_without_increasing_global_beam():
     tokenizer, model = _Tokenizer(), _Model()
     with patch.object(service, "_get_nllb", return_value=(model, tokenizer)), \

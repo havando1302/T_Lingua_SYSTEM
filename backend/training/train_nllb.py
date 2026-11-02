@@ -7,6 +7,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.utils.translation_safety import has_internal_placeholder
 
 import torch
 from datasets import Dataset, DatasetDict
@@ -33,6 +37,8 @@ def load_dataset(path: Path) -> DatasetDict:
                 raise ValueError(f"Line {number}: unsupported language")
             if not str(row.get("source", "")).strip() or not str(row.get("target", "")).strip():
                 raise ValueError(f"Line {number}: empty source or target")
+            if has_internal_placeholder(str(row["source"])) or has_internal_placeholder(str(row["target"])):
+                raise ValueError(f"Line {number}: internal translation placeholder is forbidden")
             groups[split].append(row)
     if not groups["train"] or not groups["validation"]:
         raise ValueError("Dataset requires non-empty train and validation splits")

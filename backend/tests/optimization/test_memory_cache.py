@@ -311,6 +311,29 @@ class MemoryCacheTests(unittest.TestCase):
             model.assert_not_called()
         self.assertEqual(service._normalize_stt_text("Giá là 1,5 tỷ, đúng không??"), "Giá là 1,5 tỷ, đúng không?")
 
+    def test_dirty_cache_and_memory_are_not_returned(self):
+        self.add("hello", "ZXQTL ENTITY 0 Q")
+        GLOBAL_TRANSLATION_CACHE.put("user:a", "en", "vi", "hello", "ZXQTLENTITY0Q")
+        with patch.object(service, "_translate_nllb", return_value="clean result"):
+            result = service.translate_text("hello", client_id="user:a", source_lang="en", target_lang="vi")
+        self.assertEqual(result["translated_text"], "clean result")
+        self.assertEqual(GLOBAL_TRANSLATION_CACHE.get("user:a", "en", "vi", "hello"), "clean result")
+
+    def test_internal_markers_are_rejected_at_input_and_output(self):
+        with self.assertRaises(ValueError):
+            service.translate_text("Z X Q T L E N T I T Y 0 Q")
+        with patch.object(service, "_translate_nllb", return_value="ZXQTLGLOSSARY0Q"):
+            with self.assertRaises(RuntimeError):
+                service.translate_text("hello", client_id="user:a", source_lang="en", target_lang="vi")
+        self.assertIsNone(GLOBAL_TRANSLATION_CACHE.get("user:a", "en", "vi", "hello"))
+
+    def test_dirty_private_memory_does_not_hide_clean_approved_translation(self):
+        self.add("hello", "ZXQTLENTITY0Q")
+        self.add("hello", "approved translation", owner="global:approved")
+        with patch.object(service, "_translate_nllb", side_effect=AssertionError("model must not run")):
+            result = service.translate_text("hello", client_id="user:a", source_lang="en", target_lang="vi")
+        self.assertEqual(result["translated_text"], "approved translation")
+
     def test_parallel_model_calls_cannot_switch_shared_tokenizer_direction(self):
         class Inputs(dict):
             def to(self, device):

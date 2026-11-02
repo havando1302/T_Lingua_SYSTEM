@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 from typing import Iterable
 
 from app.utils.dictionary import refine_text_rule_based
+from app.utils.translation_safety import has_internal_placeholder, is_glossary_term
 
 
 def _build_prompt(text: str, context: str) -> str:
@@ -30,7 +31,7 @@ def get_runtime_glossary(
     if client_id and client_id != "global:approved":
         owners.append(client_id)
     result: list[dict[str, str | None]] = []
-    seen: set[tuple[str, str, str]] = set()
+    seen: set[str] = set()
     repository = tm.get_tm_repository()
     for owner in owners:
         for row in repository.get_entries(owner):
@@ -40,8 +41,9 @@ def get_runtime_glossary(
                 continue
             if target and row_target and row_target != target:
                 continue
-            key = (str(row.get("source_text", "")).casefold(), row_source, row_target)
-            if not key[0] or key in seen:
+            term = str(row.get("source_text") or "")
+            key = tm._normalize(term)
+            if not is_glossary_term(term) or has_internal_placeholder(str(row.get("translated_text") or "")) or key in seen:
                 continue
             seen.add(key)
             result.append(row)
@@ -49,19 +51,30 @@ def get_runtime_glossary(
 
 
 def build_glossary_prompt(
-    entries: Iterable[dict[str, str | None]], *, max_chars: int = 300,
+    entries: Iterable[dict[str, str | None]], *, max_chars: int = 300, context: str = "",
 ) -> str:
     """Build a bounded Whisper spelling hint from source-side terms."""
     terms: list[str] = []
+    seen: set[str] = set()
     used = 0
-    for row in entries:
+    context_words = set(re.findall(r"[^\W_]+", context.casefold()))
+
+    def relevance(row):
         term = str(row.get("source_text") or "").strip()
-        if not term or len(term) > 80:
+        words = set(re.findall(r"[^\W_]+", term.casefold()))
+        overlap = len(words & context_words) / max(1, len(words))
+        return (overlap, _proper_term(term))
+
+    for row in sorted(entries, key=relevance, reverse=True):
+        term = str(row.get("source_text") or "").strip()
+        key = term.casefold()
+        if not is_glossary_term(term) or len(term) > 80 or key in seen:
             continue
         added = len(term) + (2 if terms else 0)
         if used + added > max_chars:
-            break
+            continue
         terms.append(term)
+        seen.add(key)
         used += added
     return ", ".join(terms)
 
