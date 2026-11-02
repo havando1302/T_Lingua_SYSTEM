@@ -35,14 +35,19 @@ def secure_training_directory() -> Path:
 def training_audio_path(file_name: str, *, require_exists: bool = True) -> Path:
     if not _FILE_NAME.fullmatch(file_name):
         raise HTTPException(404, "Training audio not found")
-    path = secure_training_directory() / file_name
+    primary_dir = secure_training_directory()
+    path = primary_dir / file_name
+    if require_exists and not path.is_file():
+        fallback_dir = BACKEND_DIR / "data" / "training_audio"
+        if fallback_dir.resolve() != primary_dir.resolve() and (fallback_dir / file_name).is_file():
+            path = fallback_dir / file_name
     if require_exists:
         if not path.is_file():
             raise HTTPException(404, "Training audio not found")
         info = path.lstat()
         if (
             not stat.S_ISREG(info.st_mode)
-            or info.st_nlink != 1
+            or info.st_nlink > 1
             or getattr(info, "st_file_attributes", 0) & 0x400
         ):
             raise HTTPException(404, "Training audio not found")
