@@ -1,0 +1,10 @@
+[
+  {
+    "id": "screen-truck-1",
+    "domain": "logistics",
+    "source_lang": "vi",
+    "target_lang": "en",
+    "source": "Xe tải thứ nhất đến kho an toàn.",
+    "reference": "The first truck arrived at the warehouse safely."
+  }
+]

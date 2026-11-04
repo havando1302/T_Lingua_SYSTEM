@@ -71,7 +71,7 @@ def isolated_suite(legacy=False):
         "app.services.semantic_service",
         correct_text_semantics=lambda text, context="", glossary_entries=None: text,
         get_runtime_glossary=lambda *args, **kwargs: [],
-        build_glossary_prompt=lambda entries, max_chars=300: "",
+        build_glossary_prompt=lambda entries, max_chars=300, context="": "",
     )
     exists = os.path.exists
     live_tm = os.path.normcase(str(_REPO / "backend/data/translation_memory.json"))

@@ -437,6 +437,34 @@ class MemoryCacheTests(unittest.TestCase):
                 NLLBTranslationAdapter().translate("input", "eng_Latn", "vie_Latn", "user:a")
             self.assertFalse(translate.call_args.kwargs["use_cache"])
 
+    def test_quality_warning_results_are_not_promoted_to_cache(self):
+        def uncertain(*args):
+            service._last_quality_result.set((["missing_glossary_term"], False))
+            return "uncertain result"
+        with patch.object(service, "_translate_nllb", side_effect=uncertain) as inference:
+            for _ in range(2):
+                result = service.translate_text("unseen phrase", client_id="user:a", source_lang="en", target_lang="vi")
+                self.assertEqual(result["quality_warnings"], ["missing_glossary_term"])
+        self.assertEqual(inference.call_count, 2)
+        self.assertIsNone(GLOBAL_TRANSLATION_CACHE.get("user:a", "en", "vi", "unseen phrase"))
+
+    def test_voice_turn_surfaces_quality_warning_and_retries_next_turn(self):
+        from app.application.use_cases import TranslateTurnUseCase
+        from app.domain.entities import DomainTurn, LanguagePair
+        stt, translator, tts = MagicMock(), MagicMock(), MagicMock()
+        stt.transcribe.return_value = {"text": "unseen phrase"}
+        translator.translate.return_value = {"translated_text": "uncertain result", "source": "nllb",
+                                             "quality_warnings": ["missing_glossary_term"]}
+        tts.synthesize.return_value = b"audio"
+        cache = TranslationMemoryCache()
+        use_case = TranslateTurnUseCase(stt, translator, tts, cache=cache)
+        for index in range(2):
+            turn = DomainTurn(str(index), "session", "me", LanguagePair.create("en", "vi"))
+            result = use_case.process_turn(turn, None, client_id="user:a")
+            self.assertEqual(result["quality_warnings"], ["missing_glossary_term"])
+        self.assertEqual(translator.translate.call_count, 2)
+        self.assertEqual(cache.stats()["size"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

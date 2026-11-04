@@ -31,6 +31,8 @@ class Settings(AuthSettings, PolicySettings):
     # Paired 400-case GPU validation improved both directions with beam=3.
     # Set 1 explicitly when prioritizing latency over reference similarity.
     TRANSLATION_BEAM_SIZE: int = Field(default=3, ge=1, le=10)
+    TRANSLATION_FIDELITY_RERANK: bool = True
+    TRANSLATION_LENGTH_PENALTY: float = Field(default=1.2, ge=1.0, le=1.5)
     # Exact Translation Memory remains the first choice. Fuzzy reuse is kept
     # deliberately strict because a one-word change can reverse meaning.
     TRANSLATION_FUZZY_THRESHOLD: float = Field(default=0.97, ge=0.90, le=1.0)

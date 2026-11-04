@@ -59,9 +59,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cases", type=Path, default=ROOT / "outputs/fresh500_optimized_20261014/fresh_500_test_cases.csv")
     parser.add_argument("--training", type=Path, default=ROOT / "outputs/nllb_dataset_phase2/nllb-training.jsonl")
+    parser.add_argument("--allow-training-overlap", action="store_true",
+                        help="Only for known regression fixtures; overlap remains recorded in metadata")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--service-file", type=Path, help="Archived service source for paired baseline evaluation")
     parser.add_argument("--paired-baseline", type=Path, help="Evaluate the archived baseline and candidate with the same loaded model")
+    parser.add_argument("--baseline-beam", type=int, default=1, choices=range(1, 9))
     parser.add_argument("--partition", choices=["tune", "holdout", "all"], default="tune")
     parser.add_argument("--variants", nargs="+", choices=["current", "beam1", "beam3", "baseline"], default=["current"])
     args = parser.parse_args()
@@ -82,11 +85,16 @@ def main():
     if "baseline" in args.variants and baseline_service is None:
         raise ValueError("--paired-baseline is required for the baseline variant")
     from app.utils.translation_safety import has_internal_placeholder
-    cases = list(csv.DictReader(args.cases.open(encoding="utf-8-sig", newline="")))
+    if args.cases.suffix.lower() == ".json":
+        cases = json.loads(args.cases.read_text(encoding="utf-8"))
+        for case in cases:
+            case.setdefault("case_id", case.get("id"))
+    else:
+        cases = list(csv.DictReader(args.cases.open(encoding="utf-8-sig", newline="")))
     training = [json.loads(line) for line in args.training.read_text(encoding="utf-8").splitlines() if line.strip()]
     trained = {(r["source_lang"], normalized(r["source"])) for r in training}
     overlap = [r["case_id"] for r in cases if (r["source_lang"], normalized(r["source"])) in trained]
-    if overlap:
+    if overlap and not args.allow_training_overlap:
         raise ValueError(f"Evaluation overlaps the training corpus in {len(overlap)} cases")
     seen = set()
     for case in cases:
@@ -111,6 +119,10 @@ def main():
                 "cases_sha256": hashlib.sha256(args.cases.read_bytes()).hexdigest(),
                 "glossary_sha256": hashlib.sha256(seed_path.read_bytes()).hexdigest(),
                 "service_sha256": hashlib.sha256(Path(service.__file__).read_bytes()).hexdigest(),
+                "fidelity_sha256": hashlib.sha256((ROOT / "backend/app/services/translation_fidelity.py").read_bytes()).hexdigest(),
+                "beam": service.settings.TRANSLATION_BEAM_SIZE,
+                "fidelity_rerank": service.settings.TRANSLATION_FIDELITY_RERANK,
+                "length_penalty": service.settings.TRANSLATION_LENGTH_PENALTY,
                 "baseline_sha256": hashlib.sha256(args.paired_baseline.read_bytes()).hexdigest() if args.paired_baseline else None,
                 "training_overlap": len(overlap), "partition": args.partition,
                 "scope": "text path, repository defaults, bundled 500-entry glossary, isolated TM, cache disabled",
@@ -136,7 +148,7 @@ def main():
         service.translate_text("Hello.", source_lang="en", target_lang="vi", use_cache=False)
         for variant in args.variants:
             runtime = baseline_service if variant == "baseline" else service
-            beam = {"baseline": 1, "beam1": 1, "beam3": 3}.get(variant, base_beam)
+            beam = {"baseline": args.baseline_beam, "beam1": 1, "beam3": 3}.get(variant, base_beam)
             with patch.object(service.settings, "TRANSLATION_BEAM_SIZE", beam):
                 for index, case in enumerate(selected, 1):
                     started = time.perf_counter()

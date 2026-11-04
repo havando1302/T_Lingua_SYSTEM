@@ -34,7 +34,7 @@ class _Tokenizer:
         return 42
 
     def __call__(self, batch, **kwargs):
-        assert kwargs == {"return_tensors": "pt", "padding": True, "truncation": True}
+        assert kwargs == {"return_tensors": "pt", "padding": True, "truncation": False}
         self.last_batch = list(batch)
         self.calls.append(self.last_batch)
         return _Inputs(batch)
@@ -79,7 +79,7 @@ def test_nllb_translates_all_sentences_in_bounded_batches():
 def test_token_budget_ignores_padding():
     inputs = _Inputs(["one", "one two three four five six"])
     budget = service._translation_token_budget(inputs.input_ids, inputs.attention_mask)
-    assert budget == 24
+    assert budget == 32
 
 
 def test_numeric_and_alphanumeric_entities_are_protected_and_restored():
@@ -155,9 +155,10 @@ def test_nllb_protects_approved_glossary_target():
         )
 
     assert "Phenikaa University" in translated
-    assert "Trường Đại học Phenikaa" not in tokenizer.calls[0][0]
+    assert "Trường Đại học Phenikaa" in tokenizer.calls[0][0]
+    assert "Trường Đại học Phenikaa" not in tokenizer.calls[-1][0]
     assert warnings == []
-    assert retried is False
+    assert retried is True
 
 
 def test_missing_negation_triggers_bounded_quality_retry():
@@ -224,8 +225,8 @@ def test_corrupted_name_marker_falls_back_while_retaining_code_safety():
         )
     assert text == "The center receives RX11."
     assert retried is True
-    assert warnings == ["proper_name_protection_fallback"]
-    assert candidate.call_args.kwargs["protect_names"] is False
+    assert warnings == []
+    assert candidate.call_args.kwargs["mask_terms"] is True
 
 
 def test_omitted_name_gets_safe_fallback_even_with_quality_beam():
@@ -237,5 +238,5 @@ def test_omitted_name_gets_safe_fallback_even_with_quality_beam():
             "Đội Mê Kông ghi ba bàn.", "vie_Latn", "eng_Latn", [],
         )
     assert text == "The Mekong team scored three goals."
-    assert retried and warnings == ["proper_name_protection_fallback"]
-    assert candidate.call_args.kwargs["protect_names"] is False
+    assert retried and warnings == []
+    assert candidate.call_args.kwargs["mask_terms"] is True

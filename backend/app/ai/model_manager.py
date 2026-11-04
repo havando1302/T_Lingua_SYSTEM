@@ -74,6 +74,9 @@ class ModelManager:
         print("  T-LINGUA MODEL MANAGER")
         print("=" * 56)
         print(f"  Device : {self._device}")
+        from app.services.translation_service import TRANSLATION_POLICY_VERSION
+        print(f"  Translation policy : {TRANSLATION_POLICY_VERSION}; beam={s.TRANSLATION_BEAM_SIZE}; "
+              f"fidelity_rerank={getattr(s, 'TRANSLATION_FIDELITY_RERANK', True)}")
         if self._device == "cuda" and torch.cuda.is_available():
             print(f"  GPU    : {torch.cuda.get_device_name(0)}")
             vram = torch.cuda.get_device_properties(0).total_memory / 1024**3
@@ -296,17 +299,19 @@ class ModelManager:
                 # NLLB's first CUDA generation initializes kernels and is
                 # materially slower than steady state.  Pay that cost during
                 # startup so the first user turn has normal latency.
-                self.nllb_tokenizer.src_lang = "vie_Latn"
-                nllb_inputs = self.nllb_tokenizer(
-                    "Hệ thống đã sẵn sàng.", return_tensors="pt"
-                ).to(self._device)
-                with torch.inference_mode():
-                    self.nllb_model.generate(
-                        **nllb_inputs,
-                        forced_bos_token_id=self.nllb_tokenizer.convert_tokens_to_ids("eng_Latn"),
-                        max_new_tokens=16,
-                        num_beams=1,
-                    )
+                for source_lang, target_lang, sample in (
+                    ("vie_Latn", "eng_Latn", "Hệ thống đã sẵn sàng."),
+                    ("eng_Latn", "vie_Latn", "The system is ready."),
+                ):
+                    self.nllb_tokenizer.src_lang = source_lang
+                    nllb_inputs = self.nllb_tokenizer(sample, return_tensors="pt").to(self._device)
+                    with torch.inference_mode():
+                        self.nllb_model.generate(
+                            **nllb_inputs,
+                            forced_bos_token_id=self.nllb_tokenizer.convert_tokens_to_ids(target_lang),
+                            max_new_tokens=24,
+                            num_beams=s.TRANSLATION_BEAM_SIZE,
+                        )
                 for model, tokenizer, sample in (
                     (self.tts_model_eng, self.tts_tokenizer_eng, "Ready."),
                     (self.tts_model_vie, self.tts_tokenizer_vie, "Sẵn sàng."),
@@ -343,6 +348,7 @@ class ModelManager:
 
     def get_runtime_status(self) -> dict:
         from app.core.config import settings as _s
+        from app.services.translation_service import TRANSLATION_POLICY_VERSION
         nllb_id = getattr(self, "_nllb_model_id", "not_loaded")
         if nllb_id == "not_loaded":
             nllb_id = getattr(_s, "NLLB_MODEL", "facebook/nllb-200-distilled-1.3B")
@@ -371,8 +377,13 @@ class ModelManager:
             "whisper_compute_type": self._whisper_compute_type,
             "whisper_cpu_fallback": self._whisper_fallback,
             "nllb_model_id": nllb_id,
+            "nllb_revision": getattr(_s, "NLLB_REVISION", None),
             "nllb_device": self._device,
             "nllb_dtype": "float16" if self._device == "cuda" else "float32",
+            "translation_policy": TRANSLATION_POLICY_VERSION,
+            "translation_beam_size": _s.TRANSLATION_BEAM_SIZE,
+            "translation_fidelity_rerank": getattr(_s, "TRANSLATION_FIDELITY_RERANK", True),
+            "translation_length_penalty": getattr(_s, "TRANSLATION_LENGTH_PENALTY", 1.2),
             "tts_model_eng": tts_eng,
             "tts_model_vie": tts_vie,
             "tts_device": self._tts_device,

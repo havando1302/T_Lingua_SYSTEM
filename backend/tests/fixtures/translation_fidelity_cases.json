@@ -1,0 +1,22 @@
+[
+  {"id":"screen-weather-1","domain":"weather","source_lang":"vi","target_lang":"en","source":"Hôm nay thời tiết rất đẹp.","reference":"The weather is very nice today."},
+  {"id":"screen-food","domain":"food","source_lang":"vi","target_lang":"en","source":"Bánh mì rất ngon","reference":"The bread is very delicious."},
+  {"id":"screen-evening","domain":"weather","source_lang":"vi","target_lang":"en","source":"Buổi tối hôm nay thời tiết rất đẹp, tôi muốn đi chơi.","reference":"The weather is very nice this evening, and I want to go out."},
+  {"id":"screen-weather-2","domain":"weather","source_lang":"vi","target_lang":"en","source":"Hôm nay, Thời tiết rất đẹp","reference":"The weather is very nice today."},
+  {"id":"screen-weather-3","domain":"weather","source_lang":"vi","target_lang":"en","source":"Thời tiết rất đẹp","reference":"The weather is very nice."},
+  {"id":"screen-retail","domain":"retail","source_lang":"vi","target_lang":"en","source":"Cửa hàng An Nhiên giảm giá 12% cho đèn bàn trong tuần này, Người kiểm tra xác nhận cho chiều thứ sáu","reference":"The An Nhiên store is offering a 12% discount on desk lamps this week. The inspector confirmed it for Friday afternoon."},
+  {"id":"screen-weather-4","domain":"weather","source_lang":"vi","target_lang":"en","source":"Thời tiết hôm nay rất đẹp, tôi muốn đi chơi.","reference":"The weather is very nice today, and I want to go out."},
+  {"id":"screen-vegetables","domain":"logistics","source_lang":"vi","target_lang":"en","source":"Lô rau thứ nhất đã được đóng hàng","reference":"The first batch of vegetables has been packed."},
+  {"id":"screen-truck-1","domain":"logistics","source_lang":"vi","target_lang":"en","source":"Xe tải thứ nhất đến kho an toàn.","reference":"The first truck arrived at the warehouse safely."},
+  {"id":"screen-truck-2","domain":"logistics","source_lang":"vi","target_lang":"en","source":"Xe tải thứ hai đã đến kho an toàn","reference":"The second truck has arrived at the warehouse safely."},
+  {"id":"screen-calm","domain":"conversation","source_lang":"vi","target_lang":"en","source":"Bạn đã cảm thấy bình tĩnh hơn chưa?","reference":"Are you feeling calmer yet?"},
+  {"id":"subject-health","domain":"health","source_lang":"vi","target_lang":"en","source":"Bệnh nhân vẫn còn đau đầu và chưa uống thuốc.","reference":"The patient still has a headache and has not taken the medicine yet."},
+  {"id":"subject-education","domain":"education","source_lang":"vi","target_lang":"en","source":"Sinh viên đã nộp báo cáo nhưng giảng viên chưa chấm điểm.","reference":"The students have submitted their reports, but the lecturer has not graded them yet."},
+  {"id":"subject-technology","domain":"technology","source_lang":"vi","target_lang":"en","source":"Máy chủ không lưu được dữ liệu vì ổ cứng đã đầy.","reference":"The server cannot save the data because the hard drive is full."},
+  {"id":"subject-agriculture","domain":"agriculture","source_lang":"vi","target_lang":"en","source":"Vườn cà phê thiếu nước nên nông dân phải tưới bổ sung.","reference":"The coffee plantation lacks water, so the farmers need to provide additional irrigation."},
+  {"id":"subject-finance","domain":"finance","source_lang":"vi","target_lang":"en","source":"Khách hàng đã chuyển khoản nhưng cửa hàng chưa nhận được tiền.","reference":"The customer has made the bank transfer, but the store has not received the money yet."},
+  {"id":"reverse-logistics","domain":"logistics","source_lang":"en","target_lang":"vi","source":"The second truck has arrived at the warehouse safely.","reference":"Xe tải thứ hai đã đến kho an toàn."},
+  {"id":"reverse-health","domain":"health","source_lang":"en","target_lang":"vi","source":"The patient is feeling calmer, but the headache has not gone away.","reference":"Bệnh nhân cảm thấy bình tĩnh hơn nhưng vẫn chưa hết đau đầu."},
+  {"id":"reverse-food","domain":"food","source_lang":"en","target_lang":"vi","source":"The bread is delicious, but the soup is too salty.","reference":"Bánh mì rất ngon nhưng súp quá mặn."},
+  {"id":"reverse-technology","domain":"technology","source_lang":"en","target_lang":"vi","source":"The server cannot save the report because the hard drive is full.","reference":"Máy chủ không thể lưu báo cáo vì ổ cứng đã đầy."}
+]

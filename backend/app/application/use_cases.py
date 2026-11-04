@@ -67,6 +67,7 @@ class TranslateTurnUseCase:
 
         # Tra cứu cache
         snapshot = self._cache.get_version_snapshot(client_id) if self._use_cache else None
+        quality_warnings = []
         cached = self._cache.get(client_id, turn.lang_pair.source_lang, turn.lang_pair.target_lang, source_text) if self._use_cache else None
         from app.utils.translation_safety import has_internal_placeholder
         if cached is not None and has_internal_placeholder(cached):
@@ -95,10 +96,11 @@ class TranslateTurnUseCase:
                 )
                 translated_text = trans_res.get("translated_text", "")
                 trans_source = trans_res.get("source", "nllb")
+                quality_warnings = trans_res.get("quality_warnings", [])
 
             if has_internal_placeholder(translated_text):
                 raise RuntimeError("Translation returned an unresolved internal placeholder")
-            if translated_text and self._use_cache:
+            if translated_text and self._use_cache and not quality_warnings:
                 self._cache.put(client_id, turn.lang_pair.source_lang, turn.lang_pair.target_lang, source_text, translated_text, expected_version=snapshot)
 
         turn.translated_text = translated_text
@@ -123,5 +125,6 @@ class TranslateTurnUseCase:
             "source_text": source_text,
             "translated_text": translated_text,
             "translation_source": trans_source,
+            "quality_warnings": quality_warnings,
             "audio_bytes_length": len(audio_bytes),
         }

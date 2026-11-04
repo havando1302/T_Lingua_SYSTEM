@@ -15,6 +15,7 @@ from app.utils.translation_safety import INTERNAL_PLACEHOLDER, PROTECTED_ENTITY,
 
 # Tokenizer.src_lang is mutable and shared by both HTTP and websocket workers.
 _inference_lock = threading.RLock()
+TRANSLATION_POLICY_VERSION = "source-fidelity-v2.1"
 _request_glossary: ContextVar[list[dict[str, str | None]] | None] = ContextVar(
     "translation_request_glossary", default=None,
 )
@@ -23,10 +24,8 @@ _last_quality_result: ContextVar[tuple[list[str], bool]] = ContextVar(
 )
 _NLLB_LANGUAGES = {"vi": "vie_Latn", "en": "eng_Latn"}
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
-# NLLB is good at preserving neutral ASCII placeholders, but can translate or
-# omit identifiers such as H3, RX11, 4.0 and 08:30 when they are left in the
-# sentence.  Protect only tokens that contain digits; ordinary words and names
-# still receive normal grammatical translation.
+# Numbers/codes are validated after natural decoding. ASCII placeholders are
+# reserved for a constrained retry because they can disrupt sentence meaning.
 _PROTECTED_ENTITY = PROTECTED_ENTITY
 _PLACEHOLDER_PREFIX = "ZXQTLENTITY"
 _GLOSSARY_PLACEHOLDER_PREFIX = "ZXQTLGLOSSARY"
@@ -61,7 +60,10 @@ def _normalize_stt_text(text: str) -> str:
 def _split_translation_segments(text: str) -> list[str]:
     """Split only at real sentence boundaries, never inside values like 3.1."""
     segments = [part.strip() for part in _SENTENCE_BOUNDARY.split(text) if part.strip()]
-    return segments or [text]
+    # Bound long unpunctuated speech without discarding any words.
+    return [" ".join(words[start:start + 80])
+            for segment in (segments or [text]) for words in [segment.split()]
+            for start in range(0, len(words), 80)]
 
 
 def _protect_translation_entities(text: str) -> tuple[str, list[tuple[str, str]]]:
@@ -179,9 +181,12 @@ def _translation_quality_issues(
         if target.casefold() not in translated_text.casefold():
             issues.append("missing_glossary_term")
             break
-    source_has_negation = bool(
-        _NEGATION_PATTERNS.get(source_lang, re.compile(r"$^")).search(source_text)
-    )
+    negation_matches = list(_NEGATION_PATTERNS.get(source_lang, re.compile(r"$^")).finditer(source_text))
+    if source_lang == "vie_Latn":
+        # Final "... chưa?" asks "... yet?"; it does not require English "not".
+        negation_matches = [match for match in negation_matches
+                            if not (match.group().casefold() == "chưa" and not source_text[match.end():].strip(" .!?"))]
+    source_has_negation = bool(negation_matches)
     target_has_negation = bool(
         _NEGATION_PATTERNS.get(target_lang, re.compile(r"$^")).search(translated_text)
     )
@@ -202,7 +207,34 @@ def _translation_token_budget(input_ids: Any, attention_mask: Any = None) -> int
         source_tokens = int(attention_mask.sum(dim=1).max().item())
     else:
         source_tokens = int(input_ids.shape[-1])
-    return min(128, max(24, int(source_tokens * 1.6) + 12))
+    return min(512, max(32, int(source_tokens * 2.0) + 16))
+
+
+def _repair_vietnamese_fragment(model, tokenizer, source, translated, target_token_id, token_budget):
+    """Repair rare VI→EN noun-phrase outputs without a phrase dictionary."""
+    from app.services.translation_fidelity import (
+        looks_like_english_fragment, reverse_source_scores, select_fragment_repair,
+        vietnamese_aspect_variants,
+    )
+    if not looks_like_english_fragment(translated):
+        return translated
+    variants = vietnamese_aspect_variants(source)
+    if not variants:
+        return translated
+    inputs = tokenizer(variants, return_tensors="pt", padding=True, truncation=False).to(DEVICE)
+    with torch.inference_mode():
+        output = model.generate(
+            **inputs, forced_bos_token_id=target_token_id, max_length=None,
+            max_new_tokens=token_budget, num_beams=3, num_return_sequences=3,
+            length_penalty=getattr(settings, "TRANSLATION_LENGTH_PENALTY", 1.2), use_cache=True,
+        )
+    decoded = tokenizer.batch_decode(output, skip_special_tokens=True)
+    candidates = list(dict.fromkeys([translated, *(value.strip() for value in decoded if value.strip())]))
+    risks = [_quality_risk(_translation_quality_issues(source, value, "vie_Latn", "eng_Latn", []))
+             for value in candidates]
+    reverse = reverse_source_scores(model, tokenizer, source, candidates, "vie_Latn", "eng_Latn", DEVICE)
+    chosen = select_fragment_repair(candidates, reverse, risks)
+    return candidates[chosen]
 
 
 def _translate_nllb_candidate(
@@ -211,7 +243,7 @@ def _translate_nllb_candidate(
     target_lang: str,
     glossary_entries: list[dict[str, str | None]],
     beam_size: int,
-    *, protect_names: bool = True,
+    *, protect_names: bool = True, mask_terms: bool = False, mask_numbers: bool = True,
 ) -> tuple[str, list[tuple[str, str, str]]]:
     with _inference_lock:
         model, tokenizer = _get_nllb()
@@ -226,19 +258,36 @@ def _translate_nllb_candidate(
         protected_text, glossary_entities = _protect_glossary_entities(
             text, glossary_entries + name_entries,
         )
-        protected_text, protected_entities = _protect_translation_entities(protected_text)
+        # Natural encoder input preserves subjects, predicates and grammar.
+        # Arbitrary ASCII markers can be dropped or translated as ordinary words.
+        if mask_terms:
+            if mask_numbers:
+                protected_text, protected_entities = _protect_translation_entities(protected_text)
+            else:
+                protected_entities = []
+        else:
+            protected_text, protected_entities = text, []
         segments = _split_translation_segments(protected_text)
         batch_size = getattr(settings, "TRANSLATION_SENTENCE_BATCH_SIZE", 4)
         translated_segments: list[str] = []
         for start in range(0, len(segments), batch_size):
             batch = segments[start:start + batch_size]
-            inputs = tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(DEVICE)
+            inputs = tokenizer(batch, return_tensors="pt", padding=True, truncation=False).to(DEVICE)
             input_ids = getattr(inputs, "input_ids", None)
             attention_mask = getattr(inputs, "attention_mask", None)
             if isinstance(inputs, dict):
                 input_ids = input_ids if input_ids is not None else inputs.get("input_ids")
                 attention_mask = attention_mask if attention_mask is not None else inputs.get("attention_mask")
             token_budget = _translation_token_budget(input_ids, attention_mask)
+            if input_ids is not None and input_ids.shape[-1] > 512:
+                raise ValueError("Translation segment exceeds 512 tokens; split at sentence boundaries")
+            rerank = (not mask_terms and beam_size > 1
+                      and getattr(settings, "TRANSLATION_FIDELITY_RERANK", True)
+                      and hasattr(model, "forward") and hasattr(tokenizer, "tgt_lang"))
+            generation_options = {"length_penalty": getattr(settings, "TRANSLATION_LENGTH_PENALTY", 1.2)}
+            if rerank:
+                generation_options.update(num_return_sequences=min(3, beam_size),
+                                          return_dict_in_generate=True, output_scores=True)
             with torch.inference_mode():
                 translated_tokens = model.generate(
                     **inputs,
@@ -247,14 +296,44 @@ def _translate_nllb_candidate(
                     max_new_tokens=token_budget,
                     num_beams=beam_size,
                     use_cache=True,
+                    **generation_options,
                 )
-            decoded = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
+            if rerank:
+                from app.services.translation_fidelity import reverse_source_scores, select_faithful_candidate
+                count = min(3, beam_size)
+                decoded_all = tokenizer.batch_decode(translated_tokens.sequences, skip_special_tokens=True)
+                forward = translated_tokens.sequences_scores.float().cpu().tolist()
+                del translated_tokens
+                decoded = []
+                for index, segment in enumerate(batch):
+                    candidates = decoded_all[index * count:(index + 1) * count]
+                    risks = [_quality_risk(_translation_quality_issues(segment, value, source_lang, target_lang, []))
+                             for value in candidates]
+                    reverse = reverse_source_scores(model, tokenizer, segment, candidates, source_lang, target_lang, DEVICE)
+                    chosen = select_faithful_candidate(candidates, forward[index * count:(index + 1) * count], reverse, risks)
+                    selected = candidates[chosen]
+                    if source_lang == "vie_Latn" and target_lang == "eng_Latn":
+                        selected = _repair_vietnamese_fragment(
+                            model, tokenizer, segment, selected, target_token_id, token_budget,
+                        )
+                    decoded.append(selected)
+            else:
+                decoded = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
             translated_segments.extend(part.lstrip("- ").strip() for part in decoded if part.strip())
         if len(translated_segments) != len(segments):
             raise RuntimeError("NLLB returned an incomplete sentence batch")
-        restored = _restore_glossary_entities(" ".join(translated_segments), glossary_entities)
-        restored = _restore_translation_entities(restored, protected_entities)
+        restored = " ".join(translated_segments)
+        if mask_terms:
+            restored = _restore_glossary_entities(restored, glossary_entities)
+            restored = _restore_translation_entities(restored, protected_entities)
+            if (protected_entities or glossary_entities) and re.search(r"\bQ\b", restored) and not re.search(r"\bQ\b", text):
+                raise RuntimeError("NLLB returned a fragment of an internal placeholder")
         return restored, glossary_entities
+
+
+def _quality_risk(issues):
+    return ("unresolved_placeholder" in issues, "missing_number_or_code" in issues,
+            "missing_negation" in issues, "missing_glossary_term" in issues, len(issues))
 
 
 def _translate_nllb_with_quality(
@@ -271,31 +350,28 @@ def _translate_nllb_with_quality(
         text, first, source_lang, target_lang, entities,
     )
     retry_beam = getattr(settings, "TRANSLATION_RETRY_BEAM_SIZE", 3)
-    name_fallback = bool(_vietnamese_proper_names(text, source_lang)) and any(
-        issue in first_issues for issue in ("unresolved_placeholder", "missing_number_or_code", "missing_glossary_term")
-    )
-    if not first_issues or (retry_beam <= settings.TRANSLATION_BEAM_SIZE and not name_fallback):
-        if "unresolved_placeholder" in first_issues:
-            raise RuntimeError("NLLB returned an unresolved internal placeholder")
+    if not first_issues:
         return first, first_issues, False
-    retry, retry_entities = _translate_nllb_candidate(
-        text, source_lang, target_lang, glossary_entries, max(retry_beam, settings.TRANSLATION_BEAM_SIZE),
-        protect_names=not name_fallback,
-    )
+    try:
+        retry, retry_entities = _translate_nllb_candidate(
+            text, source_lang, target_lang, glossary_entries, max(retry_beam, settings.TRANSLATION_BEAM_SIZE),
+            protect_names=True, mask_terms=True, mask_numbers="missing_number_or_code" in first_issues,
+        )
+    except RuntimeError:
+        if "unresolved_placeholder" in first_issues or "missing_number_or_code" in first_issues:
+            raise
+        return first, [*first_issues, "constraint_retry_failed"], True
     retry_issues = _translation_quality_issues(
         text, retry, source_lang, target_lang, retry_entities,
     )
-    if ("unresolved_placeholder" in first_issues and "unresolved_placeholder" not in retry_issues) or (
-        ("unresolved_placeholder" in retry_issues) == ("unresolved_placeholder" in first_issues)
-        and len(retry_issues) < len(first_issues)
-    ):
+    if _quality_risk(retry_issues) < _quality_risk(first_issues):
         selected, selected_issues = retry, retry_issues
     else:
         selected, selected_issues = first, first_issues
     if "unresolved_placeholder" in selected_issues:
         raise RuntimeError("NLLB returned an unresolved internal placeholder")
-    if name_fallback and selected == retry:
-        selected_issues = [*selected_issues, "proper_name_protection_fallback"]
+    if "missing_number_or_code" in selected_issues:
+        raise RuntimeError("NLLB could not preserve source numbers or codes")
     return selected, selected_issues, True
 
 
@@ -337,7 +413,8 @@ def translate_text(
     if use_cache:
         cached = GLOBAL_TRANSLATION_CACHE.get(cache_owner, resolved_source, resolved_target, text)
         if cached is not None and not has_internal_placeholder(cached):
-            return {"translated_text": cached, "latency": round(max(0.015, time.monotonic() - start), 3), "source": "cache"}
+            return {"translated_text": cached, "latency": round(max(0.015, time.monotonic() - start), 3),
+                    "source": "cache", "translation_policy": TRANSLATION_POLICY_VERSION}
 
     translated = repository.lookup(text, client_id, resolved_source, resolved_target) if client_id else None
     if translated is None or has_internal_placeholder(translated):
@@ -378,7 +455,7 @@ def translate_text(
             source = "nllb_model"
     if translated and has_internal_placeholder(translated):
         raise RuntimeError("Translation returned an unresolved internal placeholder")
-    if use_cache and translated:
+    if use_cache and translated and (source != "nllb_model" or not quality_warnings):
         GLOBAL_TRANSLATION_CACHE.put(
             cache_owner, resolved_source, resolved_target, text, translated,
             expected_version=snapshot,
@@ -387,6 +464,7 @@ def translate_text(
         "translated_text": translated,
         "latency": round(max(0.015, time.monotonic() - start), 3),
         "source": source,
+        "translation_policy": TRANSLATION_POLICY_VERSION,
     }
     if source == "nllb_model":
         result["quality_warnings"] = quality_warnings
